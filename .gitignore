@@ -16,6 +16,10 @@
 # Visual studio project
 [Bb]uild/
 
+# Project built binaries
+AudioEngineStatic/lib/
+ExampleApp/bin/
+
 # Mono auto generated files
 mono_crash.*
 

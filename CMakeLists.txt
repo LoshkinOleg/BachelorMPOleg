@@ -12,7 +12,9 @@ target_include_directories(AudioEngine PUBLIC
 	${PROJECT_SOURCE_DIR}/thirdparty/3dti/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/cereal/
 	${PROJECT_SOURCE_DIR}/thirdparty/libsofa/include/
-	${PROJECT_SOURCE_DIR}/thirdparty/portaudio/include/)
+	${PROJECT_SOURCE_DIR}/thirdparty/portaudio/include/
+	${PROJECT_SOURCE_DIR}/thirdparty/easy_profiler/include/
+	${PROJECT_SOURCE_DIR}/thirdparty/openvr/include/)
 target_link_libraries(AudioEngine PRIVATE
 	${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_AudioToolkit.lib
 	${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_ResourceManager.lib
@@ -22,7 +24,9 @@ target_link_libraries(AudioEngine PRIVATE
 	${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/netcdf_x64.lib
 	${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/zlib_x64.lib
 	${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libsofa_x64.lib
-	${PROJECT_SOURCE_DIR}/thirdparty/portaudio/lib/portaudio_static_x64.lib)
+	${PROJECT_SOURCE_DIR}/thirdparty/portaudio/lib/portaudio_static_x64.lib
+	${PROJECT_SOURCE_DIR}/thirdparty/easy_profiler/lib/easy_profiler.lib
+	${PROJECT_SOURCE_DIR}/thirdparty/openvr/lib/openvr_api.lib)
 set_target_properties(AudioEngine PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/AudioEngineStatic/lib"
     LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/AudioEngineStatic/lib"

@@ -5,6 +5,12 @@
 #include <HRTF/HRTFFactory.h>
 #include <BRIR/BRIRFactory.h>
 
+#ifndef BUILD_WITH_EASY_PROFILER
+#define BUILD_WITH_EASY_PROFILER
+#endif
+
+#include <easy/profiler.h>
+
 bool bs::AudioEngine::Init(const char* hrtfFileName, const char* brirFileName, size_t BUFFER_SIZE, size_t SAMPLE_RATE)
 {
 	// Init 3dti core.
@@ -27,6 +33,9 @@ bool bs::AudioEngine::Init(const char* hrtfFileName, const char* brirFileName, s
 	auto err = Pa_Initialize();
 	if (err != paNoError) throw;
 
+	// Enable writing a profiling file by easy_profiler.
+	EASY_PROFILER_ENABLE;
+
 	return true;
 }
 void bs::AudioEngine::Run()
@@ -42,6 +51,11 @@ void bs::AudioEngine::Run()
 }
 void bs::AudioEngine::Shutdown()
 {
+	// Write profiling data to file.
+	if (!profiler::dumpBlocksToFile("profilingData.prof")) {
+		std::cerr << "Couldn't write profilingData.prof!" << std::endl;
+	}
+
 	for (auto sound : sounds_)
 	{
 		sound.err_ = Pa_StopStream(sound.pStream_);
@@ -80,6 +94,9 @@ int bs::AudioEngine::ServiceAudio_
 	PaStreamCallbackFlags statusFlags, void* userData
 )
 {
+	EASY_FUNCTION(profiler::colors::Magenta);
+
+	EASY_BLOCK("ServiceAudio_ initialization.");
 	auto* engine = (AudioEngine*)userData; // Annoying hack to have a non static servicing method.
 
 	// For now only handling looping sounds for now. Oleg@self: implement non looping clips.
@@ -95,7 +112,9 @@ int bs::AudioEngine::ServiceAudio_
 	// Oleg@self: implement non looping clips.
 	if (windowBegin >= wavSize) windowBegin = 0; // Wrap around if reached end of sound data.
 	windowEnd = windowBegin + BUFFER_SIZE - 1;
+	EASY_END_BLOCK; //! ServiceAudio_ initialization.
 
+	EASY_BLOCK("Reading into window buffer.");
 	// Read audio data from wav buffer into the window vector.
 	static CMonoBuffer<float> window(BUFFER_SIZE); // Stores subset of wav data that will be feed to ears.
 	window.Fill(BUFFER_SIZE, 0.0f); // Fill window with silence.
@@ -106,7 +125,9 @@ int bs::AudioEngine::ServiceAudio_
 			window[i] = soundData[windowBegin + i];
 		}
 	}
+	EASY_END_BLOCK; //! Reading into window buffer.
 
+	EASY_BLOCK("Initializing spatialization buffers.");
 	// Oleg@self: this should be a method of SoundMaker
 	static Common::CEarPair<CMonoBuffer<float>> anechoic; // Anechoic part of the sound.
 	static Common::CEarPair<CMonoBuffer<float>> reverb; // Reverb part of the sound.
@@ -130,20 +151,32 @@ int bs::AudioEngine::ServiceAudio_
 	ears.right.resize(BUFFER_SIZE);
 	ears.left.Fill(BUFFER_SIZE, 0.0f);
 	engine->sounds_[0].source_->SetBuffer(window); // Set source buffer to read from. Makes the next lines use the window buffer as source of sound data.
+	EASY_END_BLOCK; //! Initializing spatialization buffers.
+
+	EASY_BLOCK("Processing anechoic.");
 	engine->sounds_[0].source_->ProcessAnechoic(anechoic.left, anechoic.right); // Write anechoic component of the sound to anechoic buffer.
+	EASY_END_BLOCK; //! Processing anechoic.
+
+	EASY_BLOCK("Processing reverb.");
 	engine->environment_->ProcessVirtualAmbisonicReverb(reverb.left, reverb.right); // Write reverb component of the sound to reverb buffer.
+	EASY_END_BLOCK; //! Processing reverb.
+
+	EASY_BLOCK("Interlacing left and right buffers.");
 	ears.left += anechoic.left + reverb.left; // Mix the anechoic and reverb part of the spatialized sound.
 	ears.right += anechoic.right + reverb.right; // Oleg@self: inspect the + operator overloads.
-
 	// Write interlaced audio data to hardware buffer.
 	// Oleg@self: again, avoid creating vectors on every call...
 	static CStereoBuffer<float> output;
 	output.Interlace(ears.left, ears.right);
+	EASY_END_BLOCK; //! Interlacing left and right buffers.
+
+	EASY_BLOCK("Writing to out buffer.");
 	float* outBuff = (float*)outputBuffer; // Cast output buffer to float buffer.
 	for (auto it = output.begin(); it != output.end(); it++)
 	{
 		*(outBuff++) = *it; // Oleg@self: surely there's a way to just pass outBuff to the Interlace method?...
 	}
+	EASY_END_BLOCK; //! Writing to out buffer.
 
 	return paContinue;
 }
