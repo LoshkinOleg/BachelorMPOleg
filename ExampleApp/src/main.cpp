@@ -3,8 +3,8 @@
 int main()
 {
 	bs::AudioEngine e;
-	e.Init("hrtf.sofa", "brir.sofa");
-	auto sound = e.CreateSoundMaker("pure440.wav");
+	e.Init("../resources/HRTF/SOFA/hrtf.sofa", "../resources/BRIR/SOFA/brir.sofa");
+	auto sound = e.CreateSoundMaker("../resources/AudioSamples/pure440.wav");
 	if (sound != bs::INVALID_ID)
 	{
 		e.Run();
