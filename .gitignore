@@ -18,7 +18,7 @@
 
 # Project built binaries
 AudioEngineStatic/lib/
-ExampleApp/bin/
+ProfilingApp/bin/
 
 # Mono auto generated files
 mono_crash.*
