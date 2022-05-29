@@ -1,48 +1,14 @@
 #include <ThreeDTI_SoundMaker.h>
 
 #include <ThreeDTI_AudioRenderer.h>
+#include <UtilityFunctions.h>
 
 bool bs::ThreeDTI_SoundMaker::Init(PaStreamCallback* serviceAudioCallback, bs::IAudioRenderer* engine, const char* wavFileName)
 {
 	currentBegin_ = 0;
 	currentEnd_ = 0;
 
-	// Oleg@self: investigate reading of wav.
-	struct WavHeader								 // Local declaration of wav header struct type (more info in http://soundfile.sapp.org/doc/WaveFormat/)
-	{												 // We only need the number of samples, so the rest will be unused assuming file is mono, 16-bit depth and 44.1kHz sampling rate
-		char		  fill[40];
-		uint32_t	bytesCount;
-	} wavHeader;
-
-	FILE* wavFile = fopen(wavFileName, "rb");
-	if (wavFile == NULL)
-	{
-		std::cerr << "Couldn't open file!\n";
-		return false;
-	}
-	fread(&wavHeader, sizeof(wavHeader), 1, wavFile); // Reading of the 44 bytes of header to get the number of samples of the file
-	fseek(wavFile, sizeof(wavHeader), SEEK_SET); // Moving of the file pointer to the start of the audio samples
-
-	// Oleg@self: check invariants: wav file, 16-bit depth for samples
-	unsigned int samplesCount = wavHeader.bytesCount / 2; // Getting number of samples by dividing number of bytes by 2 because we are reading 16-bit samples
-	// Oleg@self: point of this?
-	int16_t* sample; sample = new int16_t[samplesCount]; // Declaration and initialization of 16-bit signed integer pointer
-	memset(sample, 0, sizeof(int16_t) * samplesCount); // Setting its size
-
-	uint8_t* byteSample; byteSample = new uint8_t[2 * samplesCount]; // Declaration and initialization of 8-bit unsigned integer pointer
-	memset(byteSample, 0, sizeof(uint8_t) * 2 * samplesCount); // Setting its size
-
-	fread(byteSample, 1, 2 * samplesCount, wavFile); // Reading the whole file byte per byte, needed for endian-independent wav parsing
-
-	for (int i = 0; i < samplesCount; i++)
-		sample[i] = int16_t(byteSample[2 * i] | byteSample[2 * i + 1] << 8); // Conversion from two 8-bit unsigned integer to a 16-bit signed integer
-
-	soundData_.reserve(samplesCount); // Reserving memory for samples vector
-
-	for (int i = 0; i < samplesCount; i++)
-		soundData_.push_back((float)sample[i] / (float)INT16_MAX); // Converting samples to float to push them in samples vector
-
-	fclose(wavFile); // Oleg@self: handle exceptions?
+	soundData_ = LoadWav(wavFileName);
 
 	PaStreamParameters outputParams{
 		Pa_GetDefaultOutputDevice(), // Oleg@self: handle this properly.

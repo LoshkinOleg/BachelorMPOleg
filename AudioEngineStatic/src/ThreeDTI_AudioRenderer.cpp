@@ -39,8 +39,10 @@ bool bs::ThreeDTI_AudioRenderer::Init(const char* hrtfFileName, const char* brir
 	auto err = Pa_Initialize();
 	if (err != paNoError) throw;
 
+#ifdef USE_EASY_PROFILER
 	// Enable writing a profiling file by easy_profiler.
 	EASY_PROFILER_ENABLE;
+#endif //! USE_EASY_PROFILER
 
 	return true;
 }
@@ -55,10 +57,12 @@ void bs::ThreeDTI_AudioRenderer::Run()
 }
 void bs::ThreeDTI_AudioRenderer::Shutdown()
 {
+#ifdef USE_EASY_PROFILER
 	// Oleg@self: parse directors and look how to name the next file without overwriting the existing one.
 	// Write profiling data to file.
 	const auto result = profiler::dumpBlocksToFile("profilingData/profilingData0.prof");
 	assert(result, "Couldn't write .prof file!");
+#endif //! USE_EASY_PROFILER
 
 	for (auto& sound : sounds_)
 	{
@@ -97,6 +101,7 @@ int bs::ThreeDTI_AudioRenderer::ServiceAudio_
 )
 {
 	auto* engine = (ThreeDTI_AudioRenderer*)userData; // Annoying hack to have a non static servicing method.
+	if (engine->sounds_.size() <= 0) return paContinue;
 	auto* sound = dynamic_cast<ThreeDTI_SoundMaker*>(&engine->sounds_[0]);
 	static CStereoBuffer<float> processedFrame;
 	auto* outBuff = static_cast<float*>(outputBuffer); // Cast output buffer to float buffer.
@@ -104,7 +109,7 @@ int bs::ThreeDTI_AudioRenderer::ServiceAudio_
 	// Oleg@self: implement non looping clips.
 	assert(sound->GetWrapMode() != ClipWrapMode::LOOP, "Non looping clips not yet implemented!");
 
-	sound->ProcessAudio(processedFrame, engine->environment_);
+	sound->ProcessAudio(processedFrame, engine->environment_); // Oleg@self: make a virtual method out of this.
 
 	// Oleg@self: use memcpy?
 	for (auto it = processedFrame.begin(); it != processedFrame.end(); it++)

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "portaudio.h"
 
 namespace bs

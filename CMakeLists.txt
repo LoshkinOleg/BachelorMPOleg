@@ -54,3 +54,9 @@ set_target_properties(ProfilingApp PROPERTIES
 
 # Create folder for holding easy_profiler's profiling data.
 file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/build/profilingData)
+
+# Add options for the user to configure
+set(USE_EASY_PROFILER ON CACHE BOOL "Enable profiling of spatialization time. Generates .prof files under build/profilingData/")
+if (USE_EASY_PROFILER)
+	add_compile_definitions(USE_EASY_PROFILER)
+endif()
