@@ -78,6 +78,6 @@ void bs::SteamAudio_SoundMaker::ProcessAudio(std::vector<float>& output, IPLAudi
 
 	for (size_t i = 0; i < bufferSize; i++)
 	{
-		iplBinauralEffectApply(effect, &params, );
+		// iplBinauralEffectApply(effect, &params, );
 	}
 }

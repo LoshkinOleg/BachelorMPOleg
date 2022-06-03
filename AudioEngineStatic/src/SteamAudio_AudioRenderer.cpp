@@ -33,7 +33,7 @@ bool bs::SteamAudio_AudioRenderer::Init(const char* hrtfFileName, const char* br
     assert(iplErr_ == IPLerror::IPL_STATUS_SUCCESS, "SteamAudio failed to allocate a buffer!");
 
     // Init portaudio.
-    paErr_ = Pa_Initialize();
+    auto paErr_ = Pa_Initialize();
     assert(paErr_ == paNoError, "PortAudio failed to initialize!");
 
     // Enable writing a profiling file by easy_profiler.
