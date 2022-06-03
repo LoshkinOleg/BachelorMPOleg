@@ -22,7 +22,8 @@ target_include_directories(AudioEngine PUBLIC
 	${PROJECT_SOURCE_DIR}/thirdparty/easy_profiler/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/openvr/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/ovraudio/include/
-	${PROJECT_SOURCE_DIR}/thirdparty/steamaudio/include/)
+	${PROJECT_SOURCE_DIR}/thirdparty/steamaudio/include/
+	${PROJECT_SOURCE_DIR}/thirdparty/fmod/include/)
 target_link_libraries(AudioEngine PRIVATE
 	${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_AudioToolkit.lib
 	${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_ResourceManager.lib
@@ -36,7 +37,9 @@ target_link_libraries(AudioEngine PRIVATE
 	${PROJECT_SOURCE_DIR}/thirdparty/easy_profiler/lib/easy_profiler.lib
 	${PROJECT_SOURCE_DIR}/thirdparty/openvr/lib/openvr_api.lib
 	${PROJECT_SOURCE_DIR}/thirdparty/ovraudio/lib/ovraudio64.lib
-	${PROJECT_SOURCE_DIR}/thirdparty/steamaudio/lib/phonon.lib)
+	${PROJECT_SOURCE_DIR}/thirdparty/steamaudio/lib/phonon.lib
+	${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmod_vc.lib
+	${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmodL_vc.lib)
 set_target_properties(AudioEngine PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/AudioEngineStatic/lib"
     LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/AudioEngineStatic/lib"
