@@ -23,7 +23,8 @@ target_include_directories(AudioEngine PUBLIC
 	${PROJECT_SOURCE_DIR}/thirdparty/openvr/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/ovraudio/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/steamaudio/include/
-	${PROJECT_SOURCE_DIR}/thirdparty/fmod/include/)
+	${PROJECT_SOURCE_DIR}/thirdparty/fmod/include/
+	${PROJECT_SOURCE_DIR}/thirdparty/dr_wav/include/)
 target_link_libraries(AudioEngine PRIVATE
 	${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_AudioToolkit.lib
 	${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_ResourceManager.lib
