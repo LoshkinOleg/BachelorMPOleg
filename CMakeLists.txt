@@ -30,32 +30,33 @@ target_link_libraries(AudioEngine PRIVATE
 	optimized ${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_ResourceManager_release.lib
 	debug ${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_AudioToolkit_debug.lib
 	debug ${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_ResourceManager_debug.lib
-	optimized ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libcurl_imp_x64.lib
-	optimized ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libhdf5_hl_x64.lib
-	optimized ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libhdf5_x64.lib
-	optimized ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/netcdf_x64.lib
-	optimized ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/zlib_x64.lib
-	optimized ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libsofa_x64.lib
-	optimized ${PROJECT_SOURCE_DIR}/thirdparty/portaudio/lib/portaudio_static_x64.lib
-	optimized ${PROJECT_SOURCE_DIR}/thirdparty/easy_profiler/lib/easy_profiler.lib
-	optimized ${PROJECT_SOURCE_DIR}/thirdparty/openvr/lib/openvr_api.lib
-	optimized ${PROJECT_SOURCE_DIR}/thirdparty/ovraudio/lib/ovraudio64.lib
-	optimized ${PROJECT_SOURCE_DIR}/thirdparty/steamaudio/lib/phonon.lib
-	optimized ${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmod_vc.lib
-	optimized ${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmodL_vc.lib)
+	general ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libcurl_imp_x64.lib
+	general ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libhdf5_hl_x64.lib
+	general ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libhdf5_x64.lib
+	general ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/netcdf_x64.lib
+	general ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/zlib_x64.lib
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libsofa_release_x64.lib
+	debug ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libsofa_debug_x64.lib
+	general ${PROJECT_SOURCE_DIR}/thirdparty/portaudio/lib/portaudio_static_x64.lib
+	general ${PROJECT_SOURCE_DIR}/thirdparty/easy_profiler/lib/easy_profiler.lib
+	general ${PROJECT_SOURCE_DIR}/thirdparty/openvr/lib/openvr_api.lib
+	general ${PROJECT_SOURCE_DIR}/thirdparty/ovraudio/lib/ovraudio64.lib
+	general ${PROJECT_SOURCE_DIR}/thirdparty/steamaudio/lib/phonon.lib
+	general ${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmod_vc.lib
+	general ${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmodL_vc.lib)
 set_target_properties(AudioEngine PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/AudioEngineStatic/lib"
-    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/AudioEngineStatic/lib"
-    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/AudioEngineStatic/bin"
+    ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/AudioEngineStatic/lib"
+    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/AudioEngineStatic/lib"
+    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/AudioEngineStatic/bin"
 )
 
 # Generate profiling app executable.
 add_executable(ProfilingApp ${PROJECT_SOURCE_DIR}/ProfilingApp/src/main.cpp)
 target_link_libraries(ProfilingApp PRIVATE AudioEngine)
 set_target_properties(ProfilingApp PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/ProfilingApp/lib"
-    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/ProfilingApp/lib"
-    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/ProfilingApp/bin"
+    ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/ProfilingApp/lib"
+    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/ProfilingApp/lib"
+    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/ProfilingApp/bin"
 )
 
 # Create folder for holding easy_profiler's profiling data.

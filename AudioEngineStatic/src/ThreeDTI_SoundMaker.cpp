@@ -97,8 +97,10 @@ void bs::ThreeDTI_SoundMaker::ProcessAudio(CStereoBuffer<float>& outBuff, const 
 	reverb.left.Fill(bufferSize, 0.0f);
 	reverb.right.Fill(bufferSize, 0.0f);
 
+	// Oleg@self: fix this fuckery, I'm getting confused by the indices / frame sizes, sample rates, etc...
+
 	// Advance frame indices.
-	currentBegin_ = currentEnd_ + 1;
+	currentBegin_ = currentEnd_;
 	if (wrapMode_ == ClipWrapMode::CLAMP)
 	{
 		if (currentBegin_ < wavSize) // Not overruning wav data.
@@ -112,8 +114,8 @@ void bs::ThreeDTI_SoundMaker::ProcessAudio(CStereoBuffer<float>& outBuff, const 
 	}
 	else
 	{
-		if (currentBegin_ >= wavSize) currentBegin_ = 0;
-		currentEnd_ = currentBegin_ + IAudioRenderer::GetBufferSize() - 1;
+		if (currentBegin_ + IAudioRenderer::GetBufferSize() > wavSize) currentBegin_ = 0;
+		currentEnd_ = currentBegin_ + IAudioRenderer::GetBufferSize();
 	}
 
 	// Load subset of audio data into frame.

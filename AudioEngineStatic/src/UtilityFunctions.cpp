@@ -54,19 +54,22 @@ std::vector<float> bs::LoadWavOLD(const char* path)
 
 std::vector<float> bs::LoadWav(const char* path, const uint32_t desiredNrOfChanels, const uint32_t desiredSampleRate)
 {
-	unsigned int fileChannels;
-	unsigned int fileSampleRate;
-	drwav_uint64 totalPCMFrameCount;
+	unsigned int fileChannels = 0;
+	unsigned int fileSampleRate = 0;
+	drwav_uint64 sampleCount = 0;
 	
-	float* pSampleData = drwav_open_file_and_read_pcm_frames_f32("my_song.wav", &fileChannels, &fileSampleRate, &totalPCMFrameCount, NULL);
+	float* pSampleData = drwav_open_file_and_read_pcm_frames_f32(path, &fileChannels, &fileSampleRate, &sampleCount, NULL);
 
 	assert(fileChannels == desiredNrOfChanels, "Error reading wav file: desired vs actual nrOfChannels mismatch!");
 	assert(fileSampleRate == desiredSampleRate, "Error reading wav file: desired vs actual sampleRate mismatch!");
 	assert(pSampleData != NULL, "Error reading wav file: couldn't read wav data!");
 
-	std::vector<float> returnVal((size_t)fileSampleRate * (size_t)fileChannels);
-	memcpy(&returnVal[0], pSampleData, sizeof(float) * (size_t)fileSampleRate * (size_t)fileChannels);
-	assert(memcmp(returnVal.begin()._Ptr, pSampleData, sizeof(float) * (size_t)fileSampleRate * (size_t)fileChannels), "Error reading wav file: there's some mistake in the wav data copying code!");
+	std::vector<float> returnVal;
+	returnVal.reserve(sampleCount);
+	for (size_t i = 0; i < sampleCount; i++)
+	{
+		returnVal.push_back(pSampleData[i]);
+	}
 
 	drwav_free(pSampleData, NULL);
 
