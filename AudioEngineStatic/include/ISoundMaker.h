@@ -34,7 +34,8 @@ namespace bs
 
 	protected:
 		std::vector<float> soundData_; // Very large, contains whole wav file.
-		uint32_t currentBegin_, currentEnd_; // Points to subset of soundData that's currently in ears_.
+		uint32_t currentBegin_ = 0;
+		uint32_t currentEnd_ = 0; // Points to subset of soundData that's currently in ears_.
 		PaStream* pStream_ = nullptr; // portaudio stream ptr. Oleg@self: what's the difference between pStream and soundData?
 		ClipWrapMode wrapMode_ = ClipWrapMode::LOOP;
 		PaError err_;

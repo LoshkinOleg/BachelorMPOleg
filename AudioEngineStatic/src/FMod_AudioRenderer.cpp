@@ -58,7 +58,7 @@ void bs::FMod_AudioRenderer::Shutdown()
 bs::SoundMakerId bs::FMod_AudioRenderer::CreateSoundMaker(const char* wavFileName)
 {
     sounds_.push_back(FMod_SoundMaker());
-    fmodSystem_->createSound();
+    // fmodSystem_->createSound();
     if (sounds_.back().Init(&bs::FMod_AudioRenderer::ServiceAudio_, this, wavFileName)) {
         assert(false, "Problem initializing the new SoundMaker!");
         sounds_.pop_back();

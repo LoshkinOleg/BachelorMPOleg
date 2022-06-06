@@ -52,8 +52,6 @@ void bs::ThreeDTI_AudioRenderer::Run()
 	{
 		sound.Run();
 	}
-
-	Pa_Sleep(5000); // Oleg@self: design an updatable engine?
 }
 void bs::ThreeDTI_AudioRenderer::Shutdown()
 {
@@ -88,6 +86,16 @@ void bs::ThreeDTI_AudioRenderer::MoveSoundMaker(bs::SoundMakerId id, float globa
 	sounds_[id].SetPosition(globalX, globalY, globalZ);
 }
 
+void bs::ThreeDTI_AudioRenderer::ResetSoundMaker(SoundMakerId id)
+{
+	sounds_[id].Reset(*this);
+}
+
+void bs::ThreeDTI_AudioRenderer::ResetEnvironment()
+{
+	environment_->ResetReverbBuffers();
+}
+
 Binaural::CCore& bs::ThreeDTI_AudioRenderer::GetCore()
 {
 	return core_;
@@ -105,9 +113,6 @@ int bs::ThreeDTI_AudioRenderer::ServiceAudio_
 	auto* sound = dynamic_cast<ThreeDTI_SoundMaker*>(&engine->sounds_[0]);
 	static CStereoBuffer<float> processedFrame;
 	auto* outBuff = static_cast<float*>(outputBuffer); // Cast output buffer to float buffer.
-	
-	// Oleg@self: implement non looping clips.
-	assert(sound->GetWrapMode() != ClipWrapMode::LOOP, "Non looping clips not yet implemented!");
 
 	sound->ProcessAudio(processedFrame, engine->environment_); // Oleg@self: make a virtual method out of this.
 

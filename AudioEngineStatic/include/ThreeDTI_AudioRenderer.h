@@ -27,6 +27,9 @@ namespace bs
 		void MoveSoundMaker(SoundMakerId id, float globalX, float globalY, float globalZ) override;
 		//! IAudioRenderer implementation.
 
+		void ResetSoundMaker(SoundMakerId id);
+		void ResetEnvironment();
+
 		Binaural::CCore& GetCore();
 
 	private:
