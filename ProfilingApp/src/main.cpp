@@ -50,7 +50,34 @@ int TestKeyboardInputs()
 	auto* window = SDL_CreateWindow("ProfilingApp", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 720, 720, 0);
 	assert(window, "SDL failed to create a window!");
 
-	std::cin.ignore();
+	bool shutdown = false;
+	while (!shutdown)
+	{
+		SDL_Event e;
+		while (SDL_PollEvent(&e))
+		{
+			switch (e.type)
+			{
+				case SDL_QUIT:
+				{
+					shutdown = true;
+
+				}break;
+				
+				case SDL_KEYDOWN:
+				{
+					switch (e.key.keysym.scancode)
+					{
+						case SDL_SCANCODE_ESCAPE:
+						{
+							shutdown = true;
+						}break;
+					default:break;}
+				}break;
+			default:break;}
+		}
+	}
+	SDL_Quit();
 
 	return 0;
 }
