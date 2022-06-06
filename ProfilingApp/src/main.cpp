@@ -1,6 +1,11 @@
+#include <iostream>
+
+#include <SDL.h>
+#undef main
+
 #include <ThreeDTI_AudioRenderer.h>
 
-int main()
+int TestThreeDTI()
 {
 	constexpr const float pi = 3.14f;
 	constexpr const float thirdOfTwoPi = (2.0f * pi) / 3.0f;
@@ -35,4 +40,22 @@ int main()
 	e.Shutdown();
 
 	return (sound == bs::INVALID_ID);
+}
+
+int TestKeyboardInputs()
+{
+	auto result = SDL_Init(SDL_INIT_EVERYTHING);
+	assert(result == 0, "SDL failed to initialize!");
+
+	auto* window = SDL_CreateWindow("ProfilingApp", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 720, 720, 0);
+	assert(window, "SDL failed to create a window!");
+
+	std::cin.ignore();
+
+	return 0;
+}
+
+int main()
+{
+	return TestKeyboardInputs();
 }

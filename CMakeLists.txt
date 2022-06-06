@@ -24,7 +24,8 @@ target_include_directories(AudioEngine PUBLIC
 	${PROJECT_SOURCE_DIR}/thirdparty/ovraudio/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/steamaudio/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/fmod/include/
-	${PROJECT_SOURCE_DIR}/thirdparty/dr_wav/include/)
+	${PROJECT_SOURCE_DIR}/thirdparty/dr_wav/include/
+	${PROJECT_SOURCE_DIR}/thirdparty/sdl/include/)
 target_link_libraries(AudioEngine PRIVATE
 	optimized ${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_AudioToolkit_release.lib
 	optimized ${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_ResourceManager_release.lib
@@ -43,7 +44,10 @@ target_link_libraries(AudioEngine PRIVATE
 	general ${PROJECT_SOURCE_DIR}/thirdparty/ovraudio/lib/ovraudio64.lib
 	general ${PROJECT_SOURCE_DIR}/thirdparty/steamaudio/lib/phonon.lib
 	general ${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmod_vc.lib
-	general ${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmodL_vc.lib)
+	general ${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmodL_vc.lib
+	general ${PROJECT_SOURCE_DIR}/thirdparty/sdl/lib/SDL2.lib
+	general ${PROJECT_SOURCE_DIR}/thirdparty/sdl/lib/SDL2main.lib
+	general ${PROJECT_SOURCE_DIR}/thirdparty/sdl/lib/SDL2test.lib)
 set_target_properties(AudioEngine PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/AudioEngineStatic/lib"
     LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/AudioEngineStatic/lib"
