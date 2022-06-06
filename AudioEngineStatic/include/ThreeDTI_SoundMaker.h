@@ -19,6 +19,12 @@ namespace bs
 	class ThreeDTI_SoundMaker
 	{
 	public:
+		ThreeDTI_SoundMaker() = default;
+		ThreeDTI_SoundMaker(const ThreeDTI_SoundMaker&) = delete;
+		ThreeDTI_SoundMaker(ThreeDTI_SoundMaker&&) = default;
+		ThreeDTI_SoundMaker& operator=(const ThreeDTI_SoundMaker&) = delete;
+		ThreeDTI_SoundMaker& operator=(ThreeDTI_SoundMaker&&) = default;
+
 		bool Init(PaStreamCallback* serviceAudioCallback, bs::ThreeDTI_AudioRenderer* engine, const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT);
 		void Shutdown();
 
@@ -33,6 +39,8 @@ namespace bs
 		inline uint32_t const GetCurrentBegin() const { return currentBegin_; };
 		inline uint32_t const GetCurrentEnd() const { return currentEnd_; };
 		inline const std::vector<float> GetSoundData() const { return soundData_; };
+
+		std::shared_ptr<Binaural::CSingleSourceDSP> GetSource();
 		
 	private:
 		// 3dti stuff

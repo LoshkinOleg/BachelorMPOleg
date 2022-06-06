@@ -1,4 +1,5 @@
 #include <iostream>
+#include <array>
 
 #include <SDL.h>
 #undef main
@@ -7,11 +8,24 @@
 
 static void Update(bs::ThreeDTI_AudioRenderer& audioRenderer, bs::SoundMakerId soundId)
 {
-	static float theta = 0.0f;
+	static size_t currentPosition = 0;
+	constexpr const size_t NR_OF_POSITIONS = 6;
+	constexpr const std::array<std::array<float, 3>, NR_OF_POSITIONS> positions =
+	{{
+		{1.0f, 0.0f, 0.0f},
+		{-1.0f, 0.0f, 0.0f},
 
-	audioRenderer.MoveSoundMaker(soundId, std::sinf(theta), std::cosf(theta), 0.0f);
-	theta += 0.05f;
-	Pa_Sleep(40);
+		{0.0f, 1.0f, 0.0f},
+		{0.0f, -1.0f, 0.0f},
+
+		{0.0f, 0.0f, 1.0f},
+		{0.0f, 0.0f, -1.0f}
+	}};
+
+	if (++currentPosition >= NR_OF_POSITIONS) currentPosition = 0;
+
+	audioRenderer.MoveSoundMaker(soundId, positions[currentPosition][0], positions[currentPosition][1], positions[currentPosition][2]);
+	// audioRenderer.ResetSoundMaker(soundId);
 }
 
 static int RunProgram()
@@ -54,13 +68,17 @@ static int RunProgram()
 						{
 							shutdown = true;
 						}break;
+						
+						case SDL_SCANCODE_SPACE:
+						{
+							Update(audioRenderer, sound); // Update audio renderer
+						}break;
 					default:break;}
 				}break;
 			default:break;}
 		}
-
-		Update(audioRenderer, sound); // Update audio renderer
 	}
+	audioRenderer.Shutdown();
 	SDL_Quit();
 
 	return 0;

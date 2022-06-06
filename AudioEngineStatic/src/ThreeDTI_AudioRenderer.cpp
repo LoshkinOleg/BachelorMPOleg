@@ -58,12 +58,15 @@ void bs::ThreeDTI_AudioRenderer::Shutdown()
 	for (auto& sound : sounds_)
 	{
 		sound.Shutdown();
+		core_.RemoveSingleSourceDSP(sound.GetSource());
 	}
+	core_.RemoveEnvironment(environment_);
+	core_.RemoveListener();
 }
 
 bs::SoundMakerId bs::ThreeDTI_AudioRenderer::CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode)
 {
-	sounds_.push_back(ThreeDTI_SoundMaker());
+	sounds_.emplace_back(ThreeDTI_SoundMaker());
 	if (!sounds_.back().Init(&ServiceAudio_, this, wavFileName, wrapMode))
 	{
 		assert(false, "Problem initializing the new ThreeDTI_SoundMaker!");
@@ -81,6 +84,9 @@ void bs::ThreeDTI_AudioRenderer::MoveSoundMaker(bs::SoundMakerId id, float globa
 
 void bs::ThreeDTI_AudioRenderer::ResetSoundMaker(SoundMakerId id)
 {
+	/*
+		WARNING: calling this function seems to do some wierd shit... Some data used for reverb processing gets invalidated?...
+	*/
 	sounds_[id].Reset(*this);
 }
 

@@ -80,7 +80,7 @@ void bs::ThreeDTI_SoundMaker::ProcessAudio(CStereoBuffer<float>& outBuff, ThreeD
 	// Oleg@self: fix this fuckery, I'm getting confused by the indices / frame sizes, sample rates, etc...
 
 	// Advance frame indices.
-	currentBegin_ = currentEnd_;
+	currentBegin_ = currentEnd_ + 1;
 	if (wrapMode_ == ClipWrapMode::ONE_SHOT)
 	{
 		if (currentBegin_ < wavSize) // Not overruning wav data.
@@ -94,8 +94,8 @@ void bs::ThreeDTI_SoundMaker::ProcessAudio(CStereoBuffer<float>& outBuff, ThreeD
 	}
 	else
 	{
-		if (currentBegin_ + engine.GetBufferSize() > wavSize) currentBegin_ = 0;
-		currentEnd_ = currentBegin_ + engine.GetBufferSize();
+		if (currentBegin_ + engine.GetBufferSize() - 1 > wavSize) currentBegin_ = 0;
+		currentEnd_ = currentBegin_ + engine.GetBufferSize() - 1;
 	}
 
 	// Load subset of audio data into frame.
@@ -113,6 +113,7 @@ void bs::ThreeDTI_SoundMaker::ProcessAudio(CStereoBuffer<float>& outBuff, ThreeD
 	source_->ProcessAnechoic(anechoic.left, anechoic.right); // Write anechoic component of the sound to anechoic buffer.
 	// Oleg@self: investigate, does this need to be called for every sound maker? Or does it need to be done only once per servicing?
 	// Process reverb.
+	assert(reverb.left.size() > 0, "Somehow the buffer yeeted itself out of existence...");
 	engine.GetEnvironment()->ProcessVirtualAmbisonicReverb(reverb.left, reverb.right); // Write reverb component of the sound to reverb buffer.
 	// Combine anechoic and reverb then interlace.
 	anechoic.left += reverb.left;
@@ -126,4 +127,9 @@ void bs::ThreeDTI_SoundMaker::Reset(ThreeDTI_AudioRenderer& renderer)
 	currentEnd_ = 0;
 	source_->ResetSourceBuffers();
 	renderer.ResetEnvironment();
+}
+
+std::shared_ptr<Binaural::CSingleSourceDSP> bs::ThreeDTI_SoundMaker::GetSource()
+{
+	return source_;
 }
