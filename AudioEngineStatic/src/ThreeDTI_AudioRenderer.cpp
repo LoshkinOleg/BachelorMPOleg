@@ -46,13 +46,6 @@ bool bs::ThreeDTI_AudioRenderer::Init(const char* hrtfFileName, const char* brir
 
 	return true;
 }
-void bs::ThreeDTI_AudioRenderer::Run()
-{
-	for (auto& sound : sounds_)
-	{
-		sound.Run();
-	}
-}
 void bs::ThreeDTI_AudioRenderer::Shutdown()
 {
 #ifdef USE_EASY_PROFILER
@@ -96,6 +89,11 @@ void bs::ThreeDTI_AudioRenderer::ResetEnvironment()
 	environment_->ResetReverbBuffers();
 }
 
+bs::Environment bs::ThreeDTI_AudioRenderer::GetEnvironment()
+{
+	return environment_;
+}
+
 Binaural::CCore& bs::ThreeDTI_AudioRenderer::GetCore()
 {
 	return core_;
@@ -114,7 +112,7 @@ int bs::ThreeDTI_AudioRenderer::ServiceAudio_
 	static CStereoBuffer<float> processedFrame;
 	auto* outBuff = static_cast<float*>(outputBuffer); // Cast output buffer to float buffer.
 
-	sound->ProcessAudio(processedFrame, engine->environment_); // Oleg@self: make a virtual method out of this.
+	sound->ProcessAudio(processedFrame, *engine); // Oleg@self: make a virtual method out of this.
 
 	// Oleg@self: use memcpy?
 	for (auto it = processedFrame.begin(); it != processedFrame.end(); it++)

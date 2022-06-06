@@ -2,35 +2,31 @@
 
 #include <BinauralSpatializer/3DTI_BinauralSpatializer.h>
 
-#include "IAudioRenderer.h"
 #include "ThreeDTI_SoundMaker.h"
-
-namespace Binaural
-{
-	class CCore;
-}
 
 namespace bs
 {
 	using Listener = std::shared_ptr<Binaural::CListener>;
 	using Environment = std::shared_ptr<Binaural::CEnvironment>;
+	using SoundMakerId = size_t;
+	constexpr const size_t INVALID_ID = (size_t)-1;
 
-	class ThreeDTI_AudioRenderer: public IAudioRenderer
+	class ThreeDTI_AudioRenderer
 	{
 	public:
-		// IAudioRenderer implementation.
-		bool Init(const char* hrtfFileName, const char* brirFileName, size_t BUFFER_SIZE = 512, size_t SAMPLE_RATE = 44100) override;
-		void Run() override;
-		void Shutdown() override;
+		bool Init(const char* hrtfFileName, const char* brirFileName, size_t BUFFER_SIZE = 1024, size_t SAMPLE_RATE = 44100);
+		void Shutdown();
 
-		SoundMakerId CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::CLAMP) override;
-		void MoveSoundMaker(SoundMakerId id, float globalX, float globalY, float globalZ) override;
-		//! IAudioRenderer implementation.
-
+		SoundMakerId CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT);
+		void MoveSoundMaker(SoundMakerId id, const float globalX, const float globalY, const float globalZ);
 		void ResetSoundMaker(SoundMakerId id);
-		void ResetEnvironment();
 
+		void ResetEnvironment();
+		Environment GetEnvironment();
 		Binaural::CCore& GetCore();
+
+		static size_t GetBufferSize() { return BUFFER_SIZE_; };
+		static size_t GetSampleRate() { return SAMPLE_RATE_; };
 
 	private:
 		static int ServiceAudio_
@@ -40,12 +36,16 @@ namespace bs
 			PaStreamCallbackFlags statusFlags, void* userData
 		);
 
+		// 3dti stuff
 		Binaural::CCore core_;
 		Listener listener_;
 		Environment environment_;
+		static constexpr size_t HRTF_RESAMPLING_ANGLE = 15;
 
+		// Renderer specific stuff
 		std::vector<ThreeDTI_SoundMaker> sounds_;
 
-		static constexpr size_t HRTF_RESAMPLING_ANGLE = 15;
+		static size_t BUFFER_SIZE_;
+		static size_t SAMPLE_RATE_;
 	};
 }
