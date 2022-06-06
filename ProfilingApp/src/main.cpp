@@ -10,16 +10,10 @@ int main()
 
 	bs::ThreeDTI_AudioRenderer e;
 	e.Init("../resources/HRTF/SOFA/hrtf.sofa", "../resources/BRIR/SOFA/brir.sofa", 2048);
-	auto sound = e.CreateSoundMaker("../resources/AudioSamples/pure440.wav");
+	auto sound = e.CreateSoundMaker("../resources/AudioSamples/pure441_32float_1sec.wav", bs::ClipWrapMode::LOOP);
 	if (sound != bs::INVALID_ID)
 	{
-		e.MoveSoundMaker(sound, firstPos[0], firstPos[1], firstPos[2]);
-		Pa_Sleep(2000);
-		e.MoveSoundMaker(sound, secondPos[0], secondPos[1], secondPos[2]);
-		e.ResetSoundMaker(sound);
-		Pa_Sleep(2000);
-		e.MoveSoundMaker(sound, thirdPos[0], thirdPos[1], thirdPos[2]);
-		e.ResetSoundMaker(sound);
+		// e.MoveSoundMaker(sound, firstPos[0], firstPos[1], firstPos[2]);
 		Pa_Sleep(2000);
 	}
 	e.Shutdown();

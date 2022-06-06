@@ -23,7 +23,7 @@ namespace bs
 		void Run() override;
 		void Shutdown() override;
 
-		SoundMakerId CreateSoundMaker(const char* wavFileName) override;
+		SoundMakerId CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::CLAMP) override;
 		void MoveSoundMaker(SoundMakerId id, float globalX, float globalY, float globalZ) override;
 		//! IAudioRenderer implementation.
 

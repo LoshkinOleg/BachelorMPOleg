@@ -26,21 +26,23 @@ target_include_directories(AudioEngine PUBLIC
 	${PROJECT_SOURCE_DIR}/thirdparty/fmod/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/dr_wav/include/)
 target_link_libraries(AudioEngine PRIVATE
-	${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_AudioToolkit.lib
-	${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_ResourceManager.lib
-	${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libcurl_imp_x64.lib
-	${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libhdf5_hl_x64.lib
-	${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libhdf5_x64.lib
-	${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/netcdf_x64.lib
-	${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/zlib_x64.lib
-	${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libsofa_x64.lib
-	${PROJECT_SOURCE_DIR}/thirdparty/portaudio/lib/portaudio_static_x64.lib
-	${PROJECT_SOURCE_DIR}/thirdparty/easy_profiler/lib/easy_profiler.lib
-	${PROJECT_SOURCE_DIR}/thirdparty/openvr/lib/openvr_api.lib
-	${PROJECT_SOURCE_DIR}/thirdparty/ovraudio/lib/ovraudio64.lib
-	${PROJECT_SOURCE_DIR}/thirdparty/steamaudio/lib/phonon.lib
-	${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmod_vc.lib
-	${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmodL_vc.lib)
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_AudioToolkit_release.lib
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_ResourceManager_release.lib
+	debug ${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_AudioToolkit_debug.lib
+	debug ${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_ResourceManager_debug.lib
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libcurl_imp_x64.lib
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libhdf5_hl_x64.lib
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libhdf5_x64.lib
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/netcdf_x64.lib
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/zlib_x64.lib
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/libsofa/lib/libsofa_x64.lib
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/portaudio/lib/portaudio_static_x64.lib
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/easy_profiler/lib/easy_profiler.lib
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/openvr/lib/openvr_api.lib
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/ovraudio/lib/ovraudio64.lib
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/steamaudio/lib/phonon.lib
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmod_vc.lib
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmodL_vc.lib)
 set_target_properties(AudioEngine PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/AudioEngineStatic/lib"
     LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/AudioEngineStatic/lib"
@@ -60,7 +62,7 @@ set_target_properties(ProfilingApp PROPERTIES
 file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/build/profilingData)
 
 # Add options for the user to configure
-set(USE_EASY_PROFILER ON CACHE BOOL "Enable profiling of spatialization time. Generates .prof files under build/profilingData/")
+set(USE_EASY_PROFILER OFF CACHE BOOL "Enable profiling of spatialization time. Generates .prof files under build/profilingData/")
 if (USE_EASY_PROFILER)
 	add_compile_definitions(USE_EASY_PROFILER)
 endif()

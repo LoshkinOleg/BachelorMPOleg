@@ -15,7 +15,7 @@ namespace bs
 
 	class ISoundMaker {
 	public:
-		virtual bool Init(PaStreamCallback* serviceAudioCallback, bs::IAudioRenderer* engine, const char* wavFileName) = 0;
+		virtual bool Init(PaStreamCallback* serviceAudioCallback, bs::IAudioRenderer* engine, const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::CLAMP) = 0;
 		virtual void Update() = 0;
 		virtual void Run() = 0;
 		virtual void Shutdown() = 0;

@@ -3,12 +3,13 @@
 #include <ThreeDTI_AudioRenderer.h>
 #include <UtilityFunctions.h>
 
-bool bs::ThreeDTI_SoundMaker::Init(PaStreamCallback* serviceAudioCallback, bs::IAudioRenderer* engine, const char* wavFileName)
+bool bs::ThreeDTI_SoundMaker::Init(PaStreamCallback* serviceAudioCallback, bs::IAudioRenderer* engine, const char* wavFileName, const ClipWrapMode wrapMode)
 {
 	currentBegin_ = 0;
 	currentEnd_ = 0;
+	wrapMode_ = wrapMode;
 
-	soundData_ = LoadWav(wavFileName);
+	soundData_ = LoadWav(wavFileName, 1, engine->GetSampleRate());
 
 	PaStreamParameters outputParams{
 		Pa_GetDefaultOutputDevice(), // Oleg@self: handle this properly.
@@ -96,34 +97,45 @@ void bs::ThreeDTI_SoundMaker::ProcessAudio(CStereoBuffer<float>& outBuff, const 
 	reverb.left.Fill(bufferSize, 0.0f);
 	reverb.right.Fill(bufferSize, 0.0f);
 
-	// Oleg@self: implement non looping clips.
 	// Advance frame indices.
 	currentBegin_ = currentEnd_ + 1;
-	if (currentBegin_ < wavSize) // Not overruning wav data.
+	if (wrapMode_ == ClipWrapMode::CLAMP)
 	{
-		currentEnd_ = currentBegin_ + IAudioRenderer::GetBufferSize() - 1;
-
-		// Load subset of audio data into frame.
-		for (size_t i = 0; i < bufferSize; i++)
+		if (currentBegin_ < wavSize) // Not overruning wav data.
 		{
-			// Oleg@self: use memcpy?
-			if ((currentBegin_ + i) < wavSize) // If we're not overruning the clip data, copy data.
-			{
-				frame[i] = soundData_[currentBegin_ + i];
-			}
+			currentEnd_ = currentBegin_ + IAudioRenderer::GetBufferSize() - 1;
 		}
-
-		// Process anechoic.
-		source_->SetBuffer(frame); // Set source buffer to read from. Makes the next lines use the window buffer as source of sound data.
-		source_->ProcessAnechoic(anechoic.left, anechoic.right); // Write anechoic component of the sound to anechoic buffer.
-		// Oleg@self: investigate, does this need to be called for every sound maker? Or does it need to be done only once per servicing?
-		// Process reverb.
-		environment->ProcessVirtualAmbisonicReverb(reverb.left, reverb.right); // Write reverb component of the sound to reverb buffer.
-		// Combine anechoic and reverb then interlace.
-		anechoic.left += reverb.left;
-		anechoic.right += reverb.right;
-		outBuff.Interlace(anechoic.left, anechoic.right);
+		else
+		{
+			currentEnd_ = wavSize - 1;
+		}
 	}
+	else
+	{
+		if (currentBegin_ >= wavSize) currentBegin_ = 0;
+		currentEnd_ = currentBegin_ + IAudioRenderer::GetBufferSize() - 1;
+	}
+
+	// Load subset of audio data into frame.
+	for (size_t i = 0; i < bufferSize; i++)
+	{
+		// Oleg@self: use memcpy?
+		if ((currentBegin_ + i) < wavSize) // If we're not overruning the clip data, copy data.
+		{
+			frame[i] = soundData_[currentBegin_ + i];
+		}
+	}
+
+	// Process anechoic.
+	source_->SetBuffer(frame); // Set source buffer to read from. Makes the next lines use the window buffer as source of sound data.
+	source_->ProcessAnechoic(anechoic.left, anechoic.right); // Write anechoic component of the sound to anechoic buffer.
+	// Oleg@self: investigate, does this need to be called for every sound maker? Or does it need to be done only once per servicing?
+	// Process reverb.
+	environment->ProcessVirtualAmbisonicReverb(reverb.left, reverb.right); // Write reverb component of the sound to reverb buffer.
+	// Combine anechoic and reverb then interlace.
+	anechoic.left += reverb.left;
+	anechoic.right += reverb.right;
+	outBuff.Interlace(anechoic.left, anechoic.right);
 }
 
 void bs::ThreeDTI_SoundMaker::Reset(ThreeDTI_AudioRenderer& renderer)

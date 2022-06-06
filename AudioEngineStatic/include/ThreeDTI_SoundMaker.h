@@ -16,7 +16,7 @@ namespace bs
 	{
 	public:
 		// ISoundMaker implementation.
-		bool Init(PaStreamCallback* serviceAudioCallback, bs::IAudioRenderer* engine, const char* wavFileName) override;
+		bool Init(PaStreamCallback* serviceAudioCallback, bs::IAudioRenderer* engine, const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::CLAMP) override;
 		void Update() override;
 		void Run() override;
 		void Shutdown() override;

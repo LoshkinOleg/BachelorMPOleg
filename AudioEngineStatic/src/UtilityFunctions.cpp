@@ -1,8 +1,12 @@
 #include "UtilityFunctions.h"
 
 #include <cassert>
+#include <algorithm>
 
-std::vector<float> bs::LoadWav(const char* path)
+#define DR_WAV_IMPLEMENTATION
+#include "dr_wav.h"
+
+std::vector<float> bs::LoadWavOLD(const char* path)
 {
 	// Oleg@self: replace this with c++ implementation.
 
@@ -44,6 +48,27 @@ std::vector<float> bs::LoadWav(const char* path)
 
 	result = fclose(wavFile); // Oleg@self: handle exceptions?
 	assert(!result, "Failed to close file!");
+
+	return returnVal;
+}
+
+std::vector<float> bs::LoadWav(const char* path, const uint32_t desiredNrOfChanels, const uint32_t desiredSampleRate)
+{
+	unsigned int fileChannels;
+	unsigned int fileSampleRate;
+	drwav_uint64 totalPCMFrameCount;
+	
+	float* pSampleData = drwav_open_file_and_read_pcm_frames_f32("my_song.wav", &fileChannels, &fileSampleRate, &totalPCMFrameCount, NULL);
+
+	assert(fileChannels == desiredNrOfChanels, "Error reading wav file: desired vs actual nrOfChannels mismatch!");
+	assert(fileSampleRate == desiredSampleRate, "Error reading wav file: desired vs actual sampleRate mismatch!");
+	assert(pSampleData != NULL, "Error reading wav file: couldn't read wav data!");
+
+	std::vector<float> returnVal((size_t)fileSampleRate * (size_t)fileChannels);
+	memcpy(&returnVal[0], pSampleData, sizeof(float) * (size_t)fileSampleRate * (size_t)fileChannels);
+	assert(memcmp(returnVal.begin()._Ptr, pSampleData, sizeof(float) * (size_t)fileSampleRate * (size_t)fileChannels), "Error reading wav file: there's some mistake in the wav data copying code!");
+
+	drwav_free(pSampleData, NULL);
 
 	return returnVal;
 }

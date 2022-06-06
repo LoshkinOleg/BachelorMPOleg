@@ -15,7 +15,7 @@ namespace bs
 		virtual void Run() = 0;
 		virtual void Shutdown() = 0;
 
-		virtual SoundMakerId CreateSoundMaker(const char* wavFileName) = 0;
+		virtual SoundMakerId CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::CLAMP) = 0;
 		virtual void MoveSoundMaker(SoundMakerId id, float globalX, float globalY, float globalZ) = 0;
 
 		static size_t GetBufferSize() { return BUFFER_SIZE_; };

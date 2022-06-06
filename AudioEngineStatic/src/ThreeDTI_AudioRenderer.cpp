@@ -68,10 +68,10 @@ void bs::ThreeDTI_AudioRenderer::Shutdown()
 	}
 }
 
-bs::SoundMakerId bs::ThreeDTI_AudioRenderer::CreateSoundMaker(const char* wavFileName)
+bs::SoundMakerId bs::ThreeDTI_AudioRenderer::CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode)
 {
 	sounds_.push_back(ThreeDTI_SoundMaker());
-	if (!sounds_.back().Init(&ServiceAudio_, this, wavFileName))
+	if (!sounds_.back().Init(&ServiceAudio_, this, wavFileName, wrapMode))
 	{
 		assert(false, "Problem initializing the new ThreeDTI_SoundMaker!");
 		sounds_.pop_back();
