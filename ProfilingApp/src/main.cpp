@@ -1,12 +1,14 @@
 #include <iostream>
 #include <array>
+#include <cassert>
 
 #include <SDL.h>
 #undef main
 
-#include <ThreeDTI_AudioRenderer.h>
+// #include <ThreeDTI_AudioRenderer.h>
+#include <SteamAudio_AudioRenderer.h>
 
-static void Update(bs::ThreeDTI_AudioRenderer& audioRenderer, bs::SoundMakerId soundId)
+/*static void Update(bs::ThreeDTI_AudioRenderer& audioRenderer, bs::SoundMakerId soundId)
 {
 	static size_t currentPosition = 0;
 	constexpr const size_t NR_OF_POSITIONS = 6;
@@ -82,9 +84,24 @@ static int RunProgram()
 	SDL_Quit();
 
 	return 0;
+}*/
+
+static int TestSteamAudio()
+{
+	bs::SteamAudio_AudioRenderer renderer;
+	{
+		auto result = renderer.Init();
+		assert(result, "SteamAudio_AudioRenderer failed to initialize!");
+	}
+	auto sound = renderer.CreateSoundMaker("../resources/AudioSamples/brownNoise_44100Hz_32f_5sec.wav", bs::ClipWrapMode::LOOP);
+	assert(sound != bs::INVALID_ID, "Failed to create a sound maker!");
+
+	std::cin.ignore();
+
+	return 0;
 }
 
 int main()
 {
-	return RunProgram();
+	return TestSteamAudio();
 }
