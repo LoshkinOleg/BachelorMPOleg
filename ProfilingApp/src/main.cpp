@@ -248,7 +248,8 @@ static int RunProgram()
 
 				case SDL_SCANCODE_SPACE:
 				{
-					Update(audioRenderer, sound); // Update audio renderer
+					audioRenderer.PlaySound(sound);
+					// Update(audioRenderer, sound); // Update audio renderer
 				}break;
 				default:break;
 				}
@@ -256,6 +257,7 @@ static int RunProgram()
 			default:break;
 			}
 		}
+		audioRenderer.Update();
 	}
 	audioRenderer.Shutdown();
 	SDL_Quit();

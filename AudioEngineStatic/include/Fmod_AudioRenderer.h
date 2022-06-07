@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fmod.hpp>
+
 #include "Fmod_SoundMaker.h"
 
 namespace bs
@@ -12,22 +14,21 @@ namespace bs
 	public:
 		// Oleg@self: replace with constructor / destructor
 		bool Init(size_t BUFFER_SIZE = 1024, size_t SAMPLE_RATE = 44100);
+		void Update();
 		void Shutdown();
 
 		SoundMakerId CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT);
 		void MoveSoundMaker(SoundMakerId id, const float globalX, const float globalY, const float globalZ);
 		void ResetSoundMaker(SoundMakerId id);
+		void PlaySound(SoundMakerId id);
 
 		static size_t GetBufferSize() { return BUFFER_SIZE_; };
 		static size_t GetSampleRate() { return SAMPLE_RATE_; };
 
 	private:
-		static int ServiceAudio_
-		(
-			const void* unused, void* outputBuffer,
-			unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo,
-			PaStreamCallbackFlags statusFlags, void* userData
-		);
+		// Fmod stuff
+		FMOD::System* fmodSystem_ = NULL;
+		FMOD_RESULT fmodErr_ = FMOD_RESULT::FMOD_OK;
 
 		// Renderer specific stuff
 		std::vector<Fmod_SoundMaker> sounds_;

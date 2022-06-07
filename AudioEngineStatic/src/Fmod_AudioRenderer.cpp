@@ -6,6 +6,7 @@
 #define BUILD_WITH_EASY_PROFILER
 #endif
 #include <easy/profiler.h>
+#include <fmod.hpp>
 
 #include "Fmod_SoundMaker.h"
 
@@ -17,16 +18,24 @@ bool bs::Fmod_AudioRenderer::Init(size_t BUFFER_SIZE, size_t SAMPLE_RATE)
 	BUFFER_SIZE_ = BUFFER_SIZE;
 	SAMPLE_RATE_ = SAMPLE_RATE;
 
-	// Init portaudio.
-	auto err = Pa_Initialize();
-	if (err != paNoError) throw;
-
 #ifdef USE_EASY_PROFILER
 	// Enable writing a profiling file by easy_profiler.
 	EASY_PROFILER_ENABLE;
 #endif //! USE_EASY_PROFILER
 
+	fmodErr_ = FMOD::System_Create(&fmodSystem_);
+	assert(fmodErr_ == FMOD_RESULT::FMOD_OK, "Fmod failed to create a system!");
+	
+	constexpr const int MAX_CHANNELS = 32;
+	fmodErr_ = fmodSystem_->init(MAX_CHANNELS, FMOD_INIT_NORMAL, 0);
+	assert(fmodErr_ == FMOD_RESULT::FMOD_OK, "Fmod failed to initialize its system!");
+
 	return true; // Oleg@self: use int instead. Most libs use int as return val and this would allow to have a single local result var to check for errors of all libs.
+}
+void bs::Fmod_AudioRenderer::Update()
+{
+	fmodErr_ = fmodSystem_->update();
+	assert(fmodErr_ == FMOD_OK, "Error updating fmod!");
 }
 void bs::Fmod_AudioRenderer::Shutdown()
 {
@@ -41,12 +50,13 @@ void bs::Fmod_AudioRenderer::Shutdown()
 	{
 		sound.Shutdown();
 	}
+	fmodSystem_->release();
 }
 
 bs::SoundMakerId bs::Fmod_AudioRenderer::CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode)
 {
 	sounds_.emplace_back(Fmod_SoundMaker());
-	if (!sounds_.back().Init(&ServiceAudio_, this, wavFileName, wrapMode))
+	if (!sounds_.back().Init(this, wavFileName, fmodSystem_, wrapMode))
 	{
 		assert(false, "Problem initializing the new SoundMaker!");
 		sounds_.pop_back();
@@ -69,26 +79,8 @@ void bs::Fmod_AudioRenderer::ResetSoundMaker(SoundMakerId id)
 	sounds_[id].Reset(*this);
 }
 
-int bs::Fmod_AudioRenderer::ServiceAudio_
-(
-	const void* unused, void* outputBuffer,
-	unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo,
-	PaStreamCallbackFlags statusFlags, void* userData
-)
+void bs::Fmod_AudioRenderer::PlaySound(SoundMakerId id)
 {
-	auto* engine = (Fmod_AudioRenderer*)userData; // Annoying hack to have a non static servicing method.
-	if (engine->sounds_.size() <= 0) return paContinue;
-	auto* sound = dynamic_cast<Fmod_SoundMaker*>(&engine->sounds_[0]);
-	static std::vector<float> processedFrame(BUFFER_SIZE_ * 2);
-	auto* outBuff = static_cast<float*>(outputBuffer); // Cast output buffer to float buffer.
-
-	sound->ProcessAudio(processedFrame, *engine); // Oleg@self: make a virtual method out of this.
-
-	// Oleg@self: use memcpy?
-	for (auto it = processedFrame.begin(); it != processedFrame.end(); it++)
-	{
-		*(outBuff++) = *it;
-	}
-
-	return paContinue;
+	assert(id != INVALID_ID, "Trying to play a sound with an invalid id!");
+	sounds_[id].Play(fmodSystem_);
 }
