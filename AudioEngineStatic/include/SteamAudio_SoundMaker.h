@@ -3,6 +3,8 @@
 #include <vector>
 
 #include <portaudio.h>
+#include <phonon.h>
+#include <cmath>
 
 namespace bs
 {
@@ -41,6 +43,19 @@ namespace bs
 		inline const std::vector<float> GetSoundData() const { return soundData_; }; // Oleg@self: is this method useful?...
 		
 	private:
+		// Phonon stuff
+		// Oleg@self: these really should be part of the renderer
+		IPLContext context_; // I think this is a ptr to a struct?... not sure, it's intentionally obfuscated. Treat as a hex variable.
+		IPLHRTF hrtf_; // idem
+		IPLBinauralEffect effect_; // idem
+		IPLAudioBuffer iplOutBuffer_; // buffer used to output by phonon to output spatialized sound.
+		IPLBinauralEffectParams spatializationParams_
+		{
+			IPLVector3{ 0.0f, 0.0f, 0.0f },
+			IPL_HRTFINTERPOLATION_NEAREST,
+			1.0f,
+			hrtf_
+		};
 
 		// portaudio stuff
 		PaStream* pStream_ = nullptr; // portaudio stream to playback device
