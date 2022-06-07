@@ -37,6 +37,9 @@ namespace bs
 	private:
 		// Fmod stuff
 		FMOD::Sound* fmodSound_;
+		FMOD_VECTOR pos_ = { 0.0f, 0.0f, 0.0f };
+		FMOD_VECTOR linearVel_ = { 0.0f, 0.0f, 0.0f };
+		
 
 		// SoundMaker specific stuff
 		ClipWrapMode wrapMode_ = ClipWrapMode::ONE_SHOT;

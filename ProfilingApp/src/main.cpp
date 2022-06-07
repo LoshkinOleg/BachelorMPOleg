@@ -203,6 +203,7 @@ static void Update(bs::Fmod_AudioRenderer& audioRenderer, bs::SoundMakerId sound
 	if (++currentPosition >= NR_OF_POSITIONS) currentPosition = 0;
 
 	audioRenderer.MoveSoundMaker(soundId, positions[currentPosition][0], positions[currentPosition][1], positions[currentPosition][2]);
+	audioRenderer.PlaySound(soundId);
 }
 
 static int RunProgram()
@@ -248,8 +249,7 @@ static int RunProgram()
 
 				case SDL_SCANCODE_SPACE:
 				{
-					audioRenderer.PlaySound(sound);
-					// Update(audioRenderer, sound); // Update audio renderer
+					Update(audioRenderer, sound);
 				}break;
 				default:break;
 				}
