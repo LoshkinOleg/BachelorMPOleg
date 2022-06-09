@@ -4,6 +4,7 @@
 
 #include <SDL.h>
 #undef main
+#include <openvr.h>
 
 #include "Fmod_AudioRenderer.h"
 
@@ -208,14 +209,16 @@ static void Update(bs::Fmod_AudioRenderer& audioRenderer, bs::SoundMakerId sound
 
 static int RunProgram()
 {
-	{// Scoped sucess check.
+	// SDL stuff
+	/* {// Scoped sucess check.
 		auto result = SDL_Init(SDL_INIT_EVERYTHING);
 		assert(result == 0, "SDL failed to initialize!");
 	}
 
 	auto* window = SDL_CreateWindow("ProfilingApp", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 720, 720, 0);
-	assert(window, "SDL failed to create a window!");
+	assert(window, "SDL failed to create a window!");*/
 
+	// Audio renderer stuff
 	bs::Fmod_AudioRenderer audioRenderer;
 	{// Scoped success chack.
 		auto initSuccess = audioRenderer.Init(2048);
@@ -224,10 +227,18 @@ static int RunProgram()
 	auto sound = audioRenderer.CreateSoundMaker("../resources/AudioSamples/brownNoise_44100Hz_32f_5sec.wav", bs::ClipWrapMode::LOOP);
 	assert(sound != bs::INVALID_ID, "Failed to load wav file!");
 
+	// Vr stuff
+	vr::HmdError vrErr;
+	auto* vrSystem = vr::VR_Init(&vrErr, vr::EVRApplicationType::VRApplication_Background);
+	assert(vrErr == vr::EVRInitError::VRInitError_None, "Error initializing OpenVR!");
+
+
+
 	bool shutdown = false;
 	while (!shutdown)
 	{
-		SDL_Event e;
+		// SDL event processing
+		/*SDL_Event e;
 		while (SDL_PollEvent(&e))
 		{
 			switch (e.type)
@@ -256,11 +267,77 @@ static int RunProgram()
 			}break;
 			default:break;
 			}
+		}*/
+
+		// openvr event processing
+		vr::VREvent_t vr_e;
+		while (vrSystem->PollNextEvent(&vr_e, sizeof(vr_e)))
+		{
+			switch (vr_e.eventType)
+			{
+			case vr::EVREventType::VREvent_Quit:
+			{
+				shutdown = true;
+			}break;
+			case vr::EVREventType::VREvent_ButtonPress:
+			{
+				
+				if (vrSystem->IsTrackedDeviceConnected(vr_e.trackedDeviceIndex))
+				{
+					vr::VRControllerState_t deviceState;
+					if (vrSystem->GetControllerState(vr_e.trackedDeviceIndex, &deviceState, sizeof(deviceState)))
+					{
+						auto deviceClass = vrSystem->GetTrackedDeviceClass(vr_e.trackedDeviceIndex);
+						if (deviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_Controller)
+						{
+							vr::VRControllerState_t controllerState;
+							vr::TrackedDevicePose_t controllerPose;
+							vrSystem->GetControllerStateWithPose(vr::TrackingUniverseStanding, vr_e.trackedDeviceIndex, &controllerState, sizeof(controllerState), &controllerPose);
+
+							auto buttonFlags = controllerState.ulButtonPressed;
+							bool triggerDown = buttonFlags & ((uint64_t)1 << (uint64_t)vr::EVRButtonId::k_EButton_SteamVR_Trigger);
+							if (triggerDown)
+							{
+								const auto matrix = controllerPose.mDeviceToAbsoluteTracking;
+								std::cout << "Trigger press detected! Position of controller is: " << matrix.m[0][3] << ";" << matrix.m[1][3] << ";" << matrix.m[2][3] << std::endl;
+							}
+						}
+					}
+				}
+			}break;
+			default:
+				break;
+			}
 		}
+
+		// Retrieve headset transform
+		for (vr::TrackedDeviceIndex_t device = 0; device < vr::k_unMaxTrackedDeviceCount; device++)
+		{
+			if (vrSystem->IsTrackedDeviceConnected(device))
+			{
+				vr::VRControllerState_t deviceState;
+				if (vrSystem->GetControllerState(vr_e.trackedDeviceIndex, &deviceState, sizeof(deviceState)))
+				{
+					auto deviceClass = vrSystem->GetTrackedDeviceClass(vr_e.trackedDeviceIndex);
+					if (deviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_HMD)
+					{
+						vr::VRControllerState_t headsetState;
+						vr::TrackedDevicePose_t headsetPose;
+						vrSystem->GetDeviceToAbsoluteTrackingPose(vr::TrackingUniverseStanding, 0.0f, &headsetPose, 1);
+
+						const auto matrix = headsetPose.mDeviceToAbsoluteTracking;
+						std::cout << "Headset position is: " << matrix.m[0][3] << ";" << matrix.m[1][3] << ";" << matrix.m[2][3] << std::endl;
+					}
+				}
+			}
+		}
+
+		// Update audio renderer
 		audioRenderer.Update();
 	}
+	vr::VR_Shutdown();
 	audioRenderer.Shutdown();
-	SDL_Quit();
+	// SDL_Quit();
 
 	return 0;
 }
