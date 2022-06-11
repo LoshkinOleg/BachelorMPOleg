@@ -6,15 +6,13 @@
 #include <BinauralSpatializer/3DTI_BinauralSpatializer.h>
 #include <portaudio.h>
 
+#include "BSCommon.h"
+
+// Oleg@self: make an abstraction out of this.
+
 namespace bs
 {
-	using Environment = std::shared_ptr<Binaural::CEnvironment>;
 	class ThreeDTI_AudioRenderer;
-
-	enum class ClipWrapMode {
-		ONE_SHOT,
-		LOOP
-	};
 
 	class ThreeDTI_SoundMaker
 	{
@@ -48,7 +46,7 @@ namespace bs
 
 		// portaudio stuff
 		PaStream* pStream_ = nullptr; // portaudio stream ptr. Oleg@self: what's the difference between pStream and soundData?
-		PaError err_;
+		PaError err_ = 0;
 
 		// SoundMaker specific stuff
 		std::vector<float> soundData_; // Very large, contains whole wav file.

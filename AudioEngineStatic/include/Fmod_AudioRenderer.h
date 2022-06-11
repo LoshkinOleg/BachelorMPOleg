@@ -3,12 +3,10 @@
 #include <fmod.hpp>
 
 #include "Fmod_SoundMaker.h"
+#include "BSCommon.h"
 
 namespace bs
 {
-	using SoundMakerId = size_t; // Oleg@self: move to common file
-	constexpr const size_t INVALID_ID = (size_t)-1;
-
 	class Fmod_AudioRenderer
 	{
 	public:
@@ -21,6 +19,8 @@ namespace bs
 		void MoveSoundMaker(SoundMakerId id, const float globalX, const float globalY, const float globalZ);
 		void ResetSoundMaker(SoundMakerId id);
 		void PlaySound(SoundMakerId id);
+
+		inline const std::vector<Fmod_SoundMaker>& GetSounds() const { return sounds_; };
 
 		static size_t GetBufferSize() { return BUFFER_SIZE_; };
 		static size_t GetSampleRate() { return SAMPLE_RATE_; };

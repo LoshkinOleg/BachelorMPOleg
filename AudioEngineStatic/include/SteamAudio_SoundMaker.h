@@ -6,15 +6,12 @@
 #include <phonon.h>
 #include <cmath>
 
+#include "BSCommon.h"
+
+// Oleg@self: make an abstraction out of this.
+
 namespace bs
 {
-	class SteamAudio_AudioRenderer;
-
-	enum class ClipWrapMode // Oleg@self: move somewhere common for all audio renderer implementations
-	{
-		ONE_SHOT,
-		LOOP
-	};
 
 	class SteamAudio_SoundMaker
 	{

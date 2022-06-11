@@ -2,11 +2,10 @@
 
 #include "SteamAudio_SoundMaker.h"
 
+// Oleg@self: make an abstraction out of this.
+
 namespace bs
 {
-	using SoundMakerId = size_t; // Oleg@self: move to common file
-	constexpr const size_t INVALID_ID = (size_t)-1;
-
 	class SteamAudio_AudioRenderer
 	{
 	public:
@@ -17,6 +16,8 @@ namespace bs
 		SoundMakerId CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT);
 		void MoveSoundMaker(SoundMakerId id, const float globalX, const float globalY, const float globalZ);
 		void ResetSoundMaker(SoundMakerId id);
+
+		inline const std::vector<SteamAudio_SoundMaker>& GetSounds() const { return sounds_; };
 
 		static size_t GetBufferSize() { return BUFFER_SIZE_; };
 		static size_t GetSampleRate() { return SAMPLE_RATE_; };

@@ -4,12 +4,14 @@
 
 #include "ThreeDTI_SoundMaker.h"
 
+// Oleg@self: make an abstraction out of this.
+
 namespace bs
 {
 	using Listener = std::shared_ptr<Binaural::CListener>;
 	using Environment = std::shared_ptr<Binaural::CEnvironment>;
-	using SoundMakerId = size_t;
-	constexpr const size_t INVALID_ID = (size_t)-1;
+
+	// Oleg@self: make an abstraction out of this.
 
 	class ThreeDTI_AudioRenderer
 	{
@@ -20,6 +22,8 @@ namespace bs
 		SoundMakerId CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT);
 		void MoveSoundMaker(SoundMakerId id, const float globalX, const float globalY, const float globalZ);
 		void ResetSoundMaker(SoundMakerId id);
+
+		inline const std::vector<ThreeDTI_SoundMaker>& GetSounds() const { return sounds_; };
 
 		void ResetEnvironment();
 		Environment GetEnvironment();

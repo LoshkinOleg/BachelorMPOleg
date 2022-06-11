@@ -5,15 +5,11 @@
 #include <portaudio.h>
 #include <fmod.hpp>
 
+// Oleg@self: make an abstraction out of this.
+
 namespace bs
 {
 	class Fmod_AudioRenderer;
-
-	enum class ClipWrapMode // Oleg@self: move somewhere common for all audio renderer implementations
-	{
-		ONE_SHOT,
-		LOOP
-	};
 
 	class Fmod_SoundMaker
 	{
