@@ -19,6 +19,8 @@ namespace bs
 
 		inline const std::vector<SteamAudio_SoundMaker>& GetSounds() const { return sounds_; };
 
+		void SetIsActive(const bool isActive);
+
 		static size_t GetBufferSize() { return BUFFER_SIZE_; };
 		static size_t GetSampleRate() { return SAMPLE_RATE_; };
 
@@ -35,5 +37,7 @@ namespace bs
 
 		static size_t BUFFER_SIZE_;
 		static size_t SAMPLE_RATE_;
+
+		bool isActive_ = true;
 	};
 }

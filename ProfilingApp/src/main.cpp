@@ -5,6 +5,8 @@
 #include <time.h>
 
 #include <openvr.h>
+#include <SDL.h>
+#undef main
 
 #include <SteamAudio_AudioRenderer.h>
 #include "Fmod_AudioRenderer.h"
@@ -27,8 +29,10 @@ namespace bs
 		Application(const char* hrtfFile, const char* brirFile, const char* soundFile, bs::ClipWrapMode wrapMode, const size_t bufferSize, const size_t sampleRate)
 		{
 			bool result = threeDTI_renderer_.Init(hrtfFile, brirFile, bufferSize, sampleRate);
+			threeDTI_renderer_.SetIsActive(false);
 			assert(result, "Failed to initialize ThreeDTI_AudioRenderer!");
 			result = steamAudio_renderer_.Init(bufferSize, sampleRate);
+			steamAudio_renderer_.SetIsActive(false);
 			assert(result, "Failed to initialize SteamAudio_AudioRenderer!");
 			result = fmod_renderer_.Init(bufferSize, sampleRate);
 			assert(result, "Failed to initialize FMod_AudioRenderer!");
@@ -40,10 +44,24 @@ namespace bs
 			soundId = fmod_renderer_.CreateSoundMaker(soundFile, wrapMode);
 			assert(soundId != bs::INVALID_ID, "Fmod_AudioRenderer failed to load wav file!");
 
+#ifdef USE_DUMMY_INPUTS
+			// SDL here
+			if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+			{
+				std::cerr << "Couldn't initialize SDL!" << std::endl;
+				throw;
+			}
+			sdlWindow_ = SDL_CreateWindow("MyWindow", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 720, 720, SDL_WINDOW_SHOWN);
+			assert(sdlWindow_, "Failed to create sdl window!");
+#else
 			vr::HmdError vrErr;
 			pVrSystem_ = vr::VR_Init(&vrErr, vr::EVRApplicationType::VRApplication_Background);
 			assert(vrErr == vr::EVRInitError::VRInitError_None, "Error initializing OpenVR!");
+#endif // USE_DUMMY_INPUTS
 
+#ifdef USE_DUMMY_INPUTS
+			// sdl here
+#else
 			// Retireve ids of controllers.
 			for (size_t device = 0; device < vr::k_unMaxTrackedDeviceCount; device++)
 			{
@@ -61,17 +79,36 @@ namespace bs
 				}
 			}
 			assert(controller0Id_ != vr::k_unTrackedDeviceIndexInvalid && controller1Id_ != vr::k_unTrackedDeviceIndexInvalid, "Failed to get ids for two controllers!");
+#endif // USE_DUMMY_INPUTS
 
 			seed_ = time(NULL);
 			srand(seed_);
-			selectedRenderer_ = static_cast<bs::EAudioRendererType>(rand() % 2);
+			selectedRenderer_ = static_cast<bs::EAudioRendererType>(rand() % 3);
+			switch (selectedRenderer_)
+			{
+			case bs::EAudioRendererType::ThreeDTI:
+				threeDTI_renderer_.SetIsActive(true);
+				break;
+			case bs::EAudioRendererType::SteamAudio:
+				steamAudio_renderer_.SetIsActive(true);
+				break;
+			case bs::EAudioRendererType::FMod:
+				break;
+			default:
+				break;
+			}
 		}
 		~Application()
 		{
 			threeDTI_renderer_.Shutdown();
 			steamAudio_renderer_.Shutdown();
 			fmod_renderer_.Shutdown();
+#ifdef USE_DUMMY_INPUTS
+			SDL_Quit();
+#else
 			vr::VR_Shutdown();
+#endif // USE_DUMMY_INPUTS
+
 		}
 
 		Application() = delete;
@@ -84,6 +121,9 @@ namespace bs
 		{
 			while (!shutdown_)
 			{
+#ifdef USE_DUMMY_INPUTS
+				UpdateTransforms_();
+#else
 				// Update transforms.
 				if (pVrSystem_->IsTrackedDeviceConnected(hmdId_) &&
 					pVrSystem_->IsTrackedDeviceConnected(controller0Id_) &&
@@ -96,7 +136,53 @@ namespace bs
 					std::cerr << "Error: not tracking required devices!" << std::endl;
 					shutdown_ = true;
 				}
+#endif // USE_DUMMY_INPUTS
 
+
+#ifdef USE_DUMMY_INPUTS
+				while (SDL_PollEvent(&sdlEvent_))
+				{
+					switch (sdlEvent_.type)
+					{
+					case SDL_KEYDOWN:
+					{
+						switch (sdlEvent_.key.keysym.scancode)
+						{
+						case SDL_SCANCODE_ESCAPE:
+						{
+							shutdown_ = true;
+						}break;
+
+						case SDL_SCANCODE_1:
+						{
+							ProcessTriggerPullOnController0_();
+						}break;
+
+						case SDL_SCANCODE_2:
+						{
+							ProcessPadPushOnController0_();
+						}break;
+
+						case SDL_SCANCODE_3:
+						{
+							ProcessTriggerPullOnController1_();
+						}break;
+
+						default:
+							break;
+						}
+					}break;
+
+					case SDL_QUIT:
+					{
+						shutdown_ = true;
+					}break;
+
+					default:
+						break;
+					}
+				}
+#else
 				// Process inputs.
 				constexpr const auto SIZE_OF_VR_EVENT = sizeof(vr::VREvent_t);
 				while (pVrSystem_->PollNextEvent(&vrEvent_, SIZE_OF_VR_EVENT))
@@ -146,8 +232,11 @@ namespace bs
 						break;
 					}
 				}
+#endif // USE_DUMMY_INPUTS
 				fmod_renderer_.Update();
 			}
+
+			return 0;
 		}
 
 	private:
@@ -189,6 +278,7 @@ namespace bs
 				break;
 			}
 		}
+		
 		void ProcessControllerInput_(const vr::TrackedDeviceIndex_t device)
 		{
 			vr::VRControllerState_t state;
@@ -211,18 +301,36 @@ namespace bs
 		}
 		void ProcessTriggerPullOnController0_()
 		{
-			std::cout << "Trigger on controller 0 press detected!" << std::endl;
+			std::cout << "Trigger on controller 0 press detected! Position of controller 0 is: " << controller0Transform_.m[0][3] << "; " << controller0Transform_.m[1][3] << "; " << controller0Transform_.m[2][3] << std::endl;
 		}
 		void ProcessTriggerPullOnController1_()
 		{
-			std::cout << "Trigger on controller 1 press detected!" << std::endl;
+			std::cout << "Trigger on controller 1 press detected! Position of controller 1 is: " << controller1Transform_.m[0][3] << "; " << controller1Transform_.m[1][3] << "; " << controller1Transform_.m[2][3] << std::endl;
+			std::cout << "Headset position is: " << hmdTransform_.m[0][3] << "; " << hmdTransform_.m[1][3] << "; " << hmdTransform_.m[2][3] << std::endl;
 		}
 		void ProcessPadPushOnController0_()
 		{
-			std::cout << "Pad was pushed on controller 0!" << std::endl;
-			selectedRenderer_ = static_cast<bs::EAudioRendererType>(rand() % 2);
+			selectedRenderer_ = static_cast<bs::EAudioRendererType>(rand() % 3);
+			std::cout << "Pad was pushed on controller 0! New selected renderer is: " << (unsigned int)selectedRenderer_ << std::endl;
 			ChangeSourcePosition_();
 		}
+
+#ifdef USE_DUMMY_INPUTS
+		void UpdateTransforms_()
+		{
+			hmdTransform_.m[0][3] = (float)(rand() % 10 + 1);
+			hmdTransform_.m[1][3] = (float)(rand() % 10 + 1);
+			hmdTransform_.m[2][3] = (float)(rand() % 10 + 1);
+
+			controller0Transform_.m[0][3] = (float)(rand() % 10 + 1);
+			controller0Transform_.m[1][3] = (float)(rand() % 10 + 1);
+			controller0Transform_.m[2][3] = (float)(rand() % 10 + 1);
+
+			controller1Transform_.m[0][3] = (float)(rand() % 10 + 1);
+			controller1Transform_.m[1][3] = (float)(rand() % 10 + 1);
+			controller1Transform_.m[2][3] = (float)(rand() % 10 + 1);
+		}
+#else
 		void UpdateTransforms_()
 		{
 			vr::VRControllerState_t hmdState, controller0State, controller1State; // Not actually needed but there's no GetControllerPose() function so...
@@ -240,6 +348,9 @@ namespace bs
 			controller0Transform_ = controller0Pose.mDeviceToAbsoluteTracking;
 			controller1Transform_ = controller1Pose.mDeviceToAbsoluteTracking;
 		}
+#endif // USE_DUMMY_INPUTS
+
+		
 		inline static EngineVector PositionFromMatrix(const vr::HmdMatrix34_t matrix)
 		{
 			return { matrix.m[0][3], matrix.m[1][3], matrix.m[2][3] };
@@ -249,6 +360,11 @@ namespace bs
 		bs::SteamAudio_AudioRenderer steamAudio_renderer_{};
 		bs::Fmod_AudioRenderer fmod_renderer_{};
 		EAudioRendererType selectedRenderer_ = EAudioRendererType::ThreeDTI;
+
+#ifdef USE_DUMMY_INPUTS
+		SDL_Event sdlEvent_{};
+		SDL_Window* sdlWindow_ = nullptr;
+#endif // USE_DUMMY_INPUTS
 
 		vr::IVRSystem* pVrSystem_ = nullptr;
 		vr::VREvent_t vrEvent_{};
@@ -267,6 +383,6 @@ namespace bs
 
 int main()
 {
-	auto app = bs::Application("../../resources/HRTF/SOFA/3DTI_HRTF_IRC1008_128s_44100Hz.sofa", "../../resources/BRIR/SOFA/3DTI_BRIR_medium_44100Hz.sofa", "../../resources/AudioSamples/AnechoicSpeech44100.wav", bs::ClipWrapMode::LOOP, 1024, 44100);
+	auto app = bs::Application("../resources/HRTF/SOFA/3DTI_HRTF_IRC1008_128s_44100Hz.sofa", "../resources/BRIR/SOFA/3DTI_BRIR_medium_44100Hz.sofa", "../resources/AudioSamples/AnechoicSpeech44100.wav", bs::ClipWrapMode::LOOP, 1024, 44100);
 	return app.RunProgram();
 }

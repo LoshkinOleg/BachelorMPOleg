@@ -25,14 +25,22 @@ bool bs::Fmod_SoundMaker::Init(bs::Fmod_AudioRenderer* engine, const char* wavFi
 }
 void bs::Fmod_SoundMaker::Play(FMOD::System* fmodSystem)
 {
-	FMOD::Channel* fmodChannel;
-	auto result = fmodSystem->playSound(fmodSound_, NULL, true, &fmodChannel); // Oleg@self: apparently the position of a sound is linked to it's channel?...
+	auto result = fmodSystem->playSound(fmodSound_, NULL, true, &fmodChannel_); // Oleg@self: apparently the position of a sound is linked to it's channel?...
 	assert(result == FMOD_OK, "Fmod couldn't play sound!");
-	result = fmodChannel->set3DAttributes(&pos_, &linearVel_);
+	result = fmodChannel_->set3DAttributes(&pos_, &linearVel_);
 	assert(result == FMOD_OK, "Fmod couldn't set position and velocity of sound!");
-	result = fmodChannel->setPaused(false);
+	result = fmodChannel_->setPaused(false);
 	assert(result == FMOD_OK, "Fmod couldn't unpause the sound!");
 	// Oleg@self: once done playing, the channel handle will become invalid.
+}
+void bs::Fmod_SoundMaker::Stop()
+{
+	if (fmodChannel_)
+	{
+		auto result = fmodChannel_->stop();
+		fmodChannel_ = nullptr;
+		assert(result == FMOD_OK, "Failed to stop sound!");
+	}
 }
 void bs::Fmod_SoundMaker::Shutdown()
 {

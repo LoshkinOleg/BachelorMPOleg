@@ -25,6 +25,8 @@ namespace bs
 
 		inline const std::vector<ThreeDTI_SoundMaker>& GetSounds() const { return sounds_; };
 
+		void SetIsActive(const bool isActive);
+
 		void ResetEnvironment();
 		Environment GetEnvironment();
 		Binaural::CCore& GetCore();
@@ -51,5 +53,7 @@ namespace bs
 
 		static size_t BUFFER_SIZE_;
 		static size_t SAMPLE_RATE_;
+
+		bool isActive_ = true;
 	};
 }

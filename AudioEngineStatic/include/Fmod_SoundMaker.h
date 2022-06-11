@@ -5,6 +5,8 @@
 #include <portaudio.h>
 #include <fmod.hpp>
 
+#include "BSCommon.h"
+
 // Oleg@self: make an abstraction out of this.
 
 namespace bs
@@ -23,6 +25,7 @@ namespace bs
 		// Oleg@self: those really should be replaced with constructors / destructors.
 		bool Init(bs::Fmod_AudioRenderer* engine, const char* wavFileName, FMOD::System* fmodSystem, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT);
 		void Play(FMOD::System* fmodSystem);
+		void Stop();
 		void Shutdown();
 
 		void SetPosition(const float globalX, const float globalY, const float globalZ);
@@ -33,6 +36,7 @@ namespace bs
 	private:
 		// Fmod stuff
 		FMOD::Sound* fmodSound_;
+		FMOD::Channel* fmodChannel_;
 		FMOD_VECTOR pos_ = { 0.0f, 0.0f, 0.0f };
 		FMOD_VECTOR linearVel_ = { 0.0f, 0.0f, 0.0f };
 		

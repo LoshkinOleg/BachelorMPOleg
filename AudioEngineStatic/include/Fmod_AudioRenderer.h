@@ -19,6 +19,7 @@ namespace bs
 		void MoveSoundMaker(SoundMakerId id, const float globalX, const float globalY, const float globalZ);
 		void ResetSoundMaker(SoundMakerId id);
 		void PlaySound(SoundMakerId id);
+		void StopSound(SoundMakerId id);
 
 		inline const std::vector<Fmod_SoundMaker>& GetSounds() const { return sounds_; };
 

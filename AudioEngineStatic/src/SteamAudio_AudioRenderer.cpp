@@ -69,6 +69,11 @@ void bs::SteamAudio_AudioRenderer::ResetSoundMaker(SoundMakerId id)
 	sounds_[id].Reset(*this);
 }
 
+void bs::SteamAudio_AudioRenderer::SetIsActive(const bool isActive)
+{
+	isActive_ = isActive;
+}
+
 int bs::SteamAudio_AudioRenderer::ServiceAudio_
 (
 	const void* unused, void* outputBuffer,
@@ -76,7 +81,9 @@ int bs::SteamAudio_AudioRenderer::ServiceAudio_
 	PaStreamCallbackFlags statusFlags, void* userData
 )
 {
+
 	auto* engine = (SteamAudio_AudioRenderer*)userData; // Annoying hack to have a non static servicing method.
+	if (!engine->isActive_) return paContinue;
 	if (engine->sounds_.size() <= 0) return paContinue;
 	auto* sound = dynamic_cast<SteamAudio_SoundMaker*>(&engine->sounds_[0]);
 	static std::vector<float> processedFrame(BUFFER_SIZE_ * 2);

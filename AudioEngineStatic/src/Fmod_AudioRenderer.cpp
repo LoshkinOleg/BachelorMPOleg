@@ -84,3 +84,9 @@ void bs::Fmod_AudioRenderer::PlaySound(SoundMakerId id)
 	assert(id != INVALID_ID, "Trying to play a sound with an invalid id!");
 	sounds_[id].Play(fmodSystem_);
 }
+
+void bs::Fmod_AudioRenderer::StopSound(SoundMakerId id)
+{
+	assert(id != INVALID_ID, "Trying to stop a sound with an invalid id!");
+	sounds_[id].Stop();
+}

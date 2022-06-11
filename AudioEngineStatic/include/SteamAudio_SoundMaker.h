@@ -12,6 +12,7 @@
 
 namespace bs
 {
+	class SteamAudio_AudioRenderer;
 
 	class SteamAudio_SoundMaker
 	{

@@ -90,6 +90,11 @@ void bs::ThreeDTI_AudioRenderer::ResetSoundMaker(SoundMakerId id)
 	sounds_[id].Reset(*this);
 }
 
+void bs::ThreeDTI_AudioRenderer::SetIsActive(const bool isActive)
+{
+	isActive_ = isActive;
+}
+
 void bs::ThreeDTI_AudioRenderer::ResetEnvironment()
 {
 	environment_->ResetReverbBuffers();
@@ -113,6 +118,7 @@ int bs::ThreeDTI_AudioRenderer::ServiceAudio_
 )
 {
 	auto* engine = (ThreeDTI_AudioRenderer*)userData; // Annoying hack to have a non static servicing method.
+	if (!engine->isActive_) return paContinue;
 	if (engine->sounds_.size() <= 0) return paContinue;
 	auto* sound = dynamic_cast<ThreeDTI_SoundMaker*>(&engine->sounds_[0]);
 	static CStereoBuffer<float> processedFrame;

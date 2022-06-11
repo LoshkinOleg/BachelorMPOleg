@@ -21,11 +21,11 @@ target_include_directories(AudioEngine PUBLIC
 	${PROJECT_SOURCE_DIR}/thirdparty/portaudio/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/easy_profiler/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/openvr/include/
-	${PROJECT_SOURCE_DIR}/thirdparty/ovraudio/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/steamaudio/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/fmod/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/dr_wav/include/
-	${PROJECT_SOURCE_DIR}/thirdparty/sdl/include/)
+	${PROJECT_SOURCE_DIR}/thirdparty/sdl/include/
+	)
 target_link_libraries(AudioEngine PRIVATE
 	optimized ${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_AudioToolkit_release.lib
 	optimized ${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_ResourceManager_release.lib
@@ -41,13 +41,13 @@ target_link_libraries(AudioEngine PRIVATE
 	general ${PROJECT_SOURCE_DIR}/thirdparty/portaudio/lib/portaudio_static_x64.lib
 	general ${PROJECT_SOURCE_DIR}/thirdparty/easy_profiler/lib/easy_profiler.lib
 	general ${PROJECT_SOURCE_DIR}/thirdparty/openvr/lib/openvr_api.lib
-	general ${PROJECT_SOURCE_DIR}/thirdparty/ovraudio/lib/ovraudio64.lib
 	general ${PROJECT_SOURCE_DIR}/thirdparty/steamaudio/lib/phonon.lib
 	general ${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmod_vc.lib
 	general ${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmodL_vc.lib
 	general ${PROJECT_SOURCE_DIR}/thirdparty/sdl/lib/SDL2.lib
 	general ${PROJECT_SOURCE_DIR}/thirdparty/sdl/lib/SDL2main.lib
-	general ${PROJECT_SOURCE_DIR}/thirdparty/sdl/lib/SDL2test.lib)
+	general ${PROJECT_SOURCE_DIR}/thirdparty/sdl/lib/SDL2test.lib
+	)
 set_target_properties(AudioEngine PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/AudioEngineStatic/lib"
     LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/AudioEngineStatic/lib"
@@ -67,7 +67,11 @@ set_target_properties(ProfilingApp PROPERTIES
 file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/build/profilingData)
 
 # Add options for the user to configure
-set(USE_EASY_PROFILER OFF CACHE BOOL "Enable profiling of spatialization time. Generates .prof files under build/profilingData/")
+set(USE_EASY_PROFILER ON CACHE BOOL "Enable profiling of spatialization time. Generates .prof files under build/profilingData/")
+set(USE_DUMMY_INPUTS ON CACHE BOOL "Test out the experiment without using the VR headset.")
 if (USE_EASY_PROFILER)
 	add_compile_definitions(USE_EASY_PROFILER)
+endif()
+if (USE_DUMMY_INPUTS)
+	add_compile_definitions(USE_DUMMY_INPUTS)
 endif()
