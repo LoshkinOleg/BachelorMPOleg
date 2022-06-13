@@ -55,7 +55,13 @@ set_target_properties(AudioEngine PROPERTIES
 )
 
 # Generate profiling app executable.
-add_executable(ProfilingApp ${PROJECT_SOURCE_DIR}/ProfilingApp/src/main.cpp)
+file(GLOB_RECURSE ProfilingApp_include ${PROJECT_SOURCE_DIR}/ProfilingApp/include/*.h)
+file(GLOB_RECURSE ProfilingApp_src ${PROJECT_SOURCE_DIR}/ProfilingApp/src/*.cpp)
+add_executable(ProfilingApp ${ProfilingApp_include} ${ProfilingApp_src})
+target_include_directories(ProfilingApp PUBLIC
+	${PROJECT_SOURCE_DIR}/ProfilingApp/include/
+	${PROJECT_SOURCE_DIR}/AudioEngineStatic/include/
+	)
 target_link_libraries(ProfilingApp PRIVATE AudioEngine)
 set_target_properties(ProfilingApp PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/ProfilingApp/lib"
@@ -65,6 +71,8 @@ set_target_properties(ProfilingApp PROPERTIES
 
 # Create folder for holding easy_profiler's profiling data.
 file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/build/profilingData)
+# Create folder for holding experiment's results.
+file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/build/experimentData)
 
 # Add options for the user to configure
 set(USE_EASY_PROFILER ON CACHE BOOL "Enable profiling of spatialization time. Generates .prof files under build/profilingData/")
