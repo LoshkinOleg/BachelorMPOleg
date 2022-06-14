@@ -21,8 +21,7 @@ namespace bsExp
 	{
 		ThreeDTI = 0,
 		SteamAudio = 1,
-		FMod = 2,
-		Noise = 3
+		FMod = 2
 	};
 
 	// Oleg@self: make a template class out of this
@@ -53,6 +52,8 @@ namespace bsExp
 
 		static size_t seed_;
 	};
+
+	// Oleg@self: draw state machine for renderers + noise
 
 	class Application
 	{
@@ -87,16 +88,17 @@ namespace bsExp
 		bsExp::Noise_AudioRenderer noise_renderer_{};
 		AudioRendererType selectedRenderer_ = AudioRendererType::ThreeDTI;
 		bs::CartesianCoord currentSoundPos_{};
+		bool noiseIsPlaying_ = true;
 
 		// OpenVR stuff
 		vr::IVRSystem* pVrSystem_ = nullptr;
 		vr::VREvent_t vrEvent_{};
-		vr::TrackedDeviceIndex_t controller0Id_ = vr::k_unTrackedDeviceIndexInvalid; // Warning: I don't think that reconnecting a previously disconnected devices will yield the same device index!
-		vr::TrackedDeviceIndex_t controller1Id_ = vr::k_unTrackedDeviceIndexInvalid;
+		vr::TrackedDeviceIndex_t scientistControllerId_ = vr::k_unTrackedDeviceIndexInvalid; // Warning: I don't think that reconnecting a previously disconnected devices will yield the same device index!
+		vr::TrackedDeviceIndex_t participantControllerId_ = vr::k_unTrackedDeviceIndexInvalid;
 		constexpr const static vr::TrackedDeviceIndex_t hmdId_ = vr::k_unTrackedDeviceIndex_Hmd;
 		vr::HmdMatrix34_t hmdTransform_{ 0.0f };
-		vr::HmdMatrix34_t controller0Transform_{ 0.0f };
-		vr::HmdMatrix34_t controller1Transform_{ 0.0f };
+		vr::HmdMatrix34_t scientistControllerTransform_{ 0.0f };
+		vr::HmdMatrix34_t participantControllerTransform_{ 0.0f };
 
 		// App specific stuff
 		bool shutdown_ = false;

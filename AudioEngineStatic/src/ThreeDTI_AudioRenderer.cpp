@@ -93,6 +93,10 @@ void bs::ThreeDTI_AudioRenderer::ResetSoundMaker(SoundMakerId id)
 void bs::ThreeDTI_AudioRenderer::SetIsActive(const bool isActive)
 {
 	isActive_ = isActive;
+	if (isActive_ && sounds_.size())
+	{
+		sounds_[0].Reset(*this);
+	}
 }
 
 void bs::ThreeDTI_AudioRenderer::ResetEnvironment()
@@ -118,13 +122,20 @@ int bs::ThreeDTI_AudioRenderer::ServiceAudio_
 )
 {
 	auto* engine = (ThreeDTI_AudioRenderer*)userData; // Annoying hack to have a non static servicing method.
-	if (!engine->isActive_) return paContinue;
 	if (engine->sounds_.size() <= 0) return paContinue;
 	auto* sound = dynamic_cast<ThreeDTI_SoundMaker*>(&engine->sounds_[0]);
-	static CStereoBuffer<float> processedFrame;
 	auto* outBuff = static_cast<float*>(outputBuffer); // Cast output buffer to float buffer.
+	static CStereoBuffer<float> processedFrame;
 
-	sound->ProcessAudio(processedFrame, *engine); // Oleg@self: make a virtual method out of this.
+	if (engine->isActive_)
+	{
+		sound->ProcessAudio(processedFrame, *engine);
+		std::cout << "3dti renderer servicing audio.\n";
+	}
+	else
+	{
+		std::fill(processedFrame.begin(), processedFrame.end(), 0.0f);
+	}
 
 	// Oleg@self: use memcpy?
 	for (auto it = processedFrame.begin(); it != processedFrame.end(); it++)

@@ -12,6 +12,6 @@ constexpr const float ROOM_SIZE_Z = 3.0f;
 
 int main()
 {
-	auto app = bsExp::Application(HRTF_PATH, BRIR_PATH, WAV_PATH, bs::ClipWrapMode::LOOP, BUFFER_SIZE, SAMPLE_RATE);
+	auto app = bsExp::Application(HRTF_PATH, BRIR_PATH, WAV_PATH, 1337);
 	return app.RunProgram();
 }

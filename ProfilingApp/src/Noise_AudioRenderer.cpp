@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include <portaudio.h>
+
 size_t bsExp::Noise_AudioRenderer::BUFFER_SIZE_ = 0;
 size_t bsExp::Noise_AudioRenderer::SAMPLE_RATE_ = 0;
 
@@ -42,16 +44,25 @@ void bsExp::Noise_AudioRenderer::SetIsActive(const bool isActive)
 	isActive_ = isActive;
 }
 
+#include <iostream>
+
 int bsExp::Noise_AudioRenderer::ServiceAudio_(const void* unused, void* outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void* userData)
 {
 	auto* engine = (Noise_AudioRenderer*)userData; // Annoying hack to have a non static servicing method.
-	if (!engine->isActive_) return paContinue;
 	if (engine->sounds_.size() <= 0) return paContinue;
+	static std::vector<float> processedFrame(engine->BUFFER_SIZE_ * 2);
 	auto* sound = dynamic_cast<Noise_SoundMaker*>(&engine->sounds_[0]);
-	static std::vector<float> processedFrame;
 	auto* outBuff = static_cast<float*>(outputBuffer); // Cast output buffer to float buffer.
 
-	sound->ProcessAudio(processedFrame, *engine); // Oleg@self: make a virtual method out of this.
+	if (engine->isActive_)
+	{
+		sound->ProcessAudio(processedFrame, *engine);
+		std::cout << "Noise renderer servicing audio.\n";
+	}
+	else
+	{
+		std::fill(processedFrame.begin(), processedFrame.end(), 0.0f);
+	}
 
 	// Oleg@self: use memcpy?
 	for (auto it = processedFrame.begin(); it != processedFrame.end(); it++)

@@ -1,13 +1,34 @@
 #include <Application.h>
 
 #include <cassert>
+#include <filesystem>
+#include <algorithm>
 
 #include <spdlog/spdlog.h>
 
 bsExp::Application::Application(const char* hrtfFile, const char* brirFile, const char* soundFile, const size_t randSeed)
 {
 	// Init log file.
-	pLogger_ = spdlog::basic_logger_mt("DummyLogger", "experimentData/dummyLog.txt");
+	if (std::filesystem::exists("experimentData/0.txt"))
+	{
+		std::vector<std::string> paths;
+		for (const auto& entry : std::filesystem::directory_iterator("experimentData"))
+		{
+			paths.push_back(entry.path().filename().string());
+		}
+		std::sort(paths.begin(), paths.end());
+		const char latestLogName = paths.back().c_str()[0];
+		
+
+		std::string newLogName = "experimentData/";
+		newLogName += (latestLogName + 1);
+		newLogName += ".txt"; // Oleg@self: c'mon, surely there's a better way to do this...
+		pLogger_ = spdlog::basic_logger_mt("Logger" + (latestLogName + 1), newLogName);
+	}
+	else
+	{
+		pLogger_ = spdlog::basic_logger_mt("Logger0", "experimentData/0.txt");
+	}
 	pLogger_->info("Application starting up...!");
 
 	// Init bachelor renderers
@@ -24,14 +45,16 @@ bsExp::Application::Application(const char* hrtfFile, const char* brirFile, cons
 	assert(result, "Failed to initialize FMod_AudioRenderer!");
 	result = noise_renderer_.Init(BUFFER_SIZE, SAMPLE_RATE);
 	assert(result, "Failed to initialize Noise_AudioRenderer!");
+	noise_renderer_.SetIsActive(true); // Starting with noise on.
 
+	constexpr const char* NOISE_PATH = "../resources/AudioSamples/brownNoise_44100Hz_32f_5sec.wav";
 	auto soundId = threeDTI_renderer_.CreateSoundMaker(soundFile, bs::ClipWrapMode::ONE_SHOT);
 	assert(soundId != bs::INVALID_ID, "ThreeDTI_AudioRenderer failed to load wav file!");
 	soundId = steamAudio_renderer_.CreateSoundMaker(soundFile, bs::ClipWrapMode::ONE_SHOT);
 	assert(soundId != bs::INVALID_ID, "SteamAudio_AudioRenderer failed to load wav file!");
 	soundId = fmod_renderer_.CreateSoundMaker(soundFile, bs::ClipWrapMode::ONE_SHOT);
 	assert(soundId != bs::INVALID_ID, "Fmod_AudioRenderer failed to load wav file!");
-	soundId = noise_renderer_.CreateSoundMaker(soundFile, bs::ClipWrapMode::LOOP);
+	soundId = noise_renderer_.CreateSoundMaker(NOISE_PATH, bs::ClipWrapMode::LOOP);
 	assert(soundId != bs::INVALID_ID, "Noise_AudioRenderer failed to load wav file!");
 
 	// Init randomness lib and pick random renderer
@@ -49,7 +72,6 @@ bsExp::Application::Application(const char* hrtfFile, const char* brirFile, cons
 	distrElevation_.SetDistributionRange(MIN_ELEVATION, MAX_ELEVATION);
 	distrRadius_.SetDistributionRange(MIN_RADIUS, MAX_RADIUS);
 	distrMiddleware_.SetDistributionRange(0, 2);
-	selectedRenderer_ = AudioRendererType::Noise;
 
 	// Init appropriate application SDK
 #ifdef USE_DUMMY_INPUTS
@@ -111,6 +133,7 @@ bsExp::Application::~Application()
 
 int bsExp::Application::RunProgram()
 {
+	LogDelimiter_();
 	pLogger_->info("Application is now running.");
 
 	while (!shutdown_)
@@ -141,22 +164,22 @@ int bsExp::Application::RunProgram()
 
 						case PARTICIPANT_TRIGGER:
 						{
-							LogControllerPose_(controller1Id_);
+							LogControllerPose_(participantControllerId_);
 						}break;
 
 						case SCIENTIST_TRIGGER:
 						{
-							LogControllerPose_(controller0Id_);
-						}break;
-
-						case LOG_DELIMITER:
-						{
-							LogDelimiter_();
+							LogControllerPose_(scientistControllerId_);
 						}break;
 
 						case TOGGLE_NOISE:
 						{
 							ToggleNoise_();
+						}break;
+
+						case LOG_DELIMITER:
+						{
+							LogDelimiter_();
 						}break;
 
 						case CHANGE_MIDDLEWARE_AND_POS:
@@ -261,11 +284,11 @@ void bsExp::Application::ProcessControllerInput_(const vr::TrackedDeviceIndex_t 
 		const auto buttonFlags = state.ulButtonPressed;
 		const bool triggerDown = buttonFlags & ((uint64_t)1 << (uint64_t)vr::EVRButtonId::k_EButton_SteamVR_Trigger); // Set controller trigger bit in bitmask.
 
-		if (triggerDown && vrEvent_.trackedDeviceIndex == controller0Id_)
+		if (triggerDown && vrEvent_.trackedDeviceIndex == scientistControllerId_)
 		{
 
 		}
-		else if (triggerDown && vrEvent_.trackedDeviceIndex == controller1Id_)
+		else if (triggerDown && vrEvent_.trackedDeviceIndex == participantControllerId_)
 		{
 
 		}
@@ -274,23 +297,127 @@ void bsExp::Application::ProcessControllerInput_(const vr::TrackedDeviceIndex_t 
 
 bool bsExp::Application::ToggleNoise_()
 {
-	return false;
+	if (noiseIsPlaying_)
+	{
+		noiseIsPlaying_ = false;
+		pLogger_->info("Stopped playing noise over headphones.");
+		noise_renderer_.SetIsActive(false);
+		switch (selectedRenderer_)
+		{
+			case bsExp::AudioRendererType::ThreeDTI:
+			{
+				threeDTI_renderer_.SetIsActive(true);
+			}
+			break;
+			case bsExp::AudioRendererType::SteamAudio:
+			{
+				steamAudio_renderer_.SetIsActive(true);
+			}
+			break;
+			case bsExp::AudioRendererType::FMod:
+			{
+				fmod_renderer_.PlaySound(0);
+			}
+			break;
+			default:
+			break;
+		}
+		return false;
+	}
+	else
+	{
+		noiseIsPlaying_ = true;
+		threeDTI_renderer_.SetIsActive(false);
+		steamAudio_renderer_.SetIsActive(false);
+		if (selectedRenderer_ == AudioRendererType::FMod) fmod_renderer_.StopSound(0);
+		noise_renderer_.SetIsActive(true);
+		pLogger_->info("Started playing noise over headphones.");
+		return true;
+	}
 }
 
 void bsExp::Application::LogControllerPose_(const vr::TrackedDeviceIndex_t device)
 {
+	if (device == scientistControllerId_)
+	{
+		const auto pos = PositionFromMatrix_(scientistControllerTransform_);
+		pLogger_->info("Scientist has made a sound at: ({0:03.2f};{1:03.2f};{2:03.2f})", pos.x, pos.y, pos.z );
+	}
+	else if (device == participantControllerId_)
+	{
+		const auto pos = PositionFromMatrix_(participantControllerTransform_);
+		pLogger_->info("Participant has heard a sound at: ({0:03.2f};{1:03.2f};{2:03.2f})", pos.x, pos.y, pos.z);
+	}
+	else
+	{
+		assert(false, "Received an invalid device id in LogControllerPose_!");
+	}
 }
 
 void bsExp::Application::SetRandomSourcePos_()
 {
+	currentSoundPos_ = bs::ToCartesian(bs::SphericalCoord{ distrAzimuth_.Generate(), distrElevation_.Generate(), distrRadius_.Generate() });
+
+	threeDTI_renderer_.MoveSoundMaker(0, currentSoundPos_.x, currentSoundPos_.y, currentSoundPos_.z);
+	steamAudio_renderer_.MoveSoundMaker(0, currentSoundPos_.x, currentSoundPos_.y, currentSoundPos_.z);
+	fmod_renderer_.MoveSoundMaker(0, currentSoundPos_.x, currentSoundPos_.y, currentSoundPos_.z);
+
+	pLogger_->info("Set new random position for sound source at: ({0:03.2f};{1:03.2f};{2:03.2f})", currentSoundPos_.x, currentSoundPos_.y, currentSoundPos_.z);
 }
 
 void bsExp::Application::SetRandomRenderer_()
 {
+	assert(static_cast<size_t>(selectedRenderer_) < 3, "Entered SetRandomRenderer_() with an invalid selectedRenderer_!");
+	switch (selectedRenderer_) // Oleg@self: just set false on all renderers
+	{
+		case bsExp::AudioRendererType::ThreeDTI:
+		{
+			threeDTI_renderer_.SetIsActive(false);
+		}
+		break;
+		case bsExp::AudioRendererType::SteamAudio:
+		{
+			steamAudio_renderer_.SetIsActive(false);
+		}
+		break;
+		case bsExp::AudioRendererType::FMod:
+		{
+			fmod_renderer_.StopSound(0);
+		}
+		break;
+		default:break;
+	}
+
+	selectedRenderer_ = static_cast<AudioRendererType>(distrMiddleware_.Generate());
+	assert(static_cast<size_t>(selectedRenderer_) < 3, "Generated an invalid AudioRendererType!");
+
+	switch (selectedRenderer_)
+	{
+		case bsExp::AudioRendererType::ThreeDTI:
+		{
+			threeDTI_renderer_.SetIsActive(true);
+			pLogger_->info("Selected 3dti renderer.");
+		}
+		break;
+		case bsExp::AudioRendererType::SteamAudio:
+		{
+			steamAudio_renderer_.SetIsActive(true);
+			pLogger_->info("Selected steamAudio renderer.");
+		}
+		break;
+		case bsExp::AudioRendererType::FMod:
+		{
+			fmod_renderer_.PlaySound(0);
+			pLogger_->info("Selected fmod renderer.");
+		}
+		break;
+		default:break;
+	}
 }
 
 void bsExp::Application::LogDelimiter_()
 {
+	pLogger_->info("========");
 }
 
 bs::CartesianCoord bsExp::Application::PositionFromMatrix_(const vr::HmdMatrix34_t matrix)
@@ -311,15 +438,15 @@ void bsExp::Application::UpdateTransforms_()
 
 	s = { distrAzimuth_.Generate(), distrElevation_.Generate(), distrRadius_.Generate() };
 	c = bs::ToCartesian(s);
-	controller0Transform_.m[0][3] = c.x;
-	controller0Transform_.m[1][3] = c.y;
-	controller0Transform_.m[2][3] = c.z;
+	scientistControllerTransform_.m[0][3] = c.x;
+	scientistControllerTransform_.m[1][3] = c.y;
+	scientistControllerTransform_.m[2][3] = c.z;
 
 	s = { distrAzimuth_.Generate(), distrElevation_.Generate(), distrRadius_.Generate() };
 	c = bs::ToCartesian(s);
-	controller1Transform_.m[0][3] = c.x;
-	controller1Transform_.m[1][3] = c.y;
-	controller1Transform_.m[2][3] = c.z;
+	participantControllerTransform_.m[0][3] = c.x;
+	participantControllerTransform_.m[1][3] = c.y;
+	participantControllerTransform_.m[2][3] = c.z;
 #else
 	vr::VRControllerState_t hmdState, controller0State, controller1State; // Not actually needed but there's no GetControllerPose() function so...
 	vr::TrackedDevicePose_t hmdPose, controller0Pose, controller1Pose;
