@@ -6,6 +6,10 @@ constexpr const char* WAV_PATH = "../resources/AudioSamples/AnechoicSpeech44100.
 constexpr const size_t BUFFER_SIZE = 1024;
 constexpr const size_t SAMPLE_RATE = 44100;
 
+constexpr const float ROOM_SIZE_X = 7.0f;
+constexpr const float ROOM_SIZE_Y = 8.0f;
+constexpr const float ROOM_SIZE_Z = 3.0f;
+
 int main()
 {
 	auto app = bsExp::Application(HRTF_PATH, BRIR_PATH, WAV_PATH, bs::ClipWrapMode::LOOP, BUFFER_SIZE, SAMPLE_RATE);

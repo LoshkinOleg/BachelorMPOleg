@@ -1,31 +1,63 @@
 #pragma once
 
 #include <array>
-#include <fstream>
+#include <random>
 
 #include <openvr.h>
 #ifdef USE_DUMMY_INPUTS
 #include <SDL.h>
 #undef main
 #endif //! USE_DUMMY_INPUTS
+#include <spdlog/sinks/basic_file_sink.h>
 
 #include "ThreeDTI_AudioRenderer.h"
 #include "SteamAudio_AudioRenderer.h"
 #include "Fmod_AudioRenderer.h"
+#include "Noise_AudioRenderer.h"
 
 namespace bsExp
 {
-	enum class AudioRendererType : unsigned int // unsigned int to ensure we can do simple arithmetic with it.
+	enum class AudioRendererType : size_t // size_t to ensure we can do simple arithmetic with it when generating random numbers.
 	{
 		ThreeDTI = 0,
 		SteamAudio = 1,
-		FMod = 2
+		FMod = 2,
+		Noise = 3
+	};
+
+	// Oleg@self: make a template class out of this
+	class NormDistrFloatGen
+	{
+	public:
+		void SetSeed(const size_t seed);
+		void SetDistributionRange(const float min, const float max);
+		float Generate();
+
+	private:
+		std::default_random_engine e_;
+		std::normal_distribution<float> d_;
+
+		static size_t seed_;
+	};
+
+	class UniDistrUintGen
+	{
+	public:
+		void SetSeed(const size_t seed);
+		void SetDistributionRange(const size_t min, const size_t max);
+		size_t Generate();
+
+	private:
+		std::default_random_engine e_;
+		std::uniform_int_distribution<size_t> d_;
+
+		static size_t seed_;
 	};
 
 	class Application
 	{
 	public:
-		Application(const char* hrtfFile, const char* brirFile, const char* soundFile, bs::ClipWrapMode wrapMode, const size_t bufferSize, const size_t sampleRate);
+		Application(const char* hrtfFile, const char* brirFile, const char* soundFile, const size_t randSeed);
 		~Application();
 		Application() = delete;
 		Application(const Application&) = delete;
@@ -39,18 +71,20 @@ namespace bsExp
 		void UpdateTransforms_();
 
 		void ProcessControllerInput_(const vr::TrackedDeviceIndex_t device);
-		void ProcessTriggerPullOnController0_();
-		void ProcessTriggerPullOnController1_();
-		void ProcessPadPushOnController0_();
+		bool ToggleNoise_();
+		void LogControllerPose_(const vr::TrackedDeviceIndex_t device);
+		void SetRandomSourcePos_();
+		void SetRandomRenderer_();
+		void LogDelimiter_();
 
 		static bs::CartesianCoord PositionFromMatrix_(const vr::HmdMatrix34_t matrix);
-		static bs::CartesianCoord RandomCartesianPos_(const float minRadius = 0.0f, const float maxRadius = 10.0f);
 
 	private:
 		// Renderers
 		bs::ThreeDTI_AudioRenderer threeDTI_renderer_{};
 		bs::SteamAudio_AudioRenderer steamAudio_renderer_{};
 		bs::Fmod_AudioRenderer fmod_renderer_{};
+		bsExp::Noise_AudioRenderer noise_renderer_{};
 		AudioRendererType selectedRenderer_ = AudioRendererType::ThreeDTI;
 		bs::CartesianCoord currentSoundPos_{};
 
@@ -67,6 +101,8 @@ namespace bsExp
 		// App specific stuff
 		bool shutdown_ = false;
 		unsigned int seed_ = 0;
+		NormDistrFloatGen distrAzimuth_, distrElevation_, distrRadius_;
+		UniDistrUintGen distrMiddleware_;
 
 		// SDL stuff if used
 #ifdef USE_DUMMY_INPUTS
@@ -75,6 +111,6 @@ namespace bsExp
 #endif // USE_DUMMY_INPUTS
 
 		// Logging stuff
-		std::ofstream logStream_;
+		std::shared_ptr<spdlog::logger> pLogger_;
 	};
 }

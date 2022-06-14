@@ -1,47 +1,55 @@
 #include <Application.h>
 
 #include <cassert>
-#include <stdlib.h>
-#include <time.h>
-#include <iostream>
 
-bsExp::Application::Application(const char* hrtfFile, const char* brirFile, const char* soundFile, bs::ClipWrapMode wrapMode, const size_t bufferSize, const size_t sampleRate)
+#include <spdlog/spdlog.h>
+
+bsExp::Application::Application(const char* hrtfFile, const char* brirFile, const char* soundFile, const size_t randSeed)
 {
+	// Init log file.
+	pLogger_ = spdlog::basic_logger_mt("DummyLogger", "experimentData/dummyLog.txt");
+	pLogger_->info("Application starting up...!");
+
 	// Init bachelor renderers
-	bool result = threeDTI_renderer_.Init(hrtfFile, brirFile, bufferSize, sampleRate);
+	// Oleg@self: configure room spaces for each engine if possible: 8x7x3, facing the 8 axis.
+	constexpr const size_t BUFFER_SIZE = 1024;
+	constexpr const size_t SAMPLE_RATE = 44100;
+	bool result = threeDTI_renderer_.Init(hrtfFile, brirFile, BUFFER_SIZE, SAMPLE_RATE);
 	threeDTI_renderer_.SetIsActive(false);
 	assert(result, "Failed to initialize ThreeDTI_AudioRenderer!");
-	result = steamAudio_renderer_.Init(bufferSize, sampleRate);
+	result = steamAudio_renderer_.Init(BUFFER_SIZE, SAMPLE_RATE);
 	steamAudio_renderer_.SetIsActive(false);
 	assert(result, "Failed to initialize SteamAudio_AudioRenderer!");
-	result = fmod_renderer_.Init(bufferSize, sampleRate);
+	result = fmod_renderer_.Init(BUFFER_SIZE, SAMPLE_RATE);
 	assert(result, "Failed to initialize FMod_AudioRenderer!");
+	result = noise_renderer_.Init(BUFFER_SIZE, SAMPLE_RATE);
+	assert(result, "Failed to initialize Noise_AudioRenderer!");
 
-	auto soundId = threeDTI_renderer_.CreateSoundMaker(soundFile, wrapMode);
+	auto soundId = threeDTI_renderer_.CreateSoundMaker(soundFile, bs::ClipWrapMode::ONE_SHOT);
 	assert(soundId != bs::INVALID_ID, "ThreeDTI_AudioRenderer failed to load wav file!");
-	soundId = steamAudio_renderer_.CreateSoundMaker(soundFile, wrapMode);
+	soundId = steamAudio_renderer_.CreateSoundMaker(soundFile, bs::ClipWrapMode::ONE_SHOT);
 	assert(soundId != bs::INVALID_ID, "SteamAudio_AudioRenderer failed to load wav file!");
-	soundId = fmod_renderer_.CreateSoundMaker(soundFile, wrapMode);
+	soundId = fmod_renderer_.CreateSoundMaker(soundFile, bs::ClipWrapMode::ONE_SHOT);
 	assert(soundId != bs::INVALID_ID, "Fmod_AudioRenderer failed to load wav file!");
+	soundId = noise_renderer_.CreateSoundMaker(soundFile, bs::ClipWrapMode::LOOP);
+	assert(soundId != bs::INVALID_ID, "Noise_AudioRenderer failed to load wav file!");
 
 	// Init randomness lib and pick random renderer
-	seed_ = time(NULL);
-	srand(seed_);
-	selectedRenderer_ = static_cast<bsExp::AudioRendererType>(rand() % 3);
-	switch (selectedRenderer_)
-	{
-		case bsExp::AudioRendererType::ThreeDTI:
-		{
-			threeDTI_renderer_.SetIsActive(true);
-		}break;
-
-		case bsExp::AudioRendererType::SteamAudio:
-		{
-			steamAudio_renderer_.SetIsActive(true);
-		}break;
-
-		default: break;
-	}
+	constexpr const float MIN_ELEVATION = -15.0f; // In euler degrees. -15 instead of -90 since we don't want sound sources to spawn inside the ground, making it impossible for the participants to place the vr controller at the source of the sound.
+	constexpr const float MAX_ELEVATION = 45.0f; // In euler degrees. 45 instead of 90 since we don't want sound sources to spawn too high up for the participants to place the vr controller at the source of the sound.
+	constexpr const float MIN_RADIUS = 0.15f; // 15 cm away from listener at the closest to allow the experiment to take into account near-field effects.
+	constexpr const float MAX_RADIUS = 2.5f; // 2.5 meters away from the listener at the furthest due to room dimensions.
+	seed_ = randSeed;
+	pLogger_->info("Seeding normal distributions with seed_: {0:d}", seed_);
+	distrAzimuth_.SetSeed(seed_);
+	distrElevation_.SetSeed(seed_);
+	distrRadius_.SetSeed(seed_);
+	distrMiddleware_.SetSeed(seed_);
+	distrAzimuth_.SetDistributionRange(-180.0f, 180.0f);
+	distrElevation_.SetDistributionRange(MIN_ELEVATION, MAX_ELEVATION);
+	distrRadius_.SetDistributionRange(MIN_RADIUS, MAX_RADIUS);
+	distrMiddleware_.SetDistributionRange(0, 2);
+	selectedRenderer_ = AudioRendererType::Noise;
 
 	// Init appropriate application SDK
 #ifdef USE_DUMMY_INPUTS
@@ -53,11 +61,13 @@ bsExp::Application::Application(const char* hrtfFile, const char* brirFile, cons
 	}
 	sdlWindow_ = SDL_CreateWindow("MyWindow", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 720, 720, SDL_WINDOW_SHOWN);
 	assert(sdlWindow_, "Failed to create sdl window!");
+	pLogger_->info("SDL initialized.");
 #else
 	// Init openvr
 	vr::HmdError vrErr;
 	pVrSystem_ = vr::VR_Init(&vrErr, vr::EVRApplicationType::VRApplication_Background);
 	assert(vrErr == vr::EVRInitError::VRInitError_None, "Error initializing OpenVR!");
+	pLogger_->info("Openvr initialized.");
 
 	// Retireve ids of vr controllers.
 	for (size_t device = 0; device < vr::k_unMaxTrackedDeviceCount; device++)
@@ -76,15 +86,19 @@ bsExp::Application::Application(const char* hrtfFile, const char* brirFile, cons
 		}
 	}
 	assert(controller0Id_ != vr::k_unTrackedDeviceIndexInvalid && controller1Id_ != vr::k_unTrackedDeviceIndexInvalid, "Failed to get ids for two controllers!");
+	pLogger_->info("Identified vr controllers. Controller0Id_ is %u, Controller1Id_ is %u", controller0Id_, controller1Id_);
 #endif // USE_DUMMY_INPUTS
+	pLogger_->info("Application has finished initialization.");
 }
 
 bsExp::Application::~Application()
 {
+	pLogger_->info("Shutting down Application.");
 	// Shutdown bachelor renderers
 	threeDTI_renderer_.Shutdown();
 	steamAudio_renderer_.Shutdown();
 	fmod_renderer_.Shutdown();
+	noise_renderer_.Shutdown();
 
 	// Shutdown application sdk
 #ifdef USE_DUMMY_INPUTS
@@ -92,15 +106,25 @@ bsExp::Application::~Application()
 #else
 	vr::VR_Shutdown();
 #endif //! USE_DUMMY_INPUTS
+	pLogger_->info("Application has shut down.");
 }
 
 int bsExp::Application::RunProgram()
 {
+	pLogger_->info("Application is now running.");
+
 	while (!shutdown_)
 	{
 		// Poll events
 #ifdef USE_DUMMY_INPUTS
 		UpdateTransforms_();
+
+		constexpr const auto PARTICIPANT_TRIGGER = SDL_SCANCODE_1;
+
+		constexpr const auto SCIENTIST_TRIGGER = SDL_SCANCODE_2;
+		constexpr const auto LOG_DELIMITER = SDL_SCANCODE_4;
+		constexpr const auto TOGGLE_NOISE = SDL_SCANCODE_3;
+		constexpr const auto CHANGE_MIDDLEWARE_AND_POS = SDL_SCANCODE_5;
 
 		while (SDL_PollEvent(&sdlEvent_))
 		{
@@ -115,19 +139,30 @@ int bsExp::Application::RunProgram()
 							shutdown_ = true;
 						}break;
 
-						case SDL_SCANCODE_1:
+						case PARTICIPANT_TRIGGER:
 						{
-							ProcessTriggerPullOnController0_();
+							LogControllerPose_(controller1Id_);
 						}break;
 
-						case SDL_SCANCODE_2:
+						case SCIENTIST_TRIGGER:
 						{
-							ProcessPadPushOnController0_();
+							LogControllerPose_(controller0Id_);
 						}break;
 
-						case SDL_SCANCODE_3:
+						case LOG_DELIMITER:
 						{
-							ProcessTriggerPullOnController1_();
+							LogDelimiter_();
+						}break;
+
+						case TOGGLE_NOISE:
+						{
+							ToggleNoise_();
+						}break;
+
+						case CHANGE_MIDDLEWARE_AND_POS:
+						{
+							SetRandomRenderer_();
+							SetRandomSourcePos_();
 						}break;
 
 						default:
@@ -211,6 +246,7 @@ int bsExp::Application::RunProgram()
 		fmod_renderer_.Update();
 #endif // USE_DUMMY_INPUTS
 	}
+	pLogger_->info("Application is now stopping.");
 
 	return 0;
 }
@@ -227,51 +263,34 @@ void bsExp::Application::ProcessControllerInput_(const vr::TrackedDeviceIndex_t 
 
 		if (triggerDown && vrEvent_.trackedDeviceIndex == controller0Id_)
 		{
-			ProcessTriggerPullOnController0_();
+
 		}
 		else if (triggerDown && vrEvent_.trackedDeviceIndex == controller1Id_)
 		{
-			ProcessTriggerPullOnController1_();
+
 		}
 	}
 }
 
-void bsExp::Application::ProcessTriggerPullOnController0_()
+bool bsExp::Application::ToggleNoise_()
 {
-	std::cout << "Trigger on controller 0 press detected! Position of controller 0 is: " << controller0Transform_.m[0][3] << "; " << controller0Transform_.m[1][3] << "; " << controller0Transform_.m[2][3] << std::endl;
+	return false;
 }
 
-void bsExp::Application::ProcessTriggerPullOnController1_()
+void bsExp::Application::LogControllerPose_(const vr::TrackedDeviceIndex_t device)
 {
-	std::cout << "Trigger on controller 1 press detected! Position of controller 1 is: " << controller1Transform_.m[0][3] << "; " << controller1Transform_.m[1][3] << "; " << controller1Transform_.m[2][3] << std::endl;
-	std::cout << "Headset position is: " << hmdTransform_.m[0][3] << "; " << hmdTransform_.m[1][3] << "; " << hmdTransform_.m[2][3] << std::endl;
 }
 
-void bsExp::Application::ProcessPadPushOnController0_()
+void bsExp::Application::SetRandomSourcePos_()
 {
-	selectedRenderer_ = static_cast<bsExp::AudioRendererType>(rand() % 3);
-	currentSoundPos_ = RandomCartesianPos_();
-	switch (selectedRenderer_)
-	{
-		case AudioRendererType::ThreeDTI:
-		{
-			threeDTI_renderer_.MoveSoundMaker(0, currentSoundPos_.x, currentSoundPos_.y, currentSoundPos_.z);
-			// threeDTI_renderer_.ResetSoundMaker(0);
-		}
-		break;
-		case AudioRendererType::SteamAudio:
-		{
-			steamAudio_renderer_.MoveSoundMaker(0, currentSoundPos_.x, currentSoundPos_.y, currentSoundPos_.z);
-		}
-		break;
-		case AudioRendererType::FMod:
-		{
-			fmod_renderer_.MoveSoundMaker(0, currentSoundPos_.x, currentSoundPos_.y, currentSoundPos_.z);
-			fmod_renderer_.PlaySound(0);
-		}
-		break;
-		default:break;
-	}
+}
+
+void bsExp::Application::SetRandomRenderer_()
+{
+}
+
+void bsExp::Application::LogDelimiter_()
+{
 }
 
 bs::CartesianCoord bsExp::Application::PositionFromMatrix_(const vr::HmdMatrix34_t matrix)
@@ -279,32 +298,28 @@ bs::CartesianCoord bsExp::Application::PositionFromMatrix_(const vr::HmdMatrix34
 	return { matrix.m[0][3], matrix.m[1][3], matrix.m[2][3] };
 }
 
-bs::CartesianCoord bsExp::Application::RandomCartesianPos_(const float minRadius, const float maxRadius)
-{
-	bs::SphericalCoord s;
-	float fraction = static_cast<float>(rand() % 100) / 100.0f; // Random value between 0.0f and 1.0f
-	s.azimuth = bs::RemapToRange(fraction, 0.0f, 1.0f, -180.0f, 180.0f);
-	fraction = static_cast<float>(rand() % 100) / 100.0f;
-	s.elevation = bs::RemapToRange(fraction, 0.0f, 1.0f, -90.0f, 90.0f);
-	fraction = static_cast<float>(rand() % 100) / 100.0f;
-	s.radius = bs::RemapToRange(fraction, 0.0f, 1.0f, minRadius, maxRadius);
-	return bs::ToCartesian(s);
-}
-
 void bsExp::Application::UpdateTransforms_()
 {
 #ifdef USE_DUMMY_INPUTS
-	hmdTransform_.m[0][3] = (float)(rand() % 10 + 1);
-	hmdTransform_.m[1][3] = (float)(rand() % 10 + 1);
-	hmdTransform_.m[2][3] = (float)(rand() % 10 + 1);
+	// Set transforms to random positions.
 
-	controller0Transform_.m[0][3] = (float)(rand() % 10 + 1);
-	controller0Transform_.m[1][3] = (float)(rand() % 10 + 1);
-	controller0Transform_.m[2][3] = (float)(rand() % 10 + 1);
+	bs::SphericalCoord s{ distrAzimuth_.Generate(), distrElevation_.Generate(), distrRadius_.Generate() };
+	auto c = bs::ToCartesian(s);
+	hmdTransform_.m[0][3] = c.x;
+	hmdTransform_.m[1][3] = c.y;
+	hmdTransform_.m[2][3] = c.z;
 
-	controller1Transform_.m[0][3] = (float)(rand() % 10 + 1);
-	controller1Transform_.m[1][3] = (float)(rand() % 10 + 1);
-	controller1Transform_.m[2][3] = (float)(rand() % 10 + 1);
+	s = { distrAzimuth_.Generate(), distrElevation_.Generate(), distrRadius_.Generate() };
+	c = bs::ToCartesian(s);
+	controller0Transform_.m[0][3] = c.x;
+	controller0Transform_.m[1][3] = c.y;
+	controller0Transform_.m[2][3] = c.z;
+
+	s = { distrAzimuth_.Generate(), distrElevation_.Generate(), distrRadius_.Generate() };
+	c = bs::ToCartesian(s);
+	controller1Transform_.m[0][3] = c.x;
+	controller1Transform_.m[1][3] = c.y;
+	controller1Transform_.m[2][3] = c.z;
 #else
 	vr::VRControllerState_t hmdState, controller0State, controller1State; // Not actually needed but there's no GetControllerPose() function so...
 	vr::TrackedDevicePose_t hmdPose, controller0Pose, controller1Pose;
@@ -321,4 +336,40 @@ void bsExp::Application::UpdateTransforms_()
 	controller0Transform_ = controller0Pose.mDeviceToAbsoluteTracking;
 	controller1Transform_ = controller1Pose.mDeviceToAbsoluteTracking;
 #endif //! USE_DUMMY_INPUTS
+}
+
+size_t bsExp::UniDistrUintGen::seed_ = (size_t)-1;
+
+void bsExp::UniDistrUintGen::SetSeed(const size_t seed)
+{
+	seed_ = seed;
+	e_ = std::default_random_engine(seed_);
+}
+
+void bsExp::UniDistrUintGen::SetDistributionRange(const size_t min, const size_t max)
+{
+	d_ = std::uniform_int_distribution(min, max);
+}
+
+size_t bsExp::UniDistrUintGen::Generate()
+{
+	return d_(e_);
+}
+
+size_t bsExp::NormDistrFloatGen::seed_ = (size_t)-1;
+
+void bsExp::NormDistrFloatGen::SetSeed(const size_t seed)
+{
+	seed_ = seed;
+	e_ = std::default_random_engine(seed_);
+}
+
+void bsExp::NormDistrFloatGen::SetDistributionRange(const float min, const float max)
+{
+	d_ = std::normal_distribution(min, max);
+}
+
+float bsExp::NormDistrFloatGen::Generate()
+{
+	return d_(e_);
 }

@@ -61,8 +61,13 @@ add_executable(ProfilingApp ${ProfilingApp_include} ${ProfilingApp_src})
 target_include_directories(ProfilingApp PUBLIC
 	${PROJECT_SOURCE_DIR}/ProfilingApp/include/
 	${PROJECT_SOURCE_DIR}/AudioEngineStatic/include/
+	${PROJECT_SOURCE_DIR}/thirdparty/spdlog/include/
 	)
-target_link_libraries(ProfilingApp PRIVATE AudioEngine)
+target_link_libraries(ProfilingApp PRIVATE
+	general AudioEngine
+	optimized ${PROJECT_SOURCE_DIR}/thirdparty/spdlog/lib/spdlog.lib
+	debug ${PROJECT_SOURCE_DIR}/thirdparty/spdlog/lib/spdlogd.lib
+	)
 set_target_properties(ProfilingApp PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/ProfilingApp/lib"
     LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/ProfilingApp/lib"
