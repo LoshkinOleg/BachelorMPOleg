@@ -43,19 +43,14 @@ bsExp::Application::Application(const char* hrtfFile, const char* brirFile, cons
 	assert(result, "Failed to initialize SteamAudio_AudioRenderer!");
 	result = fmod_renderer_.Init(BUFFER_SIZE, SAMPLE_RATE);
 	assert(result, "Failed to initialize FMod_AudioRenderer!");
-	result = noise_renderer_.Init(BUFFER_SIZE, SAMPLE_RATE);
-	assert(result, "Failed to initialize Noise_AudioRenderer!");
-	noise_renderer_.SetIsActive(true); // Starting with noise on.
 
 	constexpr const char* NOISE_PATH = "../resources/AudioSamples/brownNoise_44100Hz_32f_5sec.wav";
-	auto soundId = threeDTI_renderer_.CreateSoundMaker(soundFile, bs::ClipWrapMode::ONE_SHOT);
-	assert(soundId != bs::INVALID_ID, "ThreeDTI_AudioRenderer failed to load wav file!");
-	soundId = steamAudio_renderer_.CreateSoundMaker(soundFile, bs::ClipWrapMode::ONE_SHOT);
-	assert(soundId != bs::INVALID_ID, "SteamAudio_AudioRenderer failed to load wav file!");
-	soundId = fmod_renderer_.CreateSoundMaker(soundFile, bs::ClipWrapMode::ONE_SHOT);
-	assert(soundId != bs::INVALID_ID, "Fmod_AudioRenderer failed to load wav file!");
-	soundId = noise_renderer_.CreateSoundMaker(NOISE_PATH, bs::ClipWrapMode::LOOP);
-	assert(soundId != bs::INVALID_ID, "Noise_AudioRenderer failed to load wav file!");
+	threeDTI_renderer_.CreateSoundMaker(NOISE_PATH, bs::ClipWrapMode::LOOP, false);
+	threeDTI_renderer_.CreateSoundMaker(soundFile, bs::ClipWrapMode::ONE_SHOT);
+	steamAudio_renderer_.CreateSoundMaker(NOISE_PATH, bs::ClipWrapMode::LOOP, false);
+	steamAudio_renderer_.CreateSoundMaker(soundFile, bs::ClipWrapMode::ONE_SHOT);
+	fmod_renderer_.CreateSoundMaker(NOISE_PATH, bs::ClipWrapMode::LOOP, false);
+	fmod_renderer_.CreateSoundMaker(soundFile, bs::ClipWrapMode::ONE_SHOT);
 
 	// Init randomness lib and pick random renderer
 	constexpr const float MIN_ELEVATION = -15.0f; // In euler degrees. -15 instead of -90 since we don't want sound sources to spawn inside the ground, making it impossible for the participants to place the vr controller at the source of the sound.
@@ -120,7 +115,6 @@ bsExp::Application::~Application()
 	threeDTI_renderer_.Shutdown();
 	steamAudio_renderer_.Shutdown();
 	fmod_renderer_.Shutdown();
-	noise_renderer_.Shutdown();
 
 	// Shutdown application sdk
 #ifdef USE_DUMMY_INPUTS
@@ -297,47 +291,17 @@ void bsExp::Application::ProcessControllerInput_(const vr::TrackedDeviceIndex_t 
 
 bool bsExp::Application::ToggleNoise_()
 {
-	if (noiseIsPlaying_)
-	{
-		noiseIsPlaying_ = false;
-		pLogger_->info("Stopped playing noise over headphones.");
-		noise_renderer_.SetIsActive(false);
-		switch (selectedRenderer_)
-		{
-			case bsExp::AudioRendererType::ThreeDTI:
-			{
-				threeDTI_renderer_.SetIsActive(true);
-			}
-			break;
-			case bsExp::AudioRendererType::SteamAudio:
-			{
-				steamAudio_renderer_.SetIsActive(true);
-			}
-			break;
-			case bsExp::AudioRendererType::FMod:
-			{
-				fmod_renderer_.PlaySound(0);
-			}
-			break;
-			default:
-			break;
-		}
-		return false;
-	}
-	else
-	{
-		noiseIsPlaying_ = true;
-		threeDTI_renderer_.SetIsActive(false);
-		steamAudio_renderer_.SetIsActive(false);
-		if (selectedRenderer_ == AudioRendererType::FMod) fmod_renderer_.StopSound(0);
-		noise_renderer_.SetIsActive(true);
-		pLogger_->info("Started playing noise over headphones.");
-		return true;
-	}
+	assert(threeDTI_renderer_.GetSelectedSound() == steamAudio_renderer_.GetSelectedSound() && steamAudio_renderer_.GetSelectedSound() == fmod_renderer_.GetSelectedSound(), "AudioRenderers have different sounds selected!");
+	const bool noiseIsSelected = threeDTI_renderer_.GetSelectedSound() == 0;
+	threeDTI_renderer_.SetSelectedSound(noiseIsSelected ? 1 : 0);
+	steamAudio_renderer_.SetSelectedSound(noiseIsSelected ? 1 : 0);
+	fmod_renderer_.SetSelectedSound(noiseIsSelected ? 1 : 0);
+	return !noiseIsSelected;
 }
 
 void bsExp::Application::LogControllerPose_(const vr::TrackedDeviceIndex_t device)
 {
+	/*
 	if (device == scientistControllerId_)
 	{
 		const auto pos = PositionFromMatrix_(scientistControllerTransform_);
@@ -352,15 +316,16 @@ void bsExp::Application::LogControllerPose_(const vr::TrackedDeviceIndex_t devic
 	{
 		assert(false, "Received an invalid device id in LogControllerPose_!");
 	}
+	*/
 }
 
 void bsExp::Application::SetRandomSourcePos_()
 {
 	currentSoundPos_ = bs::ToCartesian(bs::SphericalCoord{ distrAzimuth_.Generate(), distrElevation_.Generate(), distrRadius_.Generate() });
 
-	threeDTI_renderer_.MoveSoundMaker(0, currentSoundPos_.x, currentSoundPos_.y, currentSoundPos_.z);
-	steamAudio_renderer_.MoveSoundMaker(0, currentSoundPos_.x, currentSoundPos_.y, currentSoundPos_.z);
-	fmod_renderer_.MoveSoundMaker(0, currentSoundPos_.x, currentSoundPos_.y, currentSoundPos_.z);
+	threeDTI_renderer_.MoveSoundMaker(threeDTI_renderer_.GetSelectedSound(), currentSoundPos_.x, currentSoundPos_.y, currentSoundPos_.z);
+	steamAudio_renderer_.MoveSoundMaker(steamAudio_renderer_.GetSelectedSound(), currentSoundPos_.x, currentSoundPos_.y, currentSoundPos_.z);
+	fmod_renderer_.MoveSoundMaker(fmod_renderer_.GetSelectedSound(), currentSoundPos_.x, currentSoundPos_.y, currentSoundPos_.z);
 
 	pLogger_->info("Set new random position for sound source at: ({0:03.2f};{1:03.2f};{2:03.2f})", currentSoundPos_.x, currentSoundPos_.y, currentSoundPos_.z);
 }
@@ -382,7 +347,7 @@ void bsExp::Application::SetRandomRenderer_()
 		break;
 		case bsExp::AudioRendererType::FMod:
 		{
-			fmod_renderer_.StopSound(0);
+			fmod_renderer_.StopSound(fmod_renderer_.GetSelectedSound());
 		}
 		break;
 		default:break;
@@ -407,7 +372,7 @@ void bsExp::Application::SetRandomRenderer_()
 		break;
 		case bsExp::AudioRendererType::FMod:
 		{
-			fmod_renderer_.PlaySound(0);
+			fmod_renderer_.PlaySound(fmod_renderer_.GetSelectedSound());
 			pLogger_->info("Selected fmod renderer.");
 		}
 		break;

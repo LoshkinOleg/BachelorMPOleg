@@ -24,7 +24,7 @@ namespace bs
 		SteamAudio_SoundMaker& operator=(SteamAudio_SoundMaker&&) = default; // There's no need for move assignment for this class.
 
 		// Oleg@self: those really should be replaced with constructors / destructors.
-		bool Init(PaStreamCallback* serviceAudioCallback, bs::SteamAudio_AudioRenderer* engine, const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT);
+		bool Init(PaStreamCallback* serviceAudioCallback, bs::SteamAudio_AudioRenderer* engine, const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT, const bool spatialize = true);
 		void Shutdown();
 
 		void SetPosition(const float globalX, const float globalY, const float globalZ);
@@ -64,5 +64,6 @@ namespace bs
 		uint32_t currentBegin_ = 0;
 		uint32_t currentEnd_ = 0;
 		ClipWrapMode wrapMode_ = ClipWrapMode::ONE_SHOT;
+		bool spatialized_ = true;
 	};
 }

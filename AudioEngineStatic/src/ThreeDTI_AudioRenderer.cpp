@@ -64,10 +64,10 @@ void bs::ThreeDTI_AudioRenderer::Shutdown()
 	core_.RemoveListener();
 }
 
-bs::SoundMakerId bs::ThreeDTI_AudioRenderer::CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode)
+bs::SoundMakerId bs::ThreeDTI_AudioRenderer::CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode, const bool spatialize)
 {
 	sounds_.emplace_back(ThreeDTI_SoundMaker());
-	if (!sounds_.back().Init(&ServiceAudio_, this, wavFileName, wrapMode))
+	if (!sounds_.back().Init(&ServiceAudio_, this, wavFileName, wrapMode, spatialize))
 	{
 		assert(false, "Problem initializing the new ThreeDTI_SoundMaker!");
 		sounds_.pop_back();
@@ -95,8 +95,19 @@ void bs::ThreeDTI_AudioRenderer::SetIsActive(const bool isActive)
 	isActive_ = isActive;
 	if (isActive_ && sounds_.size())
 	{
-		sounds_[0].Reset(*this);
+		sounds_[selectedSound_].Reset(*this);
 	}
+}
+
+void bs::ThreeDTI_AudioRenderer::SetSelectedSound(const size_t soundId)
+{
+	assert(soundId < sounds_.size(), "Invalid soundId passed to SetSelectedSound()!");
+	selectedSound_ = soundId;
+}
+
+size_t bs::ThreeDTI_AudioRenderer::GetSelectedSound() const
+{
+	return selectedSound_;
 }
 
 void bs::ThreeDTI_AudioRenderer::ResetEnvironment()
@@ -123,9 +134,10 @@ int bs::ThreeDTI_AudioRenderer::ServiceAudio_
 {
 	auto* engine = (ThreeDTI_AudioRenderer*)userData; // Annoying hack to have a non static servicing method.
 	if (engine->sounds_.size() <= 0) return paContinue;
-	auto* sound = dynamic_cast<ThreeDTI_SoundMaker*>(&engine->sounds_[0]);
+	auto* sound = dynamic_cast<ThreeDTI_SoundMaker*>(&engine->sounds_[engine->selectedSound_]);
 	auto* outBuff = static_cast<float*>(outputBuffer); // Cast output buffer to float buffer.
-	static CStereoBuffer<float> processedFrame;
+	// static CStereoBuffer<float> processedFrame;
+	CStereoBuffer<float> processedFrame;
 
 	if (engine->isActive_)
 	{

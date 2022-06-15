@@ -23,7 +23,7 @@ namespace bs
 		ThreeDTI_SoundMaker& operator=(const ThreeDTI_SoundMaker&) = delete;
 		ThreeDTI_SoundMaker& operator=(ThreeDTI_SoundMaker&&) = default;
 
-		bool Init(PaStreamCallback* serviceAudioCallback, bs::ThreeDTI_AudioRenderer* engine, const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT);
+		bool Init(PaStreamCallback* serviceAudioCallback, bs::ThreeDTI_AudioRenderer* engine, const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT, const bool spatialize = true);
 		void Shutdown();
 
 		void SetPosition(const float globalX, const float globalY, const float globalZ);
@@ -53,5 +53,6 @@ namespace bs
 		uint32_t currentBegin_ = 0;
 		uint32_t currentEnd_ = 0; // Points to subset of soundData that's currently in ears_.
 		ClipWrapMode wrapMode_ = ClipWrapMode::ONE_SHOT;
+		bool spatialized_ = true;
 	};
 }

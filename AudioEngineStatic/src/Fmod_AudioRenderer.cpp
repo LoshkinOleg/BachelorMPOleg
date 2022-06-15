@@ -53,10 +53,10 @@ void bs::Fmod_AudioRenderer::Shutdown()
 	fmodSystem_->release();
 }
 
-bs::SoundMakerId bs::Fmod_AudioRenderer::CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode)
+bs::SoundMakerId bs::Fmod_AudioRenderer::CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode, bool spatialize)
 {
 	sounds_.emplace_back(Fmod_SoundMaker());
-	if (!sounds_.back().Init(this, wavFileName, fmodSystem_, wrapMode))
+	if (!sounds_.back().Init(this, wavFileName, fmodSystem_, wrapMode, spatialize))
 	{
 		assert(false, "Problem initializing the new SoundMaker!");
 		sounds_.pop_back();
@@ -89,4 +89,15 @@ void bs::Fmod_AudioRenderer::StopSound(SoundMakerId id)
 {
 	assert(id != INVALID_ID, "Trying to stop a sound with an invalid id!");
 	sounds_[id].Stop();
+}
+
+void bs::Fmod_AudioRenderer::SetSelectedSound(const size_t soundId)
+{
+	assert(soundId < sounds_.size(), "Invalid soundId passed to SetSelectedSound()!");
+	selectedSound_ = soundId;
+}
+
+bool bs::Fmod_AudioRenderer::GetSelectedSound() const
+{
+	return selectedSound_;
 }

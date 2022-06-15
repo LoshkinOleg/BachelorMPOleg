@@ -13,10 +13,12 @@
 #include "ThreeDTI_AudioRenderer.h"
 #include "SteamAudio_AudioRenderer.h"
 #include "Fmod_AudioRenderer.h"
-#include "Noise_AudioRenderer.h"
 
 namespace bsExp
 {
+	constexpr const size_t NOISE_SOUND = 0;
+	constexpr const size_t SPEECH_SOUND = 1;
+
 	enum class AudioRendererType : size_t // size_t to ensure we can do simple arithmetic with it when generating random numbers.
 	{
 		ThreeDTI = 0,
@@ -85,10 +87,9 @@ namespace bsExp
 		bs::ThreeDTI_AudioRenderer threeDTI_renderer_{};
 		bs::SteamAudio_AudioRenderer steamAudio_renderer_{};
 		bs::Fmod_AudioRenderer fmod_renderer_{};
-		bsExp::Noise_AudioRenderer noise_renderer_{};
 		AudioRendererType selectedRenderer_ = AudioRendererType::ThreeDTI;
 		bs::CartesianCoord currentSoundPos_{};
-		bool noiseIsPlaying_ = true;
+		bs::SoundMakerId soundBeingPlayed_ = NOISE_SOUND;
 
 		// OpenVR stuff
 		vr::IVRSystem* pVrSystem_ = nullptr;

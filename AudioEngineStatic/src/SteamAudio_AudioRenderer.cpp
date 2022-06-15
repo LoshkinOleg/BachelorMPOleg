@@ -43,10 +43,10 @@ void bs::SteamAudio_AudioRenderer::Shutdown()
 	}
 }
 
-bs::SoundMakerId bs::SteamAudio_AudioRenderer::CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode)
+bs::SoundMakerId bs::SteamAudio_AudioRenderer::CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode, const bool spatialize)
 {
 	sounds_.emplace_back(SteamAudio_SoundMaker());
-	if (!sounds_.back().Init(&ServiceAudio_, this, wavFileName, wrapMode))
+	if (!sounds_.back().Init(&ServiceAudio_, this, wavFileName, wrapMode, spatialize))
 	{
 		assert(false, "Problem initializing the new SoundMaker!");
 		sounds_.pop_back();
@@ -74,8 +74,19 @@ void bs::SteamAudio_AudioRenderer::SetIsActive(const bool isActive)
 	isActive_ = isActive;
 	if (isActive_ && sounds_.size())
 	{
-		sounds_[0].Reset(*this);
+		sounds_[selectedSound_].Reset(*this);
 	}
+}
+
+void bs::SteamAudio_AudioRenderer::SetSelectedSound(const size_t soundId)
+{
+	assert(soundId < sounds_.size(), "Invalid soundId passed to SetSelectedSound()!");
+	selectedSound_ = soundId;
+}
+
+size_t bs::SteamAudio_AudioRenderer::GetSelectedSound() const
+{
+	return selectedSound_;
 }
 
 #include <iostream>
@@ -90,9 +101,10 @@ int bs::SteamAudio_AudioRenderer::ServiceAudio_
 
 	auto* engine = (SteamAudio_AudioRenderer*)userData; // Annoying hack to have a non static servicing method.
 	if (engine->sounds_.size() <= 0) return paContinue;
-	auto* sound = dynamic_cast<SteamAudio_SoundMaker*>(&engine->sounds_[0]);
+	auto* sound = dynamic_cast<SteamAudio_SoundMaker*>(&engine->sounds_[engine->selectedSound_]);
 	auto* outBuff = static_cast<float*>(outputBuffer); // Cast output buffer to float buffer.
-	static std::vector<float> processedFrame(BUFFER_SIZE_ * 2);
+	// static std::vector<float> processedFrame(BUFFER_SIZE_ * 2);
+	std::vector<float> processedFrame(BUFFER_SIZE_ * 2);
 
 	if (engine->isActive_)
 	{

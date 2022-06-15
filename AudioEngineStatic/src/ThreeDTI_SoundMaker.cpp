@@ -3,11 +3,12 @@
 #include <ThreeDTI_AudioRenderer.h>
 #include <UtilityFunctions.h>
 
-bool bs::ThreeDTI_SoundMaker::Init(PaStreamCallback* serviceAudioCallback, bs::ThreeDTI_AudioRenderer* engine, const char* wavFileName, const ClipWrapMode wrapMode)
+bool bs::ThreeDTI_SoundMaker::Init(PaStreamCallback* serviceAudioCallback, bs::ThreeDTI_AudioRenderer* engine, const char* wavFileName, const ClipWrapMode wrapMode, const bool spatialize)
 {
 	currentBegin_ = 0;
 	currentEnd_ = 0;
 	wrapMode_ = wrapMode;
+	spatialized_ = spatialize;
 
 	soundData_ = LoadWav(wavFileName, 1, engine->GetSampleRate());
 
@@ -38,12 +39,15 @@ bool bs::ThreeDTI_SoundMaker::Init(PaStreamCallback* serviceAudioCallback, bs::T
 	err_ = Pa_StartStream(pStream_); // Oleg@self: I think this should be part of Renderer instead.
 	assert(!err_, "Sound maker reported error starting a stream.");
 
-	source_ = engine->GetCore().CreateSingleSourceDSP();
-	source_->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
-	source_->DisableNearFieldEffect();
-	source_->EnableAnechoicProcess();
-	source_->EnableDistanceAttenuationAnechoic();
-	source_->EnableDistanceAttenuationReverb(); // Oleg@self: investigate
+	if (spatialized_)
+	{
+		source_ = engine->GetCore().CreateSingleSourceDSP();
+		source_->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
+		source_->DisableNearFieldEffect();
+		source_->EnableAnechoicProcess();
+		source_->EnableDistanceAttenuationAnechoic();
+		source_->EnableDistanceAttenuationReverb(); // Oleg@self: investigate
+	}
 
 	return true;
 }
@@ -56,18 +60,24 @@ void bs::ThreeDTI_SoundMaker::Shutdown()
 }
 void bs::ThreeDTI_SoundMaker::SetPosition(float globalX, float globalY, float globalZ)
 {
-	Common::CTransform t = source_->GetSourceTransform(); // Copy transform.
-	t.SetPosition(Common::CVector3(globalX, globalY, globalZ)); // Modify it.
-	source_->SetSourceTransform(t); // And set it.
+	if (spatialized_)
+	{
+		Common::CTransform t = source_->GetSourceTransform(); // Copy transform.
+		t.SetPosition(Common::CVector3(globalX, globalY, globalZ)); // Modify it.
+		source_->SetSourceTransform(t); // And set it.
+	}
 }
 
 void bs::ThreeDTI_SoundMaker::ProcessAudio(CStereoBuffer<float>& outBuff, ThreeDTI_AudioRenderer& engine)
 {
 	const auto bufferSize = engine.GetBufferSize();
 	const auto wavSize = soundData_.size();
-	static CMonoBuffer<float> frame(bufferSize);
-	static Common::CEarPair<CMonoBuffer<float>> anechoic{ CMonoBuffer<float>(bufferSize) , CMonoBuffer<float>(bufferSize) };
-	static Common::CEarPair<CMonoBuffer<float>> reverb{ CMonoBuffer<float>(bufferSize) , CMonoBuffer<float>(bufferSize) };
+	// static CMonoBuffer<float> frame(bufferSize);
+	// static Common::CEarPair<CMonoBuffer<float>> anechoic{ CMonoBuffer<float>(bufferSize) , CMonoBuffer<float>(bufferSize) };
+	// static Common::CEarPair<CMonoBuffer<float>> reverb{ CMonoBuffer<float>(bufferSize) , CMonoBuffer<float>(bufferSize) };
+	CMonoBuffer<float> frame(bufferSize);
+	Common::CEarPair<CMonoBuffer<float>> anechoic{ CMonoBuffer<float>(bufferSize) , CMonoBuffer<float>(bufferSize) };
+	Common::CEarPair<CMonoBuffer<float>> reverb{ CMonoBuffer<float>(bufferSize) , CMonoBuffer<float>(bufferSize) };
 
 	// Fill all buffers with silence.
 	outBuff.Fill(bufferSize * 2, 0.0f); // Output is interleaved stereo, hence the *2
@@ -108,25 +118,40 @@ void bs::ThreeDTI_SoundMaker::ProcessAudio(CStereoBuffer<float>& outBuff, ThreeD
 		}
 	}
 
-	// Process anechoic.
-	source_->SetBuffer(frame); // Set source buffer to read from. Makes the next lines use the window buffer as source of sound data.
-	source_->ProcessAnechoic(anechoic.left, anechoic.right); // Write anechoic component of the sound to anechoic buffer.
-	// Oleg@self: investigate, does this need to be called for every sound maker? Or does it need to be done only once per servicing?
-	// Process reverb.
-	assert(reverb.left.size() > 0, "Somehow the buffer yeeted itself out of existence...");
-	engine.GetEnvironment()->ProcessVirtualAmbisonicReverb(reverb.left, reverb.right); // Write reverb component of the sound to reverb buffer.
-	// Combine anechoic and reverb then interlace.
-	anechoic.left += reverb.left;
-	anechoic.right += reverb.right;
-	outBuff.Interlace(anechoic.left, anechoic.right);
+	if (spatialized_)
+	{
+		// Process anechoic.
+		source_->SetBuffer(frame); // Set source buffer to read from. Makes the next lines use the window buffer as source of sound data.
+		source_->ProcessAnechoic(anechoic.left, anechoic.right); // Write anechoic component of the sound to anechoic buffer.
+		// Oleg@self: investigate, does this need to be called for every sound maker? Or does it need to be done only once per servicing?
+		// Process reverb.
+		assert(reverb.left.size() > 0, "Somehow the buffer yeeted itself out of existence...");
+		engine.GetEnvironment()->ProcessVirtualAmbisonicReverb(reverb.left, reverb.right); // Write reverb component of the sound to reverb buffer.
+		// Combine anechoic and reverb then interlace.
+		anechoic.left += reverb.left;
+		anechoic.right += reverb.right;
+		outBuff.Interlace(anechoic.left, anechoic.right);
+	}
+	else
+	{
+		for (size_t i = 0; i < bufferSize; i++)
+		{
+			outBuff[i * 2] = frame[i];
+			outBuff[i * 2 + 1] = frame[i];
+		}
+	}
+
 }
 
 void bs::ThreeDTI_SoundMaker::Reset(ThreeDTI_AudioRenderer& renderer)
 {
 	currentBegin_ = 0;
 	currentEnd_ = 0;
-	source_->ResetSourceBuffers();
-	renderer.ResetEnvironment();
+	if (spatialized_)
+	{
+		source_->ResetSourceBuffers();
+		renderer.ResetEnvironment();
+	}
 }
 
 std::shared_ptr<Binaural::CSingleSourceDSP> bs::ThreeDTI_SoundMaker::GetSource()

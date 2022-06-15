@@ -23,7 +23,7 @@ namespace bs
 		Fmod_SoundMaker& operator=(Fmod_SoundMaker&&) = default; // There's no need for move assignment for this class.
 
 		// Oleg@self: those really should be replaced with constructors / destructors.
-		bool Init(bs::Fmod_AudioRenderer* engine, const char* wavFileName, FMOD::System* fmodSystem, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT);
+		bool Init(bs::Fmod_AudioRenderer* engine, const char* wavFileName, FMOD::System* fmodSystem, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT, const bool spatialize = true);
 		void Play(FMOD::System* fmodSystem);
 		void Stop();
 		void Shutdown();
@@ -43,5 +43,6 @@ namespace bs
 
 		// SoundMaker specific stuff
 		ClipWrapMode wrapMode_ = ClipWrapMode::ONE_SHOT;
+		bool spatialized_ = true;
 	};
 }

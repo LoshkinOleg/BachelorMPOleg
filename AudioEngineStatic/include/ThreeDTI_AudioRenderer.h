@@ -19,13 +19,15 @@ namespace bs
 		bool Init(const char* hrtfFileName, const char* brirFileName, size_t BUFFER_SIZE = 1024, size_t SAMPLE_RATE = 44100);
 		void Shutdown();
 
-		SoundMakerId CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT);
+		SoundMakerId CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT, const bool spatialize = true);
 		void MoveSoundMaker(SoundMakerId id, const float globalX, const float globalY, const float globalZ);
 		void ResetSoundMaker(SoundMakerId id);
 
 		inline const std::vector<ThreeDTI_SoundMaker>& GetSounds() const { return sounds_; };
 
 		void SetIsActive(const bool isActive);
+		void SetSelectedSound(const size_t soundId);
+		size_t GetSelectedSound() const;
 
 		void ResetEnvironment();
 		Environment GetEnvironment();
@@ -50,6 +52,7 @@ namespace bs
 
 		// Renderer specific stuff
 		std::vector<ThreeDTI_SoundMaker> sounds_;
+		size_t selectedSound_ = 0;
 
 		static size_t BUFFER_SIZE_;
 		static size_t SAMPLE_RATE_;
