@@ -3,23 +3,17 @@
 #include <array>
 #include <vector>
 
+#define BS_NON_COPYABLE(type) type(const type&) = delete; type& operator=(const type&) = delete
+#define BS_NON_MOVEABLE(type) type(type&&) = delete; type& operator=(type&&) = delete
+
 namespace bs
 {
-	enum class ClipWrapMode
-	{
-		ONE_SHOT,
-		LOOP
-	};
-
-	using SoundMakerId = size_t;
-	constexpr const size_t INVALID_ID = (size_t)-1;
-
 	/*
 		Units are in meters. Values are ]-inf;+inf[
 	*/
 	struct CartesianCoord
 	{
-		float x, y, z;
+		float x{ 0 }, y{ 0 }, z{ 0 };
 	};
 	/*
 		Units are in euler degrees for azimuth and elevation. Meters for radius.
@@ -29,7 +23,7 @@ namespace bs
 	*/
 	struct SphericalCoord
 	{
-		float azimuth, elevation, radius;
+		float azimuth{ 0 }, elevation{ 0 }, radius{ 0 };
 	};
 
 	std::vector<float> LoadWav(const char* path, const uint32_t nrOfChannels, const uint32_t sampleRate);
@@ -38,5 +32,6 @@ namespace bs
 	std::array<float, 3> ToStdArray(const SphericalCoord coord);
 	CartesianCoord ToCartesian(const SphericalCoord coord);
 	SphericalCoord ToSpherical(const CartesianCoord coord);
+
 	float RemapToRange(const float value, const float inMin, const float inMax, const float outMin, const float outMax);
 }

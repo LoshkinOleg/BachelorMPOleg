@@ -1,6 +1,7 @@
 #include <SteamAudio_AudioRenderer.h>
 
 #include <cassert>
+#include <iostream>
 
 #ifndef BUILD_WITH_EASY_PROFILER
 #define BUILD_WITH_EASY_PROFILER
@@ -20,6 +21,35 @@ bool bs::SteamAudio_AudioRenderer::Init(size_t BUFFER_SIZE, size_t SAMPLE_RATE)
 	// Init portaudio.
 	auto err = Pa_Initialize();
 	if (err != paNoError) throw;
+
+	// Portaudio stuff
+	PaStreamParameters outputParams{
+		Pa_GetDefaultOutputDevice(), // Oleg@self: handle this properly.
+		2,
+		paFloat32, // Oleg@self: check this properly!
+		0.050, // Oleg@self: magic number. Investigate.
+		NULL
+	};
+
+	err_ = Pa_OpenStream(
+		&pStream_,
+		NULL,
+		&outputParams,
+		(double)SteamAudio_AudioRenderer::GetSampleRate(),
+		(unsigned long)SteamAudio_AudioRenderer::GetBufferSize(),
+		paClipOff, // Oleg@self: investigate
+		ServiceAudio_,
+		this
+	);
+
+	if (err_ != paNoError)
+	{
+		std::cerr << "Error opening stream: " << Pa_GetErrorText(err_) << std::endl;
+		return false;
+	}
+
+	err_ = Pa_StartStream(pStream_); // Oleg@self: I think this should be part of Renderer instead.
+	assert(!err_, "Sound maker reported error starting a stream.");
 
 #ifdef USE_EASY_PROFILER
 	// Enable writing a profiling file by easy_profiler.
@@ -41,12 +71,18 @@ void bs::SteamAudio_AudioRenderer::Shutdown()
 	{
 		sound.Shutdown();
 	}
+
+	// Portaudio stuff
+	err_ = Pa_StopStream(pStream_); // Oleg@self: it's important to do this first! Otherwise ServiceAudio_() might be called when the iplBuffer has been freed!
+	assert(!err_, "Sound maker reported error stopping a stream.");
+	err_ = Pa_CloseStream(pStream_);
+	assert(!err_, "Sound maker reported error closing a stream.");
 }
 
 bs::SoundMakerId bs::SteamAudio_AudioRenderer::CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode, const bool spatialize)
 {
 	sounds_.emplace_back(SteamAudio_SoundMaker());
-	if (!sounds_.back().Init(&ServiceAudio_, this, wavFileName, wrapMode, spatialize))
+	if (!sounds_.back().Init(this, wavFileName, wrapMode, spatialize))
 	{
 		assert(false, "Problem initializing the new SoundMaker!");
 		sounds_.pop_back();
@@ -81,7 +117,9 @@ void bs::SteamAudio_AudioRenderer::SetIsActive(const bool isActive)
 void bs::SteamAudio_AudioRenderer::SetSelectedSound(const size_t soundId)
 {
 	assert(soundId < sounds_.size(), "Invalid soundId passed to SetSelectedSound()!");
+	sounds_[selectedSound_].SetPaused(true);
 	selectedSound_ = soundId;
+	sounds_[selectedSound_].SetPaused(false);
 }
 
 size_t bs::SteamAudio_AudioRenderer::GetSelectedSound() const

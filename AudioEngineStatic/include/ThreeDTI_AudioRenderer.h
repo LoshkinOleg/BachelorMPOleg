@@ -2,61 +2,33 @@
 
 #include <BinauralSpatializer/3DTI_BinauralSpatializer.h>
 
+#include "BSCommon.h"
 #include "ThreeDTI_SoundMaker.h"
-
-// Oleg@self: make an abstraction out of this.
 
 namespace bs
 {
-	using Listener = std::shared_ptr<Binaural::CListener>;
-	using Environment = std::shared_ptr<Binaural::CEnvironment>;
-
-	// Oleg@self: make an abstraction out of this.
-
 	class ThreeDTI_AudioRenderer
 	{
 	public:
-		bool Init(const char* hrtfFileName, const char* brirFileName, size_t BUFFER_SIZE = 1024, size_t SAMPLE_RATE = 44100);
-		void Shutdown();
+		BS_NON_COPYABLE(ThreeDTI_AudioRenderer);
+		BS_NON_MOVEABLE(ThreeDTI_AudioRenderer);
 
-		SoundMakerId CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT, const bool spatialize = true);
-		void MoveSoundMaker(SoundMakerId id, const float globalX, const float globalY, const float globalZ);
-		void ResetSoundMaker(SoundMakerId id);
+		ThreeDTI_AudioRenderer() = delete;
+		ThreeDTI_AudioRenderer(const char* hrtfFileName, const char* brirFileName, const size_t bufferSize, const size_t sampleRate);
+		~ThreeDTI_AudioRenderer();
 
-		inline const std::vector<ThreeDTI_SoundMaker>& GetSounds() const { return sounds_; };
+		ThreeDTI_SoundMaker& CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize);
 
-		void SetIsActive(const bool isActive);
-		void SetSelectedSound(const size_t soundId);
-		size_t GetSelectedSound() const;
+		void ProcessAudio();
 
-		void ResetEnvironment();
-		Environment GetEnvironment();
-		Binaural::CCore& GetCore();
-
-		static size_t GetBufferSize() { return BUFFER_SIZE_; };
-		static size_t GetSampleRate() { return SAMPLE_RATE_; };
+		const size_t bufferSize;
+		const size_t sampleRate;
 
 	private:
-		static int ServiceAudio_
-		(
-			const void* unused, void* outputBuffer,
-			unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo,
-			PaStreamCallbackFlags statusFlags, void* userData
-		);
-
-		// 3dti stuff
 		Binaural::CCore core_;
-		Listener listener_;
-		Environment environment_;
-		static constexpr size_t HRTF_RESAMPLING_ANGLE = 15;
+		std::shared_ptr<Binaural::CListener> listener_;
+		std::shared_ptr<Binaural::CEnvironment> environment_;
 
-		// Renderer specific stuff
 		std::vector<ThreeDTI_SoundMaker> sounds_;
-		size_t selectedSound_ = 0;
-
-		static size_t BUFFER_SIZE_;
-		static size_t SAMPLE_RATE_;
-
-		bool isActive_ = true;
 	};
 }

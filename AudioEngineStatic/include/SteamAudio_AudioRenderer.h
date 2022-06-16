@@ -34,6 +34,10 @@ namespace bs
 			PaStreamCallbackFlags statusFlags, void* userData
 		);
 
+		// portaudio stuff
+		PaStream* pStream_ = nullptr; // portaudio stream to playback device
+		PaError err_;
+
 		// Renderer specific stuff
 		std::vector<SteamAudio_SoundMaker> sounds_;
 		size_t selectedSound_ = 0;

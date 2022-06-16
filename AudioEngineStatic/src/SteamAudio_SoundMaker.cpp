@@ -5,9 +5,9 @@
 #include <algorithm>
 
 #include <SteamAudio_AudioRenderer.h>
-#include <UtilityFunctions.h>
+#include "BSCommon.h"
 
-bool bs::SteamAudio_SoundMaker::Init(PaStreamCallback* serviceAudioCallback, bs::SteamAudio_AudioRenderer* engine, const char* wavFileName, const ClipWrapMode wrapMode, const bool spatialize)
+bool bs::SteamAudio_SoundMaker::Init(bs::SteamAudio_AudioRenderer* engine, const char* wavFileName, const ClipWrapMode wrapMode, const bool spatialize)
 {
 	currentBegin_ = 0;
 	currentEnd_ = 0;
@@ -15,34 +15,6 @@ bool bs::SteamAudio_SoundMaker::Init(PaStreamCallback* serviceAudioCallback, bs:
 	spatialized_ = spatialize;
 
 	soundData_ = LoadWav(wavFileName, 1, engine->GetSampleRate());
-
-	// Portaudio stuff
-	PaStreamParameters outputParams{
-		Pa_GetDefaultOutputDevice(), // Oleg@self: handle this properly.
-		2,
-		paFloat32, // Oleg@self: check this properly!
-		0.050, // Oleg@self: magic number. Investigate.
-		NULL
-	};
-
-	err_ = Pa_OpenStream(
-		&pStream_,
-		NULL,
-		&outputParams,
-		(double)SteamAudio_AudioRenderer::GetSampleRate(),
-		(unsigned long)SteamAudio_AudioRenderer::GetBufferSize(),
-		paClipOff, // Oleg@self: investigate
-		serviceAudioCallback,
-		engine
-	);
-
-	if (err_ != paNoError) {
-		std::cerr << "Error opening stream: " << Pa_GetErrorText(err_) << std::endl;
-		return false;
-	}
-
-	err_ = Pa_StartStream(pStream_); // Oleg@self: I think this should be part of Renderer instead.
-	assert(!err_, "Sound maker reported error starting a stream.");
 
 	if (spatialized_)
 	{
@@ -75,12 +47,6 @@ bool bs::SteamAudio_SoundMaker::Init(PaStreamCallback* serviceAudioCallback, bs:
 }
 void bs::SteamAudio_SoundMaker::Shutdown()
 {
-	// Portaudio stuff
-	err_ = Pa_StopStream(pStream_); // Oleg@self: it's important to do this first! Otherwise ServiceAudio_() might be called when the iplBuffer has been freed!
-	assert(!err_, "Sound maker reported error stopping a stream.");
-	err_ = Pa_CloseStream(pStream_);
-	assert(!err_, "Sound maker reported error closing a stream.");
-
 	// Phonon stuff
 	if (spatialized_)
 	{
@@ -108,56 +74,61 @@ void bs::SteamAudio_SoundMaker::ProcessAudio(std::vector<float>& outBuff, SteamA
 
 	// Fill all buffers with silence.
 	std::fill(frame.begin(), frame.end(), 0.0f);
-	std::fill(outBuff.begin(), outBuff.end(), 0.0f);
 
 	// Oleg@self: fix this fuckery, I'm getting confused by the indices / frame sizes, sample rates, etc...
 
-	// Advance frame indices.
-	currentBegin_ = currentEnd_ + 1;
-	if (wrapMode_ == ClipWrapMode::ONE_SHOT)
+	if (!paused_)
 	{
-		if (currentBegin_ < wavSize) // Not overruning wav data.
+		// Fill out buffer here to avoid overwriting other sound's data.
+		std::fill(outBuff.begin(), outBuff.end(), 0.0f);
+
+		// Advance frame indices.
+		currentBegin_ = currentEnd_ + 1;
+		if (wrapMode_ == ClipWrapMode::ONE_SHOT)
 		{
-			currentEnd_ = currentBegin_ + engine.GetBufferSize() - 1;
+			if (currentBegin_ < wavSize) // Not overruning wav data.
+			{
+				currentEnd_ = currentBegin_ + engine.GetBufferSize() - 1;
+			}
+			else
+			{
+				currentEnd_ = wavSize - 1;
+			}
 		}
 		else
 		{
-			currentEnd_ = wavSize - 1;
+			if (currentBegin_ + engine.GetBufferSize() - 1 > wavSize) currentBegin_ = 0;
+			currentEnd_ = currentBegin_ + engine.GetBufferSize() - 1;
 		}
-	}
-	else
-	{
-		if (currentBegin_ + engine.GetBufferSize() - 1 > wavSize) currentBegin_ = 0;
-		currentEnd_ = currentBegin_ + engine.GetBufferSize() - 1;
-	}
 
-	// Load subset of audio data into frame.
-	for (size_t i = 0; i < bufferSize; i++)
-	{
-		// Oleg@self: use memcpy?
-		if ((currentBegin_ + i) < wavSize) // If we're not overruning the clip data, copy data.
-		{
-			frame[i] = soundData_[currentBegin_ + i];
-		}
-	}
-
-	if (spatialized_)
-	{
-		// Oleg@self: clean this sheit
-		float* rawFrame[] = { frame.data() };
-		IPLAudioBuffer iplInBuffer{ 1, engine.GetBufferSize(), rawFrame };
-
-		// Oleg@self: find a way to carry over the tail of the spatialized signal.
-		auto remainingSamples = iplBinauralEffectApply(effect_, &spatializationParams_, &iplInBuffer, &iplOutBuffer_);
-		// assert(remainingSamples == IPLAudioEffectState::IPL_AUDIOEFFECTSTATE_TAILCOMPLETE, "Couldn't write all spatialized sound into output buffer!");
-		iplAudioBufferInterleave(context_, &iplOutBuffer_, outBuff.data());
-	}
-	else
-	{
+		// Load subset of audio data into frame.
 		for (size_t i = 0; i < bufferSize; i++)
 		{
-			outBuff[i * 2] = frame[i];
-			outBuff[i * 2 + 1] = frame[i];
+			// Oleg@self: use memcpy?
+			if ((currentBegin_ + i) < wavSize) // If we're not overruning the clip data, copy data.
+			{
+				frame[i] = soundData_[currentBegin_ + i];
+			}
+		}
+
+		if (spatialized_)
+		{
+			// Oleg@self: clean this sheit
+			float* rawFrame[] = { frame.data() };
+			IPLAudioBuffer iplInBuffer{ 1, engine.GetBufferSize(), rawFrame };
+
+			// Oleg@self: find a way to carry over the tail of the spatialized signal.
+			auto remainingSamples = iplBinauralEffectApply(effect_, &spatializationParams_, &iplInBuffer, &iplOutBuffer_);
+			// assert(remainingSamples == IPLAudioEffectState::IPL_AUDIOEFFECTSTATE_TAILCOMPLETE, "Couldn't write all spatialized sound into output buffer!");
+			iplAudioBufferInterleave(context_, &iplOutBuffer_, outBuff.data());
+		}
+		else
+		{
+			for (size_t i = 0; i < bufferSize; i++)
+			{
+				outBuff[i * 2] = frame[i];
+				outBuff[i * 2 + 1] = frame[i];
+			}
 		}
 	}
 }
@@ -166,4 +137,14 @@ void bs::SteamAudio_SoundMaker::Reset(SteamAudio_AudioRenderer& renderer)
 {
 	currentBegin_ = 0;
 	currentEnd_ = 0;
+}
+
+void bs::SteamAudio_SoundMaker::SetPaused(const bool newPaused)
+{
+	paused_ = newPaused;
+}
+
+bool bs::SteamAudio_SoundMaker::GetPaused() const
+{
+	return paused_;
 }

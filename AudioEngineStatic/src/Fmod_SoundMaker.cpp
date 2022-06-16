@@ -66,6 +66,18 @@ void bs::Fmod_SoundMaker::Shutdown()
 	assert(result == FMOD_OK, "Error releasing an fmod sound!");
 	fmodSound_ = NULL;
 }
+
+bool bs::Fmod_SoundMaker::GetPaused()
+{
+	if (!fmodChannel_->getPaused(&paused_))
+	{
+		return paused_;
+	}
+	else
+	{
+		return true;
+	}
+}
 void bs::Fmod_SoundMaker::SetPosition(float globalX, float globalY, float globalZ)
 {
 	// Oleg@self: check coordinate system

@@ -1,160 +1,109 @@
 #include <ThreeDTI_SoundMaker.h>
 
 #include <ThreeDTI_AudioRenderer.h>
-#include <UtilityFunctions.h>
+#include <BSCommon.h>
 
-bool bs::ThreeDTI_SoundMaker::Init(PaStreamCallback* serviceAudioCallback, bs::ThreeDTI_AudioRenderer* engine, const char* wavFileName, const ClipWrapMode wrapMode, const bool spatialize)
+bs::ThreeDTI_SoundMaker::ThreeDTI_SoundMaker(const std::vector<float>& data, Binaural::CCore& core, const bool loop, const bool spatialize, const size_t bufferSize):
+	soundData_(data), looping(loop), spatialized(spatialize), bufferSize(bufferSize)
 {
-	currentBegin_ = 0;
-	currentEnd_ = 0;
-	wrapMode_ = wrapMode;
-	spatialized_ = spatialize;
-
-	soundData_ = LoadWav(wavFileName, 1, engine->GetSampleRate());
-
-	PaStreamParameters outputParams{
-		Pa_GetDefaultOutputDevice(), // Oleg@self: handle this properly.
-		2,
-		paFloat32, // Oleg@self: check this properly!
-		0.050, // Oleg@self: magic number. Investigate.
-		NULL
-	};
-
-	err_ = Pa_OpenStream(
-		&pStream_,
-		NULL,
-		&outputParams,
-		(double)ThreeDTI_AudioRenderer::GetSampleRate(),
-		(unsigned long)ThreeDTI_AudioRenderer::GetBufferSize(),
-		paClipOff, // Oleg@self: investigate
-		serviceAudioCallback,
-		engine
-	);
-
-	if (err_ != paNoError) {
-		std::cerr << "Error opening stream: " << Pa_GetErrorText(err_) << std::endl;
-		return false;
-	}
-
-	err_ = Pa_StartStream(pStream_); // Oleg@self: I think this should be part of Renderer instead.
-	assert(!err_, "Sound maker reported error starting a stream.");
-
-	if (spatialized_)
+	source_ = core.CreateSingleSourceDSP();
+	if (spatialized)
 	{
-		source_ = engine->GetCore().CreateSingleSourceDSP();
 		source_->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
-		source_->DisableNearFieldEffect();
+		source_->EnableNearFieldEffect();
 		source_->EnableAnechoicProcess();
 		source_->EnableDistanceAttenuationAnechoic();
-		source_->EnableDistanceAttenuationReverb(); // Oleg@self: investigate
-	}
-
-	return true;
-}
-void bs::ThreeDTI_SoundMaker::Shutdown()
-{
-	err_ = Pa_StopStream(pStream_);
-	assert(!err_, "Sound maker reported error stopping a stream.");
-	err_ = Pa_CloseStream(pStream_);
-	assert(!err_, "Sound maker reported error closing a stream.");
-}
-void bs::ThreeDTI_SoundMaker::SetPosition(float globalX, float globalY, float globalZ)
-{
-	if (spatialized_)
-	{
-		Common::CTransform t = source_->GetSourceTransform(); // Copy transform.
-		t.SetPosition(Common::CVector3(globalX, globalY, globalZ)); // Modify it.
-		source_->SetSourceTransform(t); // And set it.
-	}
-}
-
-void bs::ThreeDTI_SoundMaker::ProcessAudio(CStereoBuffer<float>& outBuff, ThreeDTI_AudioRenderer& engine)
-{
-	const auto bufferSize = engine.GetBufferSize();
-	const auto wavSize = soundData_.size();
-	// static CMonoBuffer<float> frame(bufferSize);
-	// static Common::CEarPair<CMonoBuffer<float>> anechoic{ CMonoBuffer<float>(bufferSize) , CMonoBuffer<float>(bufferSize) };
-	// static Common::CEarPair<CMonoBuffer<float>> reverb{ CMonoBuffer<float>(bufferSize) , CMonoBuffer<float>(bufferSize) };
-	CMonoBuffer<float> frame(bufferSize);
-	Common::CEarPair<CMonoBuffer<float>> anechoic{ CMonoBuffer<float>(bufferSize) , CMonoBuffer<float>(bufferSize) };
-	Common::CEarPair<CMonoBuffer<float>> reverb{ CMonoBuffer<float>(bufferSize) , CMonoBuffer<float>(bufferSize) };
-
-	// Fill all buffers with silence.
-	outBuff.Fill(bufferSize * 2, 0.0f); // Output is interleaved stereo, hence the *2
-	frame.Fill(bufferSize, 0.0f);
-	anechoic.left.Fill(bufferSize, 0.0f);
-	anechoic.right.Fill(bufferSize, 0.0f);
-	reverb.left.Fill(bufferSize, 0.0f);
-	reverb.right.Fill(bufferSize, 0.0f);
-
-	// Oleg@self: fix this fuckery, I'm getting confused by the indices / frame sizes, sample rates, etc...
-
-	// Advance frame indices.
-	currentBegin_ = currentEnd_ + 1;
-	if (wrapMode_ == ClipWrapMode::ONE_SHOT)
-	{
-		if (currentBegin_ < wavSize) // Not overruning wav data.
-		{
-			currentEnd_ = currentBegin_ + engine.GetBufferSize() - 1;
-		}
-		else
-		{
-			currentEnd_ = wavSize - 1;
-		}
+		source_->EnableDistanceAttenuationReverb();
 	}
 	else
 	{
-		if (currentBegin_ + engine.GetBufferSize() - 1 > wavSize) currentBegin_ = 0;
-		currentEnd_ = currentBegin_ + engine.GetBufferSize() - 1;
+		source_->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
+		source_->DisableNearFieldEffect();
+		source_->DisableAnechoicProcess();
+		source_->DisableDistanceAttenuationAnechoic();
+		source_->DisableDistanceAttenuationReverb();
 	}
 
-	// Load subset of audio data into frame.
-	for (size_t i = 0; i < bufferSize; i++)
+	window_.resize(bufferSize);
+	anechoic_.left.resize(bufferSize);
+	anechoic_.right.resize(bufferSize);
+}
+
+void bs::ThreeDTI_SoundMaker::SetPosition(const bs::CartesianCoord coord)
+{
+	if (spatialized)
 	{
-		// Oleg@self: use memcpy?
-		if ((currentBegin_ + i) < wavSize) // If we're not overruning the clip data, copy data.
+		Common::CTransform t = source_->GetSourceTransform(); // Have to copy it to preserve rotation.
+		t.SetPosition(Common::CVector3(coord.x, coord.y, coord.z)); // Oleg@self: account for axis system difference.
+		source_->SetSourceTransform(t);
+	}
+}
+
+void bs::ThreeDTI_SoundMaker::SetPosition(const bs::SphericalCoord coord)
+{
+	const auto cartCoord = bs::ToCartesian(coord);
+	if (spatialized)
+	{
+		Common::CTransform t = source_->GetSourceTransform(); // Have to copy it to preserve rotation.
+		t.SetPosition(Common::CVector3(cartCoord.x, cartCoord.y, cartCoord.z)); // Oleg@self: account for axis system difference.
+		source_->SetSourceTransform(t);
+	}
+}
+
+bool bs::ThreeDTI_SoundMaker::GetPaused() const
+{
+	return paused_;
+}
+
+void bs::ThreeDTI_SoundMaker::ProcessAudio_(CStereoBuffer<float>& outBuff)
+{
+	const auto wavSize = soundData_.size();
+
+	outBuff.Fill(2 * bufferSize, 0.0f);
+
+	// Advance frame indices.
+	// Oleg@self: check this, I think it's wrong.
+	if (!paused_)
+	{
+		currentBegin_ = currentEnd_;
+		if (currentBegin_ + bufferSize <= wavSize) // Not overruning wav data.
 		{
-			frame[i] = soundData_[currentBegin_ + i];
+			currentEnd_ = currentBegin_ + bufferSize;
+		}
+		else
+		{
+			if (looping)
+			{
+				currentEnd_ = bufferSize - (wavSize - currentBegin_);
+			}
+			else
+			{
+				currentEnd_ = wavSize;
+			}
 		}
 	}
 
-	if (spatialized_)
+	if (!paused_)
 	{
-		// Process anechoic.
-		source_->SetBuffer(frame); // Set source buffer to read from. Makes the next lines use the window buffer as source of sound data.
-		source_->ProcessAnechoic(anechoic.left, anechoic.right); // Write anechoic component of the sound to anechoic buffer.
-		// Oleg@self: investigate, does this need to be called for every sound maker? Or does it need to be done only once per servicing?
-		// Process reverb.
-		assert(reverb.left.size() > 0, "Somehow the buffer yeeted itself out of existence...");
-		engine.GetEnvironment()->ProcessVirtualAmbisonicReverb(reverb.left, reverb.right); // Write reverb component of the sound to reverb buffer.
-		// Combine anechoic and reverb then interlace.
-		anechoic.left += reverb.left;
-		anechoic.right += reverb.right;
-		outBuff.Interlace(anechoic.left, anechoic.right);
+		// Load subset of audio data into window.
+		for (uint32_t i = currentBegin_; i < currentEnd_; i++)
+		{
+			window_[i - currentBegin_] = soundData_[i];
+		}
+	}
+
+	if (spatialized)
+	{
+		source_->SetBuffer(window_); // Set source buffer to read from. Makes the next lines use the window buffer as source of sound data.
+		source_->ProcessAnechoic(anechoic_.left, anechoic_.right); // Write anechoic component of the sound to anechoic buffer.
+		outBuff.Interlace(anechoic_.left, anechoic_.right);
 	}
 	else
 	{
 		for (size_t i = 0; i < bufferSize; i++)
 		{
-			outBuff[i * 2] = frame[i];
-			outBuff[i * 2 + 1] = frame[i];
+			outBuff[i * 2] = window_[i];
+			outBuff[i * 2 + 1] = window_[i];
 		}
 	}
-
-}
-
-void bs::ThreeDTI_SoundMaker::Reset(ThreeDTI_AudioRenderer& renderer)
-{
-	currentBegin_ = 0;
-	currentEnd_ = 0;
-	if (spatialized_)
-	{
-		source_->ResetSourceBuffers();
-		renderer.ResetEnvironment();
-	}
-}
-
-std::shared_ptr<Binaural::CSingleSourceDSP> bs::ThreeDTI_SoundMaker::GetSource()
-{
-	return source_;
 }

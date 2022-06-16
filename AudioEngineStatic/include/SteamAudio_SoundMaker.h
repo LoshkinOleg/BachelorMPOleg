@@ -24,7 +24,7 @@ namespace bs
 		SteamAudio_SoundMaker& operator=(SteamAudio_SoundMaker&&) = default; // There's no need for move assignment for this class.
 
 		// Oleg@self: those really should be replaced with constructors / destructors.
-		bool Init(PaStreamCallback* serviceAudioCallback, bs::SteamAudio_AudioRenderer* engine, const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT, const bool spatialize = true);
+		bool Init(bs::SteamAudio_AudioRenderer* engine, const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT, const bool spatialize = true);
 		void Shutdown();
 
 		void SetPosition(const float globalX, const float globalY, const float globalZ);
@@ -33,9 +33,10 @@ namespace bs
 		void ProcessAudio(std::vector<float>& outBuff, SteamAudio_AudioRenderer& engine);
 		void Reset(SteamAudio_AudioRenderer& engine);
 
-		inline PaStream* const GetStream() const { return pStream_; };
+		void SetPaused(const bool newPaused);
+		bool GetPaused() const;
+
 		inline ClipWrapMode GetWrapMode() const { return wrapMode_; };
-		inline PaError const GetError() const { return err_; };
 		inline uint32_t const GetCurrentBegin() const { return currentBegin_; };
 		inline uint32_t const GetCurrentEnd() const { return currentEnd_; };
 		inline const std::vector<float> GetSoundData() const { return soundData_; }; // Oleg@self: is this method useful?...
@@ -55,15 +56,12 @@ namespace bs
 			hrtf_
 		};
 
-		// portaudio stuff
-		PaStream* pStream_ = nullptr; // portaudio stream to playback device
-		PaError err_;
-
 		// SoundMaker specific stuff
 		std::vector<float> soundData_; // Very large, contains whole wav file.
 		uint32_t currentBegin_ = 0;
 		uint32_t currentEnd_ = 0;
 		ClipWrapMode wrapMode_ = ClipWrapMode::ONE_SHOT;
 		bool spatialized_ = true;
+		bool paused_ = false;
 	};
 }

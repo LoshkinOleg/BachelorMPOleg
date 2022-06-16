@@ -35,9 +35,7 @@ bool bs::ThreeDTI_AudioRenderer::Init(const char* hrtfFileName, const char* brir
 	environment_->SetReverberationOrder(TReverberationOrder::BIDIMENSIONAL); // Oleg@self:investigate
 	if (!BRIR::CreateFromSofa(brirFileName, environment_)) return false;
 
-	// Init portaudio.
-	auto err = Pa_Initialize();
-	if (err != paNoError) throw;
+	
 
 #ifdef USE_EASY_PROFILER
 	// Enable writing a profiling file by easy_profiler.
@@ -62,12 +60,17 @@ void bs::ThreeDTI_AudioRenderer::Shutdown()
 	}
 	core_.RemoveEnvironment(environment_);
 	core_.RemoveListener();
+
+	err_ = Pa_StopStream(pStream_);
+	assert(!err_, "Sound maker reported error stopping a stream.");
+	err_ = Pa_CloseStream(pStream_);
+	assert(!err_, "Sound maker reported error closing a stream.");
 }
 
 bs::SoundMakerId bs::ThreeDTI_AudioRenderer::CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode, const bool spatialize)
 {
 	sounds_.emplace_back(ThreeDTI_SoundMaker());
-	if (!sounds_.back().Init(&ServiceAudio_, this, wavFileName, wrapMode, spatialize))
+	if (!sounds_.back().Init(this, wavFileName, wrapMode, spatialize))
 	{
 		assert(false, "Problem initializing the new ThreeDTI_SoundMaker!");
 		sounds_.pop_back();
@@ -102,7 +105,9 @@ void bs::ThreeDTI_AudioRenderer::SetIsActive(const bool isActive)
 void bs::ThreeDTI_AudioRenderer::SetSelectedSound(const size_t soundId)
 {
 	assert(soundId < sounds_.size(), "Invalid soundId passed to SetSelectedSound()!");
+	sounds_[selectedSound_].SetPaused(true);
 	selectedSound_ = soundId;
+	sounds_[selectedSound_].SetPaused(false);
 }
 
 size_t bs::ThreeDTI_AudioRenderer::GetSelectedSound() const
@@ -156,4 +161,14 @@ int bs::ThreeDTI_AudioRenderer::ServiceAudio_
 	}
 
 	return paContinue;
+}
+
+ThreeDTI_SoundMaker& bs::ThreeDTI_AudioRenderer::CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize)
+{
+	source_ = engine->GetCore().CreateSingleSourceDSP();
+}
+
+void bs::ThreeDTI_AudioRenderer::ProcessAudio()
+{
+	engine.GetEnvironment()->ProcessVirtualAmbisonicReverb(reverb.left, reverb.right); // Write reverb component of the sound to reverb buffer.
 }

@@ -28,6 +28,8 @@ namespace bs
 		void Stop();
 		void Shutdown();
 
+		bool GetPaused();
+
 		void SetPosition(const float globalX, const float globalY, const float globalZ);
 
 		// Oleg@self: maybe make a singleton out of this class instead of passing references of it in every method?...
@@ -44,5 +46,6 @@ namespace bs
 		// SoundMaker specific stuff
 		ClipWrapMode wrapMode_ = ClipWrapMode::ONE_SHOT;
 		bool spatialized_ = true;
+		bool paused_ = false;
 	};
 }
