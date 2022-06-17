@@ -76,6 +76,6 @@ void bs::SumSignals(std::vector<float>& out, const std::vector<float>& other)
 	const auto len = other.size();
 	for (size_t i = 0; i < len; i++)
 	{
-		out[2 * i] += other[i];
+		out[i] += other[i];
 	}
 }

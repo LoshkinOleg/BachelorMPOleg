@@ -10,6 +10,7 @@ namespace bs
 	{
 	public:
 		BS_NON_COPYABLE(ThreeDTI_SoundMaker);
+		BS_MOVEABLE(ThreeDTI_SoundMaker);
 
 		ThreeDTI_SoundMaker() = delete;
 		ThreeDTI_SoundMaker(const std::vector<float>& data, Binaural::CCore& core, const bool loop, const bool spatialize, const size_t bufferSize);

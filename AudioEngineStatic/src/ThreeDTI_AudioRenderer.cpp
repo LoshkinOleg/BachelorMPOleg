@@ -44,8 +44,8 @@ bs::ThreeDTI_AudioRenderer::ThreeDTI_AudioRenderer(const char* hrtfFileName, con
 	environment_->SetReverberationOrder(TReverberationOrder::BIDIMENSIONAL);
 	if (!BRIR::CreateFromSofa(brirFileName, environment_)) assert(false, "Failed to load BRIR sofa file!");
 
-	reverb_.left.resize(bufferSize, 0.0f);
-	reverb_.right.resize(bufferSize, 0.0f);
+	// reverb_.left.resize(bufferSize, 0.0f);
+	// reverb_.right.resize(bufferSize, 0.0f);
 	interlacedReverb_.resize(2 * bufferSize, 0.0f);
 	currentlyProcessedSignal_.resize(2 * bufferSize, 0.0f);
 }
@@ -61,8 +61,12 @@ void bs::ThreeDTI_AudioRenderer::ProcessAudio(std::vector<float>& interleavedSte
 	}
 
 	// Process reverb.
-	environment_->ProcessVirtualAmbisonicReverb(reverb_.left, reverb_.right);
+	Common::CEarPair<CMonoBuffer<float>> reverb;
+	environment_->ProcessVirtualAmbisonicReverb(reverb.left, reverb.right);
 	
-	bs::Interlace(interlacedReverb_, reverb_.left, reverb_.right);
-	bs::SumSignals(interleavedStereoOut, interlacedReverb_);
+	if (reverb.left.size()) // 3dti sets size to 0 if there's no reverb to process.
+	{
+		bs::Interlace(interlacedReverb_, reverb.left, reverb.right);
+		bs::SumSignals(interleavedStereoOut, interlacedReverb_);
+	}
 }

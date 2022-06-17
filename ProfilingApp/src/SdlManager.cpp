@@ -1,6 +1,8 @@
 #include "SdlManager.h"
 
 #include <cassert>
+#include <functional>
+#include <tuple>
 
 bsExp::SdlManager::SdlManager()
 {
@@ -17,9 +19,9 @@ bsExp::SdlManager::~SdlManager()
 	SDL_Quit();
 }
 
-void bsExp::SdlManager::RegisterCallback(const Input input, const std::function<void(void)>& callback)
+void bsExp::SdlManager::RegisterCallback(Input input, std::function<void(void)> callback)
 {
-	callbacks_.emplace(input, callback);
+	callbacks_[input].push_back(callback);
 }
 
 bool bsExp::SdlManager::Update()

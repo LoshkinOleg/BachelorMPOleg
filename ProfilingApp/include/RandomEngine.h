@@ -2,7 +2,6 @@
 
 #include <random>
 
-#include "BSExpCommon.h"
 #include "BSCommon.h"
 
 namespace bsExp
@@ -10,8 +9,8 @@ namespace bsExp
 	class RandomEngine
 	{
 	public:
-		BSEXP_NON_COPYABLE(RandomEngine);
-		BSEXP_NON_MOVEABLE(RandomEngine);
+		BS_NON_COPYABLE(RandomEngine);
+		BS_NON_MOVEABLE(RandomEngine);
 
 		RandomEngine() = delete;
 		RandomEngine(const size_t seed,

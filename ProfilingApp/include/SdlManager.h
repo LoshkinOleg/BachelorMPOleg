@@ -32,7 +32,7 @@ namespace bsExp
 		SdlManager();
 		~SdlManager();
 
-		void RegisterCallback(const Input input, const std::function<void(void)>& callback);
+		void RegisterCallback(Input input, std::function<void(void)> callback);
 		bool Update();
 
 	private:

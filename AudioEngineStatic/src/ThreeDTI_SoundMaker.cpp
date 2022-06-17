@@ -130,8 +130,11 @@ void bs::ThreeDTI_SoundMaker::ProcessAudio_(std::vector<float>& interlacedStereo
 		}
 		else
 		{
-			anechoic_.left.insert(anechoic_.left.begin(), soundDataSubset_.begin(), soundDataSubset_.end());
-			anechoic_.right.insert(anechoic_.left.begin(), soundDataSubset_.begin(), soundDataSubset_.end());
+			for (size_t i = 0; i < bufferSize; i++)
+			{
+				anechoic_.left[i] = soundDataSubset_[i];
+				anechoic_.right[i] = soundDataSubset_[i];
+			}
 		}
 		bs::Interlace(interlacedStereoOut, anechoic_.left, anechoic_.right);
 
@@ -139,7 +142,7 @@ void bs::ThreeDTI_SoundMaker::ProcessAudio_(std::vector<float>& interlacedStereo
 		if (looping) // currentBegin_ can never reach wavSize.
 		{
 			// Update currentBegin_
-			assert(currentEnd_ + 1 > wavSize, "currentEnd_ somehow incremented past wavSize! Last iteration must have had currentEnd_ = wavSize, which shouldn't be possible. Check your code.");
+			assert(currentEnd_ + 1 <= wavSize, "currentEnd_ somehow incremented past wavSize! Last iteration must have had currentEnd_ = wavSize, which shouldn't be possible. Check your code.");
 			if (currentEnd_ + 1 == wavSize) // If wavSize % bufferSize = 0, this can happen, wrap back to 0.
 			{
 				currentBegin_ = 0;
@@ -168,7 +171,7 @@ void bs::ThreeDTI_SoundMaker::ProcessAudio_(std::vector<float>& interlacedStereo
 			}
 			else
 			{
-				assert(currentEnd_ + 1 > wavSize, "Somehow currentEnd_ is greater than wavSize, this shouldn't be possible, check your code!");
+				assert(currentEnd_ + 1 <= wavSize, "Somehow currentEnd_ is greater than wavSize, this shouldn't be possible, check your code!");
 				currentBegin_ = currentEnd_ + 1;
 
 				if (currentBegin_ + bufferSize - 1 >= wavSize) // Reached end of the wav.

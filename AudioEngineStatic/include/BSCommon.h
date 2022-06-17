@@ -5,6 +5,8 @@
 
 #define BS_NON_COPYABLE(type) type(const type&) = delete; type& operator=(const type&) = delete
 #define BS_NON_MOVEABLE(type) type(type&&) = delete; type& operator=(type&&) = delete
+#define BS_COPYABLE(type) type(const type&) = default; type& operator=(const type&) = default
+#define BS_MOVEABLE(type) type(type&&) = default; type& operator=(type&&) = default
 
 namespace bs
 {

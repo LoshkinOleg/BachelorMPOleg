@@ -33,7 +33,6 @@ namespace bs
 		std::shared_ptr<Binaural::CListener> listener_;
 		std::shared_ptr<Binaural::CEnvironment> environment_;
 
-		Common::CEarPair<CMonoBuffer<float>> reverb_;
 		std::vector<float> interlacedReverb_;
 		std::vector<float> currentlyProcessedSignal_;
 
