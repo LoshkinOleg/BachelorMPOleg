@@ -2,16 +2,7 @@
 
 #include <cassert>
 
-bsExp::SdlManager::SdlManager(const std::function<void(void)>& leftTriggerCallback,
-							  const std::function<void(void)>& rightTriggerCallback,
-							  const std::function<void(void)>& leftGripCallback,
-							  const std::function<void(void)>& leftPadCallback,
-							  const std::function<void(void)>& escapeCallback):
-	leftTriggerCallback_(leftTriggerCallback),
-	rightTriggerCallback_(rightTriggerCallback),
-	leftGripCallback_(leftGripCallback),
-	leftPadCallback_(leftPadCallback),
-	escapeCallback_(escapeCallback)
+bsExp::SdlManager::SdlManager()
 {
 	if (SDL_Init(SDL_INIT_EVERYTHING))
 	{
@@ -26,13 +17,13 @@ bsExp::SdlManager::~SdlManager()
 	SDL_Quit();
 }
 
+void bsExp::SdlManager::RegisterCallback(const Input input, const std::function<void(void)>& callback)
+{
+	callbacks_.emplace(input, callback);
+}
+
 bool bsExp::SdlManager::Update()
 {
-	constexpr const auto PARTICIPANT_TRIGGER = SDL_SCANCODE_1;
-	constexpr const auto SCIENTIST_TRIGGER = SDL_SCANCODE_2;
-	constexpr const auto TOGGLE_NOISE = SDL_SCANCODE_3;
-	constexpr const auto CHANGE_MIDDLEWARE_AND_POS = SDL_SCANCODE_5;
-
 	while (SDL_PollEvent(&sdlEvent_))
 	{
 		switch (sdlEvent_.type)
@@ -43,29 +34,99 @@ bool bsExp::SdlManager::Update()
 				{
 					case SDL_SCANCODE_ESCAPE:
 					{
-						escapeCallback_();
 						return true;
-					}break;
+					}
+					break;
 
-					case PARTICIPANT_TRIGGER:
+					case SDL_SCANCODE_1:
 					{
-						rightTriggerCallback_();
-					}break;
+						const auto& callbacks = callbacks_[Input::LeftTrigger];
+						for (auto& callback : callbacks)
+						{
+							callback();
+						}
+					}
+					break;
 
-					case SCIENTIST_TRIGGER:
+					case SDL_SCANCODE_2:
 					{
-						leftTriggerCallback_();
-					}break;
+						const auto& callbacks = callbacks_[Input::RightTrigger];
+						for (auto& callback : callbacks)
+						{
+							callback();
+						}
+					}
+					break;
 
-					case TOGGLE_NOISE:
+					case SDL_SCANCODE_3:
 					{
-						leftGripCallback_();
-					}break;
+						const auto& callbacks = callbacks_[Input::LeftGrip];
+						for (auto& callback : callbacks)
+						{
+							callback();
+						}
+					}
+					break;
 
-					case CHANGE_MIDDLEWARE_AND_POS:
+					case SDL_SCANCODE_4:
 					{
-						leftPadCallback_();
-					}break;
+						const auto& callbacks = callbacks_[Input::RightGrip];
+						for (auto& callback : callbacks)
+						{
+							callback();
+						}
+					}
+					break;
+
+					case SDL_SCANCODE_5:
+					{
+						const auto& callbacks = callbacks_[Input::LeftPad];
+						for (auto& callback : callbacks)
+						{
+							callback();
+						}
+					}
+					break;
+
+					case SDL_SCANCODE_6:
+					{
+						const auto& callbacks = callbacks_[Input::RightPad];
+						for (auto& callback : callbacks)
+						{
+							callback();
+						}
+					}
+					break;
+
+					case SDL_SCANCODE_7:
+					{
+						const auto& callbacks = callbacks_[Input::Spacebar];
+						for (auto& callback : callbacks)
+						{
+							callback();
+						}
+					}
+					break;
+
+					case SDL_SCANCODE_8:
+					{
+						const auto& callbacks = callbacks_[Input::Enter];
+						for (auto& callback : callbacks)
+						{
+							callback();
+						}
+					}
+					break;
+
+					case SDL_SCANCODE_9:
+					{
+						const auto& callbacks = callbacks_[Input::Backspace];
+						for (auto& callback : callbacks)
+						{
+							callback();
+						}
+					}
+					break;
 
 					default:
 					break;

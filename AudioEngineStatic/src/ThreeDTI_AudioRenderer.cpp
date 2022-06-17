@@ -4,171 +4,65 @@
 #include <HRTF/HRTFFactory.h>
 #include <BRIR/BRIRFactory.h>
 
-#ifndef BUILD_WITH_EASY_PROFILER
-#define BUILD_WITH_EASY_PROFILER
-#endif
-#include <easy/profiler.h>
-
 #include "ThreeDTI_SoundMaker.h"
 
-size_t bs::ThreeDTI_AudioRenderer::BUFFER_SIZE_ = 0;
-size_t bs::ThreeDTI_AudioRenderer::SAMPLE_RATE_ = 0;
-
-bool bs::ThreeDTI_AudioRenderer::Init(const char* hrtfFileName, const char* brirFileName, size_t BUFFER_SIZE, size_t SAMPLE_RATE)
+size_t bs::ThreeDTI_AudioRenderer::CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize)
 {
-	BUFFER_SIZE_ = BUFFER_SIZE;
-	SAMPLE_RATE_ = SAMPLE_RATE;
+	const auto hash = hasher_(wavFileName);
 
-	// Init 3dti core.
-	core_.SetAudioState({ (int)SAMPLE_RATE, (int)BUFFER_SIZE });
-	core_.SetHRTFResamplingStep(HRTF_RESAMPLING_ANGLE);
-
-	// Init 3dti listener.
-	// Oleg@self: handle splitscreen multiplayer.
-	listener_ = core_.CreateListener();
-	listener_->DisableCustomizedITD(); // Oleg@self: investigate
-	bool unused; // Oleg@self: investigate
-	if (!HRTF::CreateFromSofa(hrtfFileName, listener_, unused)) return false;
-
-	// Init 3dti environment.
-	environment_ = core_.CreateEnvironment();
-	environment_->SetReverberationOrder(TReverberationOrder::BIDIMENSIONAL); // Oleg@self:investigate
-	if (!BRIR::CreateFromSofa(brirFileName, environment_)) return false;
-
-	
-
-#ifdef USE_EASY_PROFILER
-	// Enable writing a profiling file by easy_profiler.
-	EASY_PROFILER_ENABLE;
-#endif //! USE_EASY_PROFILER
-
-	return true;
-}
-void bs::ThreeDTI_AudioRenderer::Shutdown()
-{
-#ifdef USE_EASY_PROFILER
-	// Oleg@self: parse directors and look how to name the next file without overwriting the existing one.
-	// Write profiling data to file.
-	const auto result = profiler::dumpBlocksToFile("profilingData/profilingData0.prof");
-	assert(result, "Couldn't write .prof file!");
-#endif //! USE_EASY_PROFILER
-
-	for (auto& sound : sounds_)
+	if (assets_.find(hash) == assets_.end()) // Sound not loaded.
 	{
-		sound.Shutdown();
-		core_.RemoveSingleSourceDSP(sound.GetSource());
+		assets_.emplace(hash, bs::LoadWav(wavFileName, 1, sampleRate));
 	}
-	core_.RemoveEnvironment(environment_);
-	core_.RemoveListener();
 
-	err_ = Pa_StopStream(pStream_);
-	assert(!err_, "Sound maker reported error stopping a stream.");
-	err_ = Pa_CloseStream(pStream_);
-	assert(!err_, "Sound maker reported error closing a stream.");
-}
+	sounds_.emplace_back(ThreeDTI_SoundMaker(assets_[hash], core_, loop, spatialize, bufferSize));
 
-bs::SoundMakerId bs::ThreeDTI_AudioRenderer::CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode, const bool spatialize)
-{
-	sounds_.emplace_back(ThreeDTI_SoundMaker());
-	if (!sounds_.back().Init(this, wavFileName, wrapMode, spatialize))
-	{
-		assert(false, "Problem initializing the new ThreeDTI_SoundMaker!");
-		sounds_.pop_back();
-		return INVALID_ID;
-	}
 	return sounds_.size() - 1;
 }
 
-void bs::ThreeDTI_AudioRenderer::MoveSoundMaker(bs::SoundMakerId id, float globalX, float globalY, float globalZ)
+bs::ThreeDTI_SoundMaker& bs::ThreeDTI_AudioRenderer::GetSound(const size_t soundId)
 {
-	assert(id != (size_t)-1, "Invalid sound maker id recieved in MoveSoundMaker()!");
-	sounds_[id].SetPosition(globalX, globalY, globalZ);
+	assert(soundId < sounds_.size(), "Invalid soundId passed to GetSound()!");
+	return sounds_[soundId];
 }
 
-void bs::ThreeDTI_AudioRenderer::ResetSoundMaker(SoundMakerId id)
+bs::ThreeDTI_AudioRenderer::ThreeDTI_AudioRenderer(const char* hrtfFileName, const char* brirFileName, const size_t bufferSize, const size_t sampleRate):
+	bufferSize(bufferSize), sampleRate(sampleRate)
 {
-	/*
-		WARNING: calling this function seems to do some wierd shit... Some data used for reverb processing gets invalidated?...
-	*/
-	sounds_[id].Reset(*this);
+	// Init 3dti core.
+	core_.SetAudioState({ (int)sampleRate, (int)bufferSize });
+	core_.SetHRTFResamplingStep(HRTF_RESAMPLING_STEP);
+
+	// Init 3dti listener.
+	listener_ = core_.CreateListener();
+	listener_->DisableCustomizedITD();
+	bool unused;
+	if (!HRTF::CreateFromSofa(hrtfFileName, listener_, unused)) assert(false, "Failed to load HRTF sofa file!");
+
+	// Init 3dti environment.
+	environment_ = core_.CreateEnvironment();
+	environment_->SetReverberationOrder(TReverberationOrder::BIDIMENSIONAL);
+	if (!BRIR::CreateFromSofa(brirFileName, environment_)) assert(false, "Failed to load BRIR sofa file!");
+
+	reverb_.left.resize(bufferSize, 0.0f);
+	reverb_.right.resize(bufferSize, 0.0f);
+	interlacedReverb_.resize(2 * bufferSize, 0.0f);
+	currentlyProcessedSignal_.resize(2 * bufferSize, 0.0f);
 }
 
-void bs::ThreeDTI_AudioRenderer::SetIsActive(const bool isActive)
+void bs::ThreeDTI_AudioRenderer::ProcessAudio(std::vector<float>& interleavedStereoOut)
 {
-	isActive_ = isActive;
-	if (isActive_ && sounds_.size())
+	// Process anechoic.
+	for (auto& sound : sounds_)
 	{
-		sounds_[selectedSound_].Reset(*this);
-	}
-}
-
-void bs::ThreeDTI_AudioRenderer::SetSelectedSound(const size_t soundId)
-{
-	assert(soundId < sounds_.size(), "Invalid soundId passed to SetSelectedSound()!");
-	sounds_[selectedSound_].SetPaused(true);
-	selectedSound_ = soundId;
-	sounds_[selectedSound_].SetPaused(false);
-}
-
-size_t bs::ThreeDTI_AudioRenderer::GetSelectedSound() const
-{
-	return selectedSound_;
-}
-
-void bs::ThreeDTI_AudioRenderer::ResetEnvironment()
-{
-	environment_->ResetReverbBuffers();
-}
-
-bs::Environment bs::ThreeDTI_AudioRenderer::GetEnvironment()
-{
-	return environment_;
-}
-
-Binaural::CCore& bs::ThreeDTI_AudioRenderer::GetCore()
-{
-	return core_;
-}
-
-int bs::ThreeDTI_AudioRenderer::ServiceAudio_
-(
-	const void* unused, void* outputBuffer,
-	unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo,
-	PaStreamCallbackFlags statusFlags, void* userData
-)
-{
-	auto* engine = (ThreeDTI_AudioRenderer*)userData; // Annoying hack to have a non static servicing method.
-	if (engine->sounds_.size() <= 0) return paContinue;
-	auto* sound = dynamic_cast<ThreeDTI_SoundMaker*>(&engine->sounds_[engine->selectedSound_]);
-	auto* outBuff = static_cast<float*>(outputBuffer); // Cast output buffer to float buffer.
-	// static CStereoBuffer<float> processedFrame;
-	CStereoBuffer<float> processedFrame;
-
-	if (engine->isActive_)
-	{
-		sound->ProcessAudio(processedFrame, *engine);
-		std::cout << "3dti renderer servicing audio.\n";
-	}
-	else
-	{
-		std::fill(processedFrame.begin(), processedFrame.end(), 0.0f);
+		std::fill(currentlyProcessedSignal_.begin(), currentlyProcessedSignal_.end(), 0.0f);
+		sound.ProcessAudio_(currentlyProcessedSignal_);
+		bs::SumSignals(interleavedStereoOut, currentlyProcessedSignal_);
 	}
 
-	// Oleg@self: use memcpy?
-	for (auto it = processedFrame.begin(); it != processedFrame.end(); it++)
-	{
-		*(outBuff++) = *it;
-	}
-
-	return paContinue;
-}
-
-ThreeDTI_SoundMaker& bs::ThreeDTI_AudioRenderer::CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize)
-{
-	source_ = engine->GetCore().CreateSingleSourceDSP();
-}
-
-void bs::ThreeDTI_AudioRenderer::ProcessAudio()
-{
-	engine.GetEnvironment()->ProcessVirtualAmbisonicReverb(reverb.left, reverb.right); // Write reverb component of the sound to reverb buffer.
+	// Process reverb.
+	environment_->ProcessVirtualAmbisonicReverb(reverb_.left, reverb_.right);
+	
+	bs::Interlace(interlacedReverb_, reverb_.left, reverb_.right);
+	bs::SumSignals(interleavedStereoOut, interlacedReverb_);
 }

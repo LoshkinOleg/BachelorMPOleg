@@ -3,7 +3,6 @@
 #include "portaudio.h"
 
 #include "ThreeDTI_AudioRenderer.h"
-#include "SteamAudio_AudioRenderer.h"
 
 namespace bsExp
 {
@@ -13,37 +12,42 @@ namespace bsExp
 		enum class AudioRendererType: size_t
 		{
 			ThreeDTI = 0,
-			SteamAudio = 1,
 
-			MAX = SteamAudio
+			MAX = ThreeDTI
 		};
 
 		BS_NON_COPYABLE(RendererManager);
 		BS_NON_MOVEABLE(RendererManager);
 
-		RendererManager() = delete;
-		RendererManager(const char* hrtfFile, const char* brirFile);
+		RendererManager();
 		~RendererManager();
 
-		bool ToggleNoise();
+		void CallImplementationsUpdates();
 
-		void SetRandomRenderer();
+		void PlaySound(const char* soundName);
+		void PauseSound(const char* soundName);
+		bool IsPaused(const char* soundName);
+		void StopSound(const char* soundName);
+		void StopAll();
+
+
+		void MoveSound(const char* soundName, const bs::CartesianCoord coord);
+		void MoveAllSounds(const bs::CartesianCoord coord);
+
 		void SetSelectedRenderer(const AudioRendererType type);
 		AudioRendererType GetSelectedRenderer() const;
 
-		void StartRendering();
-		void StopRendering();
-		void PauseRendering();
-
 		constexpr static float const MIN_SOUND_AZIMUTH = -180.0f;
-		constexpr static float const MIN_SOUND_AZIMUTH = 180.0f;
+		constexpr static float const MAX_SOUND_AZIMUTH = 180.0f;
 		constexpr static float const MIN_SOUND_DISTANCE = 0.15f;
 		constexpr static float const MAX_SOUND_DISTANCE = 2.5f;
 		constexpr static float const MIN_SOUND_ELEVATION = -15.0f;
 		constexpr static float const MAX_SOUND_ELEVATION = 30.0f;
 		constexpr static char const* const HRTF_PATH = "../resources/HRTF/SOFA/3DTI_HRTF_IRC1008_128s_44100Hz.sofa";
 		constexpr static char const* const BRIR_PATH = "../resources/BRIR/SOFA/3DTI_BRIR_medium_44100Hz.sofa";
-		constexpr static char const* const WAV_PATH = "../resources/AudioSamples/AnechoicSpeech44100.wav";
+		constexpr static char const* const WAV_PATH_SPEECH = "../resources/AudioSamples/AnechoicSpeech44100.wav";
+		constexpr static char const* const WAV_PATH_BROWN_NOISE = "../resources/AudioSamples/brownNoise_44100Hz_32f_5sec.wav";
+		constexpr static char const* const WAV_PATH_SWEEP = "../resources/AudioSamples/sweep20to16000_44100Hz_32f_10sec.wav";
 		constexpr static size_t const BUFFER_SIZE = 1024;
 		constexpr static size_t const SAMPLE_RATE = 44100;
 		constexpr static float const ROOM_SIZE_X = 7.0f;
@@ -60,10 +64,11 @@ namespace bsExp
 			PaStreamCallbackFlags statusFlags, void* userData
 		);
 
-		bs::ThreeDTI_AudioRenderer threeDTI_renderer_{};
-		bs::SteamAudio_AudioRenderer steamAudio_renderer_{};
 		AudioRendererType selectedRenderer_ = AudioRendererType::ThreeDTI;
+		bs::ThreeDTI_AudioRenderer threeDTI_renderer_;
+		std::map<std::string, size_t> threeDTI_soundIds_;
 
 		PaStream* pStream_ = nullptr;
+		std::vector<float> renderResult_;
 	};
 }

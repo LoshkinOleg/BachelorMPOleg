@@ -26,9 +26,9 @@ bs::ThreeDTI_SoundMaker::ThreeDTI_SoundMaker(const std::vector<float>& data, Bin
 		source_->DisableDistanceAttenuationReverb();
 	}
 
-	soundDataSubset_.resize(bufferSize);
-	anechoic_.left.resize(bufferSize);
-	anechoic_.right.resize(bufferSize);
+	soundDataSubset_.resize(bufferSize, 0.0f);
+	anechoic_.left.resize(bufferSize, 0.0f);
+	anechoic_.right.resize(bufferSize, 0.0f);
 
 	source_->SetBuffer(soundDataSubset_);
 

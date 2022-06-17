@@ -1,36 +1,44 @@
 #pragma once
 
 #include <functional>
+#include <map>
 
 #include <SDL.h>
 #undef main
 
-#include "BSExpCommon.h"
+#include "BSCommon.h"
 
 namespace bsExp
 {
 	class SdlManager
 	{
 	public:
-		BSEXP_NON_COPYABLE(SdlManager);
-		BSEXP_NON_MOVEABLE(SdlManager);
+		enum class Input: size_t
+		{
+			LeftTrigger,
+			RightTrigger,
+			LeftGrip,
+			RightGrip,
+			LeftPad,
+			RightPad,
+			Spacebar,
+			Enter,
+			Backspace
+		};
 
-		SdlManager() = delete;
-		SdlManager(const std::function<void(void)>& leftTriggerCallback,
-				   const std::function<void(void)>& rightTriggerCallback,
-				   const std::function<void(void)>& leftGripCallback,
-				   const std::function<void(void)>& leftPadCallback,
-				   const std::function<void(void)>& escapeCallback
-		);
+		BS_NON_COPYABLE(SdlManager);
+		BS_NON_MOVEABLE(SdlManager);
+
+		SdlManager();
 		~SdlManager();
 
+		void RegisterCallback(const Input input, const std::function<void(void)>& callback);
 		bool Update();
 
 	private:
 		SDL_Event sdlEvent_{};
 		SDL_Window* sdlWindow_ = nullptr;
-		bool shutdown_ = false;
 
-		const std::function<void(void)>& leftTriggerCallback_, rightTriggerCallback_, leftGripCallback_, leftPadCallback_, escapeCallback_;
+		std::map<Input, std::vector<std::function<void(void)>>> callbacks_;
 	};
 }

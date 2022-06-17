@@ -30,7 +30,7 @@ void bsExp::Logger::LogDelimiter()
 	pLogger_->info("========");
 }
 
-void bsExp::Logger::LogControllerPose(const char* deviceName, bs::CartesianCoord coord)
+void bsExp::Logger::LogControllerPosition(const char* deviceName, const bs::CartesianCoord coord)
 {
 	pLogger_->info("Position of {0} is: ({1:03.2f};{2:03.2f};{3:03.2f})", deviceName, coord.x, coord.y, coord.y);
 }
@@ -43,4 +43,9 @@ void bsExp::Logger::LogRendererChange(const char* rendererName)
 void bsExp::Logger::LogNoiseToggle(const bool enabled)
 {
 	pLogger_->info("{} noise over headphones.", enabled ? "Playing" : "Stopped");
+}
+
+void bsExp::Logger::LogNewSoundPos(const bs::CartesianCoord coord)
+{
+	pLogger_->info("New position of sound is: ({1:03.2f};{2:03.2f};{3:03.2f})", coord.x, coord.y, coord.y);
 }

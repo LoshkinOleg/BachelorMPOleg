@@ -36,4 +36,5 @@ namespace bs
 	float RemapToRange(const float value, const float inMin, const float inMax, const float outMin, const float outMax);
 
 	void Interlace(std::vector<float>& out, const std::vector<float>& left, const std::vector<float>& right);
+	void SumSignals(std::vector<float>& out, const std::vector<float>& other);
 }
