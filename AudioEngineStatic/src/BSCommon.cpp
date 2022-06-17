@@ -58,3 +58,14 @@ float bs::RemapToRange(const float value, const float inMin, const float inMax, 
 {
 	return outMin + (value - inMin) * (outMax - outMin) / (inMax - inMin);
 }
+
+void bs::Interlace(std::vector<float>& out, const std::vector<float>& left, const std::vector<float>& right)
+{
+	assert(out.size() == left.size() + right.size() && left.size() == right.size(), "Vectors passed to Interlace() are not size compatible!");
+	const auto len = left.size();
+	for (size_t i = 0; i < len; i++)
+	{
+		out[2 * i] = left[i];
+		out[2 * i + 1] = right[i];
+	}
+}

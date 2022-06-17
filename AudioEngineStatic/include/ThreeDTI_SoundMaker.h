@@ -21,7 +21,8 @@ namespace bs
 		void Pause();
 		void Stop();
 
-		bool GetPaused() const;
+		bool IsPaused() const;
+		bool IsPlaying() const;
 		
 		const bool looping;
 		const bool spatialized;
@@ -29,15 +30,15 @@ namespace bs
 
 	private:
 		friend class ThreeDTI_AudioRenderer;
-		void ProcessAudio_(CStereoBuffer<float>& outBuff);
+		void ProcessAudio_(std::vector<float>& interlacedStereoOut); // Called by ThreeDTI_AudioRenderer.
 
 		std::shared_ptr<Binaural::CSingleSourceDSP> source_;
-		CMonoBuffer<float> window_;
 		Common::CEarPair<CMonoBuffer<float>> anechoic_;
 
 		const std::vector<float>& soundData_;
-		uint32_t currentBegin_ = 0;
-		uint32_t currentEnd_ = 0;
+		CMonoBuffer<float> soundDataSubset_;
+		size_t currentBegin_ = 0;
+		size_t currentEnd_ = 0;
 		bool paused_ = false;
 	};
 }
