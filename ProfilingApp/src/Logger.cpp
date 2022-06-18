@@ -1,30 +1,22 @@
 #include "Logger.h"
 
-#include <filesystem>
 #include <iostream>
+#include <filesystem>
+namespace fs = std::filesystem;
+#include <iomanip>
+#include <ctime>
+#include <sstream>
 
 bsExp::Logger::Logger()
 {
-	if (std::filesystem::exists("experimentData/0.txt"))
-	{
-		std::vector<std::string> paths;
-		for (const auto& entry : std::filesystem::directory_iterator("experimentData"))
-		{
-			paths.push_back(entry.path().filename().string());
-		}
-		std::sort(paths.begin(), paths.end());
-		const char latestLogName = paths.back().c_str()[0];
-		assert(latestLogName <= '9', "More than 9 log files in folder, next symbol is : which will cause issues!"); // Oleg@self: implement >9 files handling...
+	const auto time = std::time(nullptr);
+	const auto localTime = *std::localtime(&time);
 
-		std::string newLogName = "experimentData/";
-		newLogName += (latestLogName + 1);
-		newLogName += ".txt";
-		pLogger_ = spdlog::basic_logger_mt("Logger", newLogName);
-	}
-	else
-	{
-		pLogger_ = spdlog::basic_logger_mt("Logger", "experimentData/0.txt");
-	}
+	std::ostringstream newLogNameStream;
+	newLogNameStream << "experimentData/";
+	newLogNameStream << std::put_time(&localTime, "%Y-%m-%d_%H-%M-%S");
+	newLogNameStream << ".log";
+	pLogger_ = spdlog::basic_logger_mt("Logger", newLogNameStream.str());
 }
 
 void bsExp::Logger::LogDelimiter()

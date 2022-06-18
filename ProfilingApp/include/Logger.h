@@ -20,6 +20,8 @@ namespace bsExp
 		void LogNoiseToggle(const bool enabled);
 		void LogNewSoundPos(const bs::CartesianCoord coord);
 
+		constexpr static const char* const LOGS_DIR = "experimentData";
+
 	private:
 		std::shared_ptr<spdlog::logger> pLogger_;
 	};

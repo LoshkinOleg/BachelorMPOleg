@@ -2,6 +2,7 @@
 
 #include <array>
 #include <vector>
+#include <string>
 
 #define BS_NON_COPYABLE(type) type(const type&) = delete; type& operator=(const type&) = delete
 #define BS_NON_MOVEABLE(type) type(type&&) = delete; type& operator=(type&&) = delete
@@ -39,4 +40,6 @@ namespace bs
 
 	void Interlace(std::vector<float>& out, const std::vector<float>& left, const std::vector<float>& right);
 	void SumSignals(std::vector<float>& out, const std::vector<float>& other);
+
+	std::string ComputeNextLogName(const char* folderPath, const char* fileStem);
 }
