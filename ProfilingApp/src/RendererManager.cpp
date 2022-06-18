@@ -1,7 +1,7 @@
 #include "RendererManager.h"
 
 bsExp::RendererManager::RendererManager():
-	threeDTI_renderer_(bs::ThreeDTI_AudioRenderer(HRTF_PATH, BRIR_PATH, BUFFER_SIZE, SAMPLE_RATE))
+	threeDTI_renderer_(bs::ThreeDTI_AudioRenderer(HRTF_PATH, BRIR_PATH, BUFFER_SIZE, SAMPLE_RATE, HEAD_ALTITUDE))
 {
 	// Init portaudio.
 	auto err = Pa_Initialize();

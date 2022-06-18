@@ -50,13 +50,6 @@ bs::CartesianCoord bs::ToCartesian(const SphericalCoord coord)
 			coord.radius * cosf(coord.elevation)};
 }
 
-bs::SphericalCoord bs::ToSpherical(const CartesianCoord coord)
-{
-	return {atanf(coord.y / coord.x),
-			atanf((sqrtf(coord.x * coord.x + coord.y * coord.y) / coord.z)),
-			sqrtf(coord.x * coord.x + coord.y * coord.y + coord.z * coord.z)};
-}
-
 float bs::RemapToRange(const float value, const float inMin, const float inMax, const float outMin, const float outMax)
 {
 	return outMin + (value - inMin) * (outMax - outMin) / (inMax - inMin);

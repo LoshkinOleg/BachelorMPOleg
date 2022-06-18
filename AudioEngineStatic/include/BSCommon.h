@@ -34,7 +34,6 @@ namespace bs
 	std::array<float, 3> ToStdArray(const CartesianCoord coord); // Oleg@self: inline those
 	std::array<float, 3> ToStdArray(const SphericalCoord coord);
 	CartesianCoord ToCartesian(const SphericalCoord coord);
-	SphericalCoord ToSpherical(const CartesianCoord coord);
 
 	float RemapToRange(const float value, const float inMin, const float inMax, const float outMin, const float outMax);
 

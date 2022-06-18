@@ -17,7 +17,7 @@ namespace bs
 		BS_NON_MOVEABLE(ThreeDTI_AudioRenderer);
 
 		ThreeDTI_AudioRenderer() = delete;
-		ThreeDTI_AudioRenderer(const char* hrtfFileName, const char* brirFileName, const size_t bufferSize, const size_t sampleRate);
+		ThreeDTI_AudioRenderer(const char* hrtfFileName, const char* brirFileName, const size_t bufferSize, const size_t sampleRate, const float headAltitude);
 
 		size_t CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize);
 		ThreeDTI_SoundMaker& GetSound(const size_t soundId);

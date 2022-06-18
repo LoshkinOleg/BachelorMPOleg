@@ -5,6 +5,15 @@
 #include <ThreeDTI_AudioRenderer.h>
 #include <BSCommon.h>
 
+/*
+	+X is front
+	-X is back
+	+Y is left
+	-Y is right
+	+Z is up
+	-Z is down
+*/
+
 bs::ThreeDTI_SoundMaker::ThreeDTI_SoundMaker(const std::vector<float>& data, Binaural::CCore& core, const bool loop, const bool spatialize, const size_t bufferSize):
 	soundData_(data), looping(loop), spatialized(spatialize), bufferSize(bufferSize)
 {
@@ -40,7 +49,7 @@ void bs::ThreeDTI_SoundMaker::SetPosition(const bs::CartesianCoord coord)
 	if (spatialized)
 	{
 		Common::CTransform t = source_->GetSourceTransform(); // Have to copy it to preserve rotation.
-		t.SetPosition(Common::CVector3(coord.x, coord.y, coord.z)); // Oleg@self: account for axis system difference.
+		t.SetPosition(Common::CVector3(coord.x, coord.y, coord.z));
 		source_->SetSourceTransform(t);
 	}
 }

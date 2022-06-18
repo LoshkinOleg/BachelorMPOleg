@@ -6,6 +6,15 @@
 
 #include "ThreeDTI_SoundMaker.h"
 
+/*
+	+X is front
+	-X is back
+	+Y is left
+	-Y is right
+	+Z is up
+	-Z is down
+*/
+
 size_t bs::ThreeDTI_AudioRenderer::CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize)
 {
 	const auto hash = hasher_(wavFileName);
@@ -26,7 +35,7 @@ bs::ThreeDTI_SoundMaker& bs::ThreeDTI_AudioRenderer::GetSound(const size_t sound
 	return sounds_[soundId];
 }
 
-bs::ThreeDTI_AudioRenderer::ThreeDTI_AudioRenderer(const char* hrtfFileName, const char* brirFileName, const size_t bufferSize, const size_t sampleRate):
+bs::ThreeDTI_AudioRenderer::ThreeDTI_AudioRenderer(const char* hrtfFileName, const char* brirFileName, const size_t bufferSize, const size_t sampleRate, const float headAltitude):
 	bufferSize(bufferSize), sampleRate(sampleRate)
 {
 	// Init 3dti core.
@@ -36,6 +45,9 @@ bs::ThreeDTI_AudioRenderer::ThreeDTI_AudioRenderer(const char* hrtfFileName, con
 	// Init 3dti listener.
 	listener_ = core_.CreateListener();
 	listener_->DisableCustomizedITD();
+	auto t = listener_->GetListenerTransform();
+	t.Translate(Common::CVector3(0.0f, 0.0f, headAltitude));
+	listener_->SetListenerTransform(t);
 	bool unused;
 	if (!HRTF::CreateFromSofa(hrtfFileName, listener_, unused)) assert(false, "Failed to load HRTF sofa file!");
 

@@ -18,6 +18,14 @@ bsExp::Application::Application(const size_t randSeed):
 	sdlManager_.RegisterCallback(SdlManager::Input::NumSix, [this]() { rendererManager_.PauseSound("sweep"); });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumPlus, [this]() { SetRandomSourcePos_(); });
 
+	sdlManager_.RegisterCallback(SdlManager::Input::ArrowUp, [this]() { currentSoundPos_.x += 0.1f; });
+	sdlManager_.RegisterCallback(SdlManager::Input::ArrowDown, [this]() { currentSoundPos_.x -= 0.1f; });
+	sdlManager_.RegisterCallback(SdlManager::Input::ArrowLeft, [this]() { currentSoundPos_.y += 0.1f; });
+	sdlManager_.RegisterCallback(SdlManager::Input::ArrowRight, [this]() { currentSoundPos_.y -= 0.1f; });
+	sdlManager_.RegisterCallback(SdlManager::Input::NumMultiply, [this]() { currentSoundPos_.z += 0.1f; });
+	sdlManager_.RegisterCallback(SdlManager::Input::NumDivide, [this]() { currentSoundPos_.z -= 0.1f; });
+	sdlManager_.RegisterCallback(SdlManager::Input::NumMinus, [this]() { logger_.LogNewSoundPos(currentSoundPos_); });
+
 	SetRandomSourcePos_();
 	SelectRandomRenderer_();
 }
