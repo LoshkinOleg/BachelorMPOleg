@@ -19,9 +19,9 @@ namespace bs
 		float x{ 0 }, y{ 0 }, z{ 0 };
 	};
 	/*
-		Units are in euler degrees for azimuth and elevation. Meters for radius.
-		Value of azimuth is [-180;180] where values <0 are left relative to listener, >0 are right relative to the listener.
-		Value of elevation is [-90;90] where values <0 are down relative to the listener, >0 are above relative to the listener.
+		Units are in radians for azimuth and elevation. Meters for radius.
+		Value of azimuth is [-pi;pi] where values <0 are left relative to listener, >0 are right relative to the listener.
+		Value of elevation is [-pi/2;pi/2] where values <0 are down relative to the listener, >0 are above relative to the listener.
 		Value of radius is [0;+inf[ .
 	*/
 	struct SphericalCoord
