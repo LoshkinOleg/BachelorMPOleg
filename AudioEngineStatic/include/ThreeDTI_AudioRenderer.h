@@ -35,6 +35,7 @@ namespace bs
 
 		std::vector<float> interlacedReverb_;
 		std::vector<float> currentlyProcessedSignal_;
+		Common::CEarPair<CMonoBuffer<float>> reverb_;
 
 		std::vector<ThreeDTI_SoundMaker> sounds_;
 		std::map<size_t, std::vector<float>> assets_;

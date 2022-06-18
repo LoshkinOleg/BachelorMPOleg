@@ -9,13 +9,14 @@ bsExp::Application::Application(const size_t randSeed):
 	// sdlManager_.RegisterCallback(SdlManager::Input::NumOne, [this]() { OnRightPad_(); });
 
 	// DEBUG
-	sdlManager_.RegisterCallback(SdlManager::Input::Zero, [this]() { rendererManager_.StopAll(); });
+	sdlManager_.RegisterCallback(SdlManager::Input::NumZero, [this]() { rendererManager_.StopAll(); });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumOne, [this]() { rendererManager_.PlaySound("noise"); });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumTwo, [this]() { rendererManager_.PlaySound("speech"); });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumThree, [this]() { rendererManager_.PlaySound("sweep"); });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumFour, [this]() { rendererManager_.PauseSound("noise"); });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumFive, [this]() { rendererManager_.PauseSound("speech"); });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumSix, [this]() { rendererManager_.PauseSound("sweep"); });
+	sdlManager_.RegisterCallback(SdlManager::Input::NumPlus, [this]() { SetRandomSourcePos_(); });
 
 	SetRandomSourcePos_();
 	SelectRandomRenderer_();
