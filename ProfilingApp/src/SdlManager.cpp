@@ -32,113 +32,26 @@ bool bsExp::SdlManager::Update()
 		{
 			case SDL_KEYDOWN:
 			{
-				switch (sdlEvent_.key.keysym.scancode)
+				if (sdlEvent_.key.keysym.scancode == SDL_SCANCODE_ESCAPE) // Key reserved for exiting the program.
 				{
-					case SDL_SCANCODE_ESCAPE:
-					{
-						return true;
-					}
-					break;
-
-					case SDL_SCANCODE_1:
-					{
-						const auto& callbacks = callbacks_[Input::LeftTrigger];
-						for (auto& callback : callbacks)
-						{
-							callback();
-						}
-					}
-					break;
-
-					case SDL_SCANCODE_2:
-					{
-						const auto& callbacks = callbacks_[Input::RightTrigger];
-						for (auto& callback : callbacks)
-						{
-							callback();
-						}
-					}
-					break;
-
-					case SDL_SCANCODE_3:
-					{
-						const auto& callbacks = callbacks_[Input::LeftGrip];
-						for (auto& callback : callbacks)
-						{
-							callback();
-						}
-					}
-					break;
-
-					case SDL_SCANCODE_4:
-					{
-						const auto& callbacks = callbacks_[Input::RightGrip];
-						for (auto& callback : callbacks)
-						{
-							callback();
-						}
-					}
-					break;
-
-					case SDL_SCANCODE_5:
-					{
-						const auto& callbacks = callbacks_[Input::LeftPad];
-						for (auto& callback : callbacks)
-						{
-							callback();
-						}
-					}
-					break;
-
-					case SDL_SCANCODE_6:
-					{
-						const auto& callbacks = callbacks_[Input::RightPad];
-						for (auto& callback : callbacks)
-						{
-							callback();
-						}
-					}
-					break;
-
-					case SDL_SCANCODE_7:
-					{
-						const auto& callbacks = callbacks_[Input::Spacebar];
-						for (auto& callback : callbacks)
-						{
-							callback();
-						}
-					}
-					break;
-
-					case SDL_SCANCODE_8:
-					{
-						const auto& callbacks = callbacks_[Input::Enter];
-						for (auto& callback : callbacks)
-						{
-							callback();
-						}
-					}
-					break;
-
-					case SDL_SCANCODE_9:
-					{
-						const auto& callbacks = callbacks_[Input::Backspace];
-						for (auto& callback : callbacks)
-						{
-							callback();
-						}
-					}
-					break;
-
-					default:
-					break;
+					return true;
 				}
-			}break;
+				else
+				{
+					const auto& callbacks = callbacks_[(Input)sdlEvent_.key.keysym.scancode];
+					for (auto& callback : callbacks)
+					{
+						callback();
+					}
+				}
+			}
+			break;
 
 			case SDL_QUIT:
 			{
 				return true;
-			}break;
+			}
+			break;
 
 			default:
 			break;

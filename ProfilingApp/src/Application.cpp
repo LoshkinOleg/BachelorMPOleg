@@ -3,10 +3,19 @@
 bsExp::Application::Application(const size_t randSeed):
 	rndEngine_(RandomEngine(randSeed, RendererManager::MIN_SOUND_DISTANCE, RendererManager::MAX_SOUND_DISTANCE, RendererManager::MIN_SOUND_ELEVATION, RendererManager::MAX_SOUND_ELEVATION, RendererManager::MIN_SOUND_AZIMUTH, RendererManager::MAX_SOUND_AZIMUTH, RendererManager::MIN_RENDERER_INDEX, RendererManager::MAX_RENDERER_INDEX))
 {
-	sdlManager_.RegisterCallback(SdlManager::Input::LeftTrigger, [this]() { OnLeftTrigger_(); });
-	sdlManager_.RegisterCallback(SdlManager::Input::RightTrigger, [this]() { OnRightTrigger_(); });
-	sdlManager_.RegisterCallback(SdlManager::Input::RightGrip, [this]() { OnRightGrip_(); });
-	sdlManager_.RegisterCallback(SdlManager::Input::RightPad, [this]() { OnRightPad_(); });
+	// sdlManager_.RegisterCallback(SdlManager::Input::One, [this]() { OnLeftTrigger_(); });
+	// sdlManager_.RegisterCallback(SdlManager::Input::NumTwo, [this]() { OnRightTrigger_(); });
+	// sdlManager_.RegisterCallback(SdlManager::Input::NumZero, [this]() { OnRightGrip_(); });
+	// sdlManager_.RegisterCallback(SdlManager::Input::NumOne, [this]() { OnRightPad_(); });
+
+	// DEBUG
+	sdlManager_.RegisterCallback(SdlManager::Input::Zero, [this]() { rendererManager_.StopAll(); });
+	sdlManager_.RegisterCallback(SdlManager::Input::NumOne, [this]() { rendererManager_.PlaySound("noise"); });
+	sdlManager_.RegisterCallback(SdlManager::Input::NumTwo, [this]() { rendererManager_.PlaySound("speech"); });
+	sdlManager_.RegisterCallback(SdlManager::Input::NumThree, [this]() { rendererManager_.PlaySound("sweep"); });
+	sdlManager_.RegisterCallback(SdlManager::Input::NumFour, [this]() { rendererManager_.PauseSound("noise"); });
+	sdlManager_.RegisterCallback(SdlManager::Input::NumFive, [this]() { rendererManager_.PauseSound("speech"); });
+	sdlManager_.RegisterCallback(SdlManager::Input::NumSix, [this]() { rendererManager_.PauseSound("sweep"); });
 
 	SetRandomSourcePos_();
 	SelectRandomRenderer_();

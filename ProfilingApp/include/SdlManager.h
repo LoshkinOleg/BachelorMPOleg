@@ -15,15 +15,48 @@ namespace bsExp
 	public:
 		enum class Input: size_t
 		{
-			LeftTrigger,
-			RightTrigger,
-			LeftGrip,
-			RightGrip,
-			LeftPad,
-			RightPad,
-			Spacebar,
-			Enter,
-			Backspace
+			One = SDL_SCANCODE_1,
+			Two = SDL_SCANCODE_2,
+			Three = SDL_SCANCODE_3,
+			Four = SDL_SCANCODE_4,
+			Five = SDL_SCANCODE_5,
+			Six = SDL_SCANCODE_6,
+			Seven = SDL_SCANCODE_7,
+			Eight = SDL_SCANCODE_8,
+			Nine = SDL_SCANCODE_9,
+			Zero = SDL_SCANCODE_0,
+
+			Spacebar = SDL_SCANCODE_SPACE,
+			Enter = SDL_SCANCODE_RETURN,
+			Backspace = SDL_SCANCODE_BACKSPACE,
+
+			NumPlus = SDL_SCANCODE_KP_PLUS,
+			NumMinus = SDL_SCANCODE_KP_MINUS,
+			NumMultiply = SDL_SCANCODE_KP_MULTIPLY,
+			NumDivide = SDL_SCANCODE_KP_DIVIDE,
+			NumOne = SDL_SCANCODE_KP_1,
+			NumTwo = SDL_SCANCODE_KP_2,
+			NumThree = SDL_SCANCODE_KP_3,
+			NumFour = SDL_SCANCODE_KP_4,
+			NumFive = SDL_SCANCODE_KP_5,
+			NumSix = SDL_SCANCODE_KP_6,
+			NumSeven = SDL_SCANCODE_KP_7,
+			NumEight = SDL_SCANCODE_KP_8,
+			NumNine = SDL_SCANCODE_KP_9,
+			NumZero = SDL_SCANCODE_KP_0,
+
+			ArrowRight = SDL_SCANCODE_RIGHT,
+			ArrowUp = SDL_SCANCODE_UP,
+			ArrowLeft = SDL_SCANCODE_LEFT,
+			ArrowDown = SDL_SCANCODE_DOWN,
+
+			// Aliases for dummy VR controllers.
+			LeftTrigger = One,
+			LeftPad = Two,
+			LeftGrip = Three,
+			RightTrigger = NumOne,
+			RightGrip = NumTwo,
+			RightPad = NumThree
 		};
 
 		BS_NON_COPYABLE(SdlManager);

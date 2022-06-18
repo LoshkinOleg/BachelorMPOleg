@@ -30,8 +30,6 @@ bs::ThreeDTI_SoundMaker::ThreeDTI_SoundMaker(const std::vector<float>& data, Bin
 	anechoic_.left.resize(bufferSize, 0.0f);
 	anechoic_.right.resize(bufferSize, 0.0f);
 
-	source_->SetBuffer(soundDataSubset_);
-
 	assert(soundData_.size() >= bufferSize, "The buffer size is greater than the wav data size! Something's wierd's going on, check your code.");
 	currentBegin_ = soundData_.size();
 	currentEnd_ = soundData_.size();
@@ -126,6 +124,7 @@ void bs::ThreeDTI_SoundMaker::ProcessAudio_(std::vector<float>& interlacedStereo
 		// Spatialize sound if needed and interlace it into the output buffer.
 		if (spatialized)
 		{
+			source_->SetBuffer(soundDataSubset_);
 			source_->ProcessAnechoic(anechoic_.left, anechoic_.right); // Ideally, this should NOT be done upon portaudio's servicing callback as it may introduce audio stuttering due to computational time.
 		}
 		else
@@ -164,7 +163,7 @@ void bs::ThreeDTI_SoundMaker::ProcessAudio_(std::vector<float>& interlacedStereo
 		}
 		else // currentBegin_ can reach wavSize.
 		{
-			if (currentEnd_ + 1 == wavSize) // If wavSize % bufferSize = 0, this can happen.
+			if (currentEnd_ + 1 == wavSize) // Happens when clip reached the last window of the wav data.
 			{
 				currentBegin_ = wavSize;
 				currentEnd_ = wavSize;
@@ -176,7 +175,7 @@ void bs::ThreeDTI_SoundMaker::ProcessAudio_(std::vector<float>& interlacedStereo
 
 				if (currentBegin_ + bufferSize - 1 >= wavSize) // Reached end of the wav.
 				{
-					currentEnd_ = wavSize;
+					currentEnd_ = wavSize - 1;
 				}
 				else
 				{
