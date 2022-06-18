@@ -41,5 +41,9 @@ namespace bs
 	void Interlace(std::vector<float>& out, const std::vector<float>& left, const std::vector<float>& right);
 	void SumSignals(std::vector<float>& out, const std::vector<float>& other);
 
-	std::string ComputeNextLogName(const char* folderPath, const char* fileStem);
+	constexpr inline float ToRadians(const float euler)
+	{
+		constexpr const float pi = 3.14159265359f;
+		return euler * (pi / 180.0f);
+	}
 }

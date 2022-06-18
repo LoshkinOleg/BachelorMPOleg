@@ -37,12 +37,12 @@ namespace bsExp
 		void SetSelectedRenderer(const AudioRendererType type);
 		AudioRendererType GetSelectedRenderer() const;
 
-		constexpr static float const MIN_SOUND_AZIMUTH = -180.0f;
-		constexpr static float const MAX_SOUND_AZIMUTH = 180.0f;
-		constexpr static float const MIN_SOUND_DISTANCE = 0.15f;
-		constexpr static float const MAX_SOUND_DISTANCE = 2.5f;
-		constexpr static float const MIN_SOUND_ELEVATION = -15.0f;
-		constexpr static float const MAX_SOUND_ELEVATION = 30.0f;
+		constexpr static float const MIN_SOUND_AZIMUTH = bs::ToRadians(-180.0f);
+		constexpr static float const MAX_SOUND_AZIMUTH = bs::ToRadians(180.0f);
+		constexpr static float const MIN_SOUND_DISTANCE = bs::ToRadians(0.15f);
+		constexpr static float const MAX_SOUND_DISTANCE = bs::ToRadians(2.5f);
+		constexpr static float const MIN_SOUND_ELEVATION = bs::ToRadians(-15.0f);
+		constexpr static float const MAX_SOUND_ELEVATION = bs::ToRadians(30.0f);
 		constexpr static char const* const HRTF_PATH = "../resources/HRTF/SOFA/3DTI_HRTF_IRC1008_128s_44100Hz.sofa";
 		constexpr static char const* const BRIR_PATH = "../resources/BRIR/SOFA/3DTI_BRIR_medium_44100Hz.sofa";
 		constexpr static char const* const WAV_PATH_SPEECH = "../resources/AudioSamples/AnechoicSpeech44100.wav";

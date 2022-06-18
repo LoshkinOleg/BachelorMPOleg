@@ -41,7 +41,7 @@ namespace bsExp
 		public:
 			NormDistrFloatGen_() = delete;
 			NormDistrFloatGen_(const size_t seed, const float min, const float max):
-				seed(seed), e_(std::default_random_engine(seed)), d_(std::normal_distribution<float>(min, max))
+				seed(seed), e_(std::default_random_engine(seed)), d_(std::normal_distribution<float>((max + min) / 2.0f, (max - min) / 2.0f))
 			{
 			};
 
