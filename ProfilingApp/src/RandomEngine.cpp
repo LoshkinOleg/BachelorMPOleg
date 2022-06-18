@@ -2,6 +2,7 @@
 
 bs::CartesianCoord bsExp::RandomEngine::GenCartesian()
 {
+	// Oleg@self: fix distrubutions, creating incoherent positions.
 	return { bs::ToCartesian(GenSpherical()) };
 }
 
