@@ -27,15 +27,15 @@ void bsExp::Logger::LogDelimiter()
 
 void bsExp::Logger::LogControllerPosition(const char* deviceName, const bs::CartesianCoord coord)
 {
-	pLogger_->info("Position of {0} is: ({1:03.2f};{2:03.2f};{3:03.2f})", deviceName, coord.x, coord.y, coord.y);
+	pLogger_->info("Position of {0} is: ({1:03.2f},{2:03.2f},{3:03.2f})", deviceName, coord.x, coord.y, coord.z);
 
 	std::string s = "Position of ";
 	s += deviceName;
 	s += " is: (";
 	s += std::to_string(coord.x);
-	s += ";";
+	s += ",";
 	s += std::to_string(coord.y);
-	s += ";";
+	s += ",";
 	s += std::to_string(coord.z);
 	s += ").\n";
 	std::cout << s;
@@ -62,13 +62,13 @@ void bsExp::Logger::LogNoiseToggle(const bool enabled)
 
 void bsExp::Logger::LogNewSoundPos(const bs::CartesianCoord coord)
 {
-	pLogger_->info("New position of sound is: ({0:03.2f};{1:03.2f};{2:03.2f})", coord.x, coord.y, coord.y);
+	pLogger_->info("New position of sound is: ({0:03.2f},{1:03.2f},{2:03.2f})", coord.x, coord.y, coord.z);
 
 	std::string s = "New position of sound is: (";
 	s += std::to_string(coord.x);
-	s += ";";
+	s += ",";
 	s += std::to_string(coord.y);
-	s += ";";
+	s += ",";
 	s += std::to_string(coord.z);
 	s += ").\n";
 	std::cout << s;

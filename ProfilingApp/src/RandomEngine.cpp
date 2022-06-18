@@ -1,9 +1,11 @@
 #include "RandomEngine.h"
 
-bs::CartesianCoord bsExp::RandomEngine::GenCartesian()
+bs::CartesianCoord bsExp::RandomEngine::GenCartesian(const float headAltitude)
 {
 	// Oleg@self: fix distrubutions, creating incoherent positions.
-	return { bs::ToCartesian(GenSpherical()) };
+	auto c = bs::ToCartesian(GenSpherical());
+	c.z += headAltitude;
+	return c;
 }
 
 bs::SphericalCoord bsExp::RandomEngine::GenSpherical()
@@ -31,7 +33,7 @@ size_t bsExp::RandomEngine::GenMiddleware()
 	return distrMiddleware_.Generate();
 }
 
-float bsExp::RandomEngine::NormDistrFloatGen_::Generate()
+float bsExp::RandomEngine::UniDistrFloatGen_::Generate()
 {
 	return d_(e_);
 }

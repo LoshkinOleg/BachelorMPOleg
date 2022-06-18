@@ -3,11 +3,6 @@
 bsExp::Application::Application(const size_t randSeed):
 	rndEngine_(RandomEngine(randSeed, RendererManager::MIN_SOUND_DISTANCE, RendererManager::MAX_SOUND_DISTANCE, RendererManager::MIN_SOUND_ELEVATION, RendererManager::MAX_SOUND_ELEVATION, RendererManager::MIN_SOUND_AZIMUTH, RendererManager::MAX_SOUND_AZIMUTH, RendererManager::MIN_RENDERER_INDEX, RendererManager::MAX_RENDERER_INDEX))
 {
-	// sdlManager_.RegisterCallback(SdlManager::Input::One, [this]() { OnLeftTrigger_(); });
-	// sdlManager_.RegisterCallback(SdlManager::Input::NumTwo, [this]() { OnRightTrigger_(); });
-	// sdlManager_.RegisterCallback(SdlManager::Input::NumZero, [this]() { OnRightGrip_(); });
-	// sdlManager_.RegisterCallback(SdlManager::Input::NumOne, [this]() { OnRightPad_(); });
-
 	// DEBUG
 	sdlManager_.RegisterCallback(SdlManager::Input::NumZero, [this]() { rendererManager_.StopAll(); });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumOne, [this]() { rendererManager_.PlaySound("noise"); });
@@ -63,13 +58,13 @@ void bsExp::Application::SelectRandomRenderer_()
 void bsExp::Application::UpdateTransforms_()
 {
 	// Dummy implementation, move openvr code here to retireve controller positions.
-	leftControllerPos = rndEngine_.GenCartesian();
-	rightControllerPos = rndEngine_.GenCartesian();
+	leftControllerPos = rndEngine_.GenCartesian(rendererManager_.HEAD_ALTITUDE);
+	rightControllerPos = rndEngine_.GenCartesian(rendererManager_.HEAD_ALTITUDE);
 }
 
 void bsExp::Application::SetRandomSourcePos_()
 {
-	currentSoundPos_ = rndEngine_.GenCartesian();
+	currentSoundPos_ = rndEngine_.GenCartesian(rendererManager_.HEAD_ALTITUDE);
 	logger_.LogNewSoundPos(currentSoundPos_);
 }
 

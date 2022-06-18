@@ -41,7 +41,7 @@ namespace bsExp
 		constexpr static float const MAX_SOUND_AZIMUTH = bs::ToRadians(180.0f);
 		constexpr static float const MIN_SOUND_DISTANCE = 0.33f;
 		constexpr static float const MAX_SOUND_DISTANCE = 3.0f;
-		constexpr static float const HEAD_ALTITUDE = 1.3f;
+		constexpr static float const HEAD_ALTITUDE = 1.3f; // Oleg@self: find a way to pass this as argument to program. Move to application maybe since that's where it's used mostly?
 		constexpr static float const MIN_SOUND_ELEVATION = bs::ToRadians(50.0f);
 		constexpr static float const MAX_SOUND_ELEVATION = bs::ToRadians(120.0f);
 		constexpr static char const* const HRTF_PATH = "../resources/HRTF/SOFA/3DTI_HRTF_IRC1008_128s_44100Hz.sofa";

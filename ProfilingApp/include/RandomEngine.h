@@ -26,7 +26,7 @@ namespace bsExp
 		{
 		};
 
-		bs::CartesianCoord GenCartesian();
+		bs::CartesianCoord GenCartesian(const float headAltitude);
 		bs::SphericalCoord GenSpherical();
 		float GenAzimuth();
 		float GenElevation();
@@ -36,12 +36,12 @@ namespace bsExp
 		const size_t seed;
 
 	private:
-		class NormDistrFloatGen_
+		class UniDistrFloatGen_
 		{
 		public:
-			NormDistrFloatGen_() = delete;
-			NormDistrFloatGen_(const size_t seed, const float min, const float max):
-				seed(seed), e_(std::default_random_engine(seed)), d_(std::normal_distribution<float>((max + min) / 2.0f, (max - min) / 2.0f))
+			UniDistrFloatGen_() = delete;
+			UniDistrFloatGen_(const size_t seed, const float min, const float max):
+				seed(seed), e_(std::default_random_engine(seed)), d_(std::uniform_real_distribution<float>(min, max))
 			{
 			};
 
@@ -51,7 +51,7 @@ namespace bsExp
 
 		private:
 			std::default_random_engine e_;
-			std::normal_distribution<float> d_;
+			std::uniform_real_distribution<float> d_;
 		};
 
 		class UniDistrUintGen_
@@ -69,7 +69,7 @@ namespace bsExp
 			std::uniform_int_distribution<size_t> d_;
 		};
 
-		NormDistrFloatGen_ distrAzimuth_, distrElevation_, distrRadius_;
+		UniDistrFloatGen_ distrAzimuth_, distrElevation_, distrRadius_;
 		UniDistrUintGen_ distrMiddleware_;
 	};
 }
