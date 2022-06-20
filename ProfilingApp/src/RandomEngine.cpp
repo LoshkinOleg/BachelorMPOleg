@@ -15,30 +15,30 @@ bs::SphericalCoord bsExp::RandomEngine::GenSpherical()
 
 float bsExp::RandomEngine::GenAzimuth()
 {
-	return distrAzimuth_.Generate();
+	return distrAzimuth_.Generate(e_);
 }
 
 float bsExp::RandomEngine::GenElevation()
 {
-	return distrElevation_.Generate();
+	return distrElevation_.Generate(e_);
 }
 
 float bsExp::RandomEngine::GenRadius()
 {
-	return distrRadius_.Generate();
+	return distrRadius_.Generate(e_);
 }
 
 size_t bsExp::RandomEngine::GenMiddleware()
 {
-	return distrMiddleware_.Generate();
+	return distrMiddleware_.Generate(e_);
 }
 
-float bsExp::RandomEngine::UniDistrFloatGen_::Generate()
+float bsExp::RandomEngine::UniDistrFloatGen_::Generate(std::default_random_engine& e)
 {
-	return d_(e_);
+	return d_(e);
 }
 
-size_t bsExp::RandomEngine::UniDistrUintGen_::Generate()
+size_t bsExp::RandomEngine::UniDistrUintGen_::Generate(std::default_random_engine& e)
 {
-	return d_(e_);
+	return d_(e);
 }

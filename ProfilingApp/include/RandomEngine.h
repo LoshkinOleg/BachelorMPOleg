@@ -19,6 +19,7 @@ namespace bsExp
 					 const float minSoundAzimuth, const float maxSoundAzimuth,
 					 const size_t minRendererIndex, const size_t maxRendererIndex):
 			seed(seed),
+			e_(std::default_random_engine(seed)),
 			distrAzimuth_(seed, minSoundAzimuth, maxSoundAzimuth),
 			distrElevation_(seed, minSoundElevation, maxSoundElevation),
 			distrRadius_(seed, minSoundDist, maxSoundDist),
@@ -41,16 +42,15 @@ namespace bsExp
 		public:
 			UniDistrFloatGen_() = delete;
 			UniDistrFloatGen_(const size_t seed, const float min, const float max):
-				seed(seed), e_(std::default_random_engine(seed)), d_(std::uniform_real_distribution<float>(min, max))
+				seed(seed), d_(std::uniform_real_distribution<float>(min, max))
 			{
 			};
 
-			float Generate();
+			float Generate(std::default_random_engine& e);
 
 			const size_t seed;
 
 		private:
-			std::default_random_engine e_;
 			std::uniform_real_distribution<float> d_;
 		};
 
@@ -58,18 +58,18 @@ namespace bsExp
 		{
 		public:
 			UniDistrUintGen_() = delete;
-			UniDistrUintGen_(const size_t seed, const size_t min, const size_t max): seed(seed), e_(std::default_random_engine(seed)), d_(std::uniform_int_distribution(min, max)) {};
+			UniDistrUintGen_(const size_t seed, const size_t min, const size_t max): seed(seed), d_(std::uniform_int_distribution(min, max)) {};
 
-			size_t Generate();
+			size_t Generate(std::default_random_engine& e);
 
 			const size_t seed;
 
 		private:
-			std::default_random_engine e_;
 			std::uniform_int_distribution<size_t> d_;
 		};
 
 		UniDistrFloatGen_ distrAzimuth_, distrElevation_, distrRadius_;
 		UniDistrUintGen_ distrMiddleware_;
+		std::default_random_engine e_;
 	};
 }
