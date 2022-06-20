@@ -17,6 +17,10 @@ namespace bs
 	struct CartesianCoord
 	{
 		float x{ 0 }, y{ 0 }, z{ 0 };
+
+		float Magnitude() const;
+		CartesianCoord Normalized() const;
+		CartesianCoord operator-(const CartesianCoord other) const;
 	};
 	/*
 		Units are in radians for azimuth and elevation. Meters for radius.

@@ -75,3 +75,19 @@ void bs::SumSignals(std::vector<float>& out, const std::vector<float>& other)
 		out[i] += other[i];
 	}
 }
+
+float bs::CartesianCoord::Magnitude() const
+{
+	return std::sqrtf(x * x + y * y + z * z);
+}
+
+bs::CartesianCoord bs::CartesianCoord::Normalized() const
+{
+	const auto magnitude = Magnitude();
+	return { x / magnitude, y / magnitude, z / magnitude };
+}
+
+bs::CartesianCoord bs::CartesianCoord::operator-(const CartesianCoord other) const
+{
+	return { x - other.x, y - other.y, z - other.z };
+}

@@ -51,6 +51,11 @@ void bsExp::Application::SelectRandomRenderer_()
 			logger_.LogRendererChange("3dti");
 		}
 		break;
+		case RendererManager::AudioRendererType::SteamAudio:
+		{
+			logger_.LogRendererChange("SteamAudio");
+		}
+		break;
 		default:
 		break;
 	}

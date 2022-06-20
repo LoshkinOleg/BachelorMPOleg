@@ -2,24 +2,15 @@
 
 #include <cassert>
 
-bs::SteamAudio_SoundMaker::SteamAudio_SoundMaker(const std::vector<float>& data, const bool loop, const bool spatialize, const size_t bufferSize, const IPLContext& context, const IPLHRTF& hrtf):
-	soundData_(data), looping(loop), spatialized(spatialize), bufferSize(bufferSize), context_(context)
+bs::SteamAudio_SoundMaker::SteamAudio_SoundMaker(const std::vector<float>& data, const bool loop, const bool spatialize, const size_t bufferSize, const IPLContext& context, const IPLHRTF& hrtf, const IPLBinauralEffect& effect):
+	soundData_(data), looping(loop), spatialized(spatialize), bufferSize(bufferSize), context_(context), hrtf_(hrtf), effect_(effect)
 {
-	if (iplAudioBufferAllocate(context, 2, bufferSize, &stereoSpatializedData_))
-	{
-		assert(true, "Phonon failed to allocate a buffer for stereoSpatializedData_!");
-	}
-	// if (iplAudioBufferAllocate(context, 2, bufferSize, &spatializationTail_))
-	// {
-	// 	assert(true, "Phonon failed to allocate a buffer for spatializationTail_!");
-	// }
-
 	spatializationParams_ =
 	{
 		IPLVector3{ 0.0f, 0.0f, 0.0f },
-		IPL_HRTFINTERPOLATION_NEAREST,
+		IPL_HRTFINTERPOLATION_BILINEAR,
 		1.0f,
-		hrtf
+		hrtf_
 	};
 
 	soundDataSubset_.resize(bufferSize, 0.0f);
@@ -30,14 +21,9 @@ bs::SteamAudio_SoundMaker::SteamAudio_SoundMaker(const std::vector<float>& data,
 	// TODO: init source
 }
 
-bs::SteamAudio_SoundMaker::~SteamAudio_SoundMaker()
-{
-	iplAudioBufferFree(context_, &stereoSpatializedData_); // Oleg@self: this should only be called on object shutdown, not destruction since this object can be moved!
-}
-
 void bs::SteamAudio_SoundMaker::SetPosition(const bs::CartesianCoord coord)
 {
-	spatializationParams_.direction = IPLVector3{ coord.x, coord.y, coord.z }; // Oleg@self: take into account coordinate system differences. And you're given a position, not a direction...
+	pos_ = coord;
 }
 
 void bs::SteamAudio_SoundMaker::SetPosition(const bs::SphericalCoord coord)
@@ -80,7 +66,7 @@ bool bs::SteamAudio_SoundMaker::IsPlaying() const
 	return currentBegin_ != soundData_.size();
 }
 
-void bs::SteamAudio_SoundMaker::ProcessAudio_(std::vector<float>& interlacedStereoOut, const IPLBinauralEffect& effect)
+void bs::SteamAudio_SoundMaker::ProcessAudio_(std::vector<float>& interlacedStereoOut, const bs::CartesianCoord listenerPos)
 {
 	const auto wavSize = soundData_.size();
 
@@ -113,14 +99,28 @@ void bs::SteamAudio_SoundMaker::ProcessAudio_(std::vector<float>& interlacedSter
 		// Spatialize sound and write to output buffer.
 		if (spatialized)
 		{
+			// Allocate temporary buffers. Not at all ideal to do this here but it avoids having a shutdown method for this class.
+			if (iplAudioBufferAllocate(context_, 2, bufferSize, &stereoSpatializedData_))
+			{
+				assert(true, "Phonon failed to allocate a buffer for stereoSpatializedData_!");
+			}
+			// if (iplAudioBufferAllocate(context, 2, bufferSize, &spatializationTail_))
+			// {
+			// 	assert(true, "Phonon failed to allocate a buffer for spatializationTail_!");
+			// }
+
+			const auto dir = (listenerPos - pos_).Normalized();
+			spatializationParams_.direction = IPLVector3{ dir.x, dir.y, dir.z }; // Oleg@self: take into account coordinate system differences.
+
 			float* in = soundDataSubset_.data();
 			IPLAudioBuffer iplIn{ 1, bufferSize, &in };
-			auto remainingSamples = iplBinauralEffectApply(effect, &spatializationParams_, &iplIn, &stereoSpatializedData_);
+			auto remainingSamples = iplBinauralEffectApply(effect_, &spatializationParams_, &iplIn, &stereoSpatializedData_);
 			if (remainingSamples == IPLAudioEffectState::IPL_AUDIOEFFECTSTATE_TAILREMAINING)
 			{
 				// TODO: implement carrying over trailing samples.
 			}
 			iplAudioBufferInterleave(context_, &stereoSpatializedData_, interlacedStereoOut.data());
+			iplAudioBufferFree(context_, &stereoSpatializedData_);
 		}
 		else
 		{

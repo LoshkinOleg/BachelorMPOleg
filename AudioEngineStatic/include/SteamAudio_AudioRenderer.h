@@ -19,6 +19,9 @@ namespace bs
 		size_t CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize);
 		SteamAudio_SoundMaker& GetSound(const size_t soundId);
 
+		void MoveListener(const bs::CartesianCoord coord);
+		void MoveListener(const bs::SphericalCoord coord);
+
 		void ProcessAudio(std::vector<float>& interleavedStereoOut);
 
 		const size_t bufferSize;
@@ -31,8 +34,12 @@ namespace bs
 
 		IPLContext context_; // I think this is a ptr to a struct?... not sure, it's intentionally obfuscated. Treat as a hex variable.
 		IPLHRTF hrtf_;
-		IPLBinauralEffect effect_;
+		IPLBinauralEffect binauralEffect_;
+		IPLAmbisonicsEncodeEffect ambiEncodeEffect_;
+		IPLAmbisonicsDecodeEffect ambiDecodeEffect_;
 		std::vector<float> currentlyProcessedSignal_;
+
+		CartesianCoord listenerPos_{};
 
 		std::hash<std::string> hasher_{};
 	};

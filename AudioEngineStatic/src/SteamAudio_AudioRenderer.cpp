@@ -5,13 +5,15 @@
 #include "SteamAudio_SoundMaker.h"
 
 bs::SteamAudio_AudioRenderer::SteamAudio_AudioRenderer(const size_t bufferSize, const size_t sampleRate, const float headAltitude):
-	bufferSize(bufferSize), sampleRate(sampleRate)
+	bufferSize(bufferSize), sampleRate(sampleRate), listenerPos_{0.0f, 0.0f, headAltitude}
 {
 	// Phonon stuff
 	IPLAudioSettings audioSettings{ sampleRate, bufferSize };
 	IPLContextSettings contextSettings{};
 	IPLBinauralEffectSettings effectSettings;
 	IPLHRTFSettings hrtfSettings;
+	IPLAmbisonicsEncodeEffectSettings ambiEncodingSettings{1};
+	IPLAmbisonicsDecodeEffectSettings ambiDecodingSettings{0 , hrtf_, 1};
 
 	contextSettings.version = STEAMAUDIO_VERSION;
 	hrtfSettings.type = IPL_HRTFTYPE_DEFAULT;
@@ -23,8 +25,14 @@ bs::SteamAudio_AudioRenderer::SteamAudio_AudioRenderer(const size_t bufferSize, 
 	assert(result == IPLerror::IPL_STATUS_SUCCESS, "Failed to create a phonon hrtf!");
 	effectSettings.hrtf = hrtf_;
 
-	result = iplBinauralEffectCreate(context_, &audioSettings, &effectSettings, &effect_);
+	result = iplBinauralEffectCreate(context_, &audioSettings, &effectSettings, &binauralEffect_);
 	assert(result == IPLerror::IPL_STATUS_SUCCESS, "Failed to create a phonon binaural effect!");
+
+	result = iplAmbisonicsEncodeEffectCreate(context_, &audioSettings, &ambiEncodingSettings, &ambiEncodeEffect_);
+	assert(result == IPLerror::IPL_STATUS_SUCCESS, "Failed to create a phonon ambisonic encoding effect!");
+
+	result = iplAmbisonicsDecodeEffectCreate(context_, &audioSettings, &ambiDecodingSettings, &ambiDecodeEffect_);
+	assert(result == IPLerror::IPL_STATUS_SUCCESS, "Failed to create a phonon ambisonic decoding effect!");
 
 	// TODO: init simulation and listener and move listener to headAltitude. https://valvesoftware.github.io/steam-audio/doc/capi/guide.html#sources
 
@@ -33,7 +41,7 @@ bs::SteamAudio_AudioRenderer::SteamAudio_AudioRenderer(const size_t bufferSize, 
 
 bs::SteamAudio_AudioRenderer::~SteamAudio_AudioRenderer()
 {
-	iplBinauralEffectRelease(&effect_);
+	iplBinauralEffectRelease(&binauralEffect_);
 	iplHRTFRelease(&hrtf_);
 	iplContextRelease(&context_);
 }
@@ -46,8 +54,7 @@ size_t bs::SteamAudio_AudioRenderer::CreateSoundMaker(const char* wavFileName, c
 	{
 		assets_.emplace(hash, bs::LoadWav(wavFileName, 1, sampleRate));
 	}
-
-	sounds_.emplace_back(SteamAudio_SoundMaker(assets_[hash], loop, spatialize, bufferSize, context_, hrtf_));
+	sounds_.emplace_back(SteamAudio_SoundMaker(assets_[hash], loop, spatialize, bufferSize, context_, hrtf_, binauralEffect_));
 
 	return sounds_.size() - 1;
 }
@@ -58,13 +65,33 @@ bs::SteamAudio_SoundMaker& bs::SteamAudio_AudioRenderer::GetSound(const size_t s
 	return sounds_[soundId];
 }
 
+void bs::SteamAudio_AudioRenderer::MoveListener(const bs::CartesianCoord coord)
+{
+	listenerPos_ = coord;
+}
+
+void bs::SteamAudio_AudioRenderer::MoveListener(const bs::SphericalCoord coord)
+{
+	listenerPos_ = bs::ToCartesian(coord);
+}
+
 void bs::SteamAudio_AudioRenderer::ProcessAudio(std::vector<float>& interleavedStereoOut)
 {
 	// Process anechoic.
 	for (auto& sound : sounds_)
 	{
 		std::fill(currentlyProcessedSignal_.begin(), currentlyProcessedSignal_.end(), 0.0f);
-		sound.ProcessAudio_(currentlyProcessedSignal_, effect_);
+		sound.ProcessAudio_(currentlyProcessedSignal_, listenerPos_);
 		bs::SumSignals(interleavedStereoOut, currentlyProcessedSignal_);
 	}
+
+	// Process reverb.
+	IPLAudioBuffer inReverb; // mono buffer
+	auto result = iplAudioBufferAllocate(context_, 1, bufferSize, &inReverb);
+	assert(result == IPLerror::IPL_STATUS_SUCCESS, "Failed to allocate a phonon buffer!");
+	IPLAudioBuffer outReverb; // B-format buffer
+	auto result = iplAudioBufferAllocate(context_, 4, bufferSize, &outReverb);
+	assert(result == IPLerror::IPL_STATUS_SUCCESS, "Failed to allocate a phonon buffer!");
+
+	
 }
