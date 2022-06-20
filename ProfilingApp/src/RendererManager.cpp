@@ -1,7 +1,7 @@
 #include "RendererManager.h"
 
 bsExp::RendererManager::RendererManager():
-	threeDTI_renderer_(bs::ThreeDTI_AudioRenderer(HRTF_PATH, BRIR_PATH, BUFFER_SIZE, SAMPLE_RATE, HEAD_ALTITUDE))
+	threeDTI_renderer_(bs::ThreeDTI_AudioRenderer(HRTF_PATH, BRIR_PATH, BUFFER_SIZE, SAMPLE_RATE, HEAD_ALTITUDE)), steamAudio_renderer_(bs::SteamAudio_AudioRenderer(BUFFER_SIZE, SAMPLE_RATE, HEAD_ALTITUDE))
 {
 	// Init portaudio.
 	auto err = Pa_Initialize();
@@ -35,6 +35,10 @@ bsExp::RendererManager::RendererManager():
 	threeDTI_soundIds_.emplace("speech", threeDTI_renderer_.CreateSoundMaker(WAV_PATH_SPEECH, false, true));
 	threeDTI_soundIds_.emplace("noise", threeDTI_renderer_.CreateSoundMaker(WAV_PATH_BROWN_NOISE, true, false));
 	threeDTI_soundIds_.emplace("sweep", threeDTI_renderer_.CreateSoundMaker(WAV_PATH_SWEEP, false, true));
+
+	steamAudio_soundIds_.emplace("speech", steamAudio_renderer_.CreateSoundMaker(WAV_PATH_SPEECH, false, true));
+	steamAudio_soundIds_.emplace("noise", steamAudio_renderer_.CreateSoundMaker(WAV_PATH_BROWN_NOISE, true, false));
+	steamAudio_soundIds_.emplace("sweep", steamAudio_renderer_.CreateSoundMaker(WAV_PATH_SWEEP, false, true));
 }
 
 bsExp::RendererManager::~RendererManager()
@@ -66,6 +70,18 @@ void bsExp::RendererManager::PlaySound(const char* soundName)
 			}
 		}
 		break;
+		case bsExp::RendererManager::AudioRendererType::SteamAudio:
+		{
+			if (steamAudio_soundIds_.find(soundName) != steamAudio_soundIds_.end())
+			{
+				steamAudio_renderer_.GetSound(steamAudio_soundIds_[soundName]).Play();
+			}
+			else
+			{
+				assert(false, "Sound isn't loaded: " << soundName);
+			}
+		}
+		break;
 		default:
 		break;
 	}
@@ -87,6 +103,18 @@ void bsExp::RendererManager::PauseSound(const char* soundName)
 			}
 		}
 		break;
+		case bsExp::RendererManager::AudioRendererType::SteamAudio:
+		{
+			if (steamAudio_soundIds_.find(soundName) != steamAudio_soundIds_.end())
+			{
+				steamAudio_renderer_.GetSound(steamAudio_soundIds_[soundName]).Pause();
+			}
+			else
+			{
+				assert(false, "Sound isn't loaded: " << soundName);
+			}
+		}
+		break;
 		default:
 		break;
 	}
@@ -101,6 +129,18 @@ bool bsExp::RendererManager::IsPaused(const char* soundName)
 			if (threeDTI_soundIds_.find(soundName) != threeDTI_soundIds_.end())
 			{
 				return threeDTI_renderer_.GetSound(threeDTI_soundIds_[soundName]).IsPaused();
+			}
+			else
+			{
+				assert(false, "Sound isn't loaded: " << soundName);
+			}
+		}
+		break;
+		case bsExp::RendererManager::AudioRendererType::SteamAudio:
+		{
+			if (steamAudio_soundIds_.find(soundName) != steamAudio_soundIds_.end())
+			{
+				steamAudio_renderer_.GetSound(steamAudio_soundIds_[soundName]).IsPaused();
 			}
 			else
 			{
@@ -131,6 +171,18 @@ void bsExp::RendererManager::StopSound(const char* soundName)
 			}
 		}
 		break;
+		case bsExp::RendererManager::AudioRendererType::SteamAudio:
+		{
+			if (steamAudio_soundIds_.find(soundName) != steamAudio_soundIds_.end())
+			{
+				steamAudio_renderer_.GetSound(steamAudio_soundIds_[soundName]).Stop();
+			}
+			else
+			{
+				assert(false, "Sound isn't loaded: " << soundName);
+			}
+		}
+		break;
 		default:
 		break;
 	}
@@ -142,6 +194,10 @@ void bsExp::RendererManager::StopAll()
 	{
 		threeDTI_renderer_.GetSound(pair.second).Stop();
 	}
+	for (auto& pair : steamAudio_soundIds_)
+	{
+		steamAudio_renderer_.GetSound(pair.second).Stop();
+	}
 }
 
 void bsExp::RendererManager::MoveSound(const char* soundName, const bs::CartesianCoord coord)
@@ -150,7 +206,10 @@ void bsExp::RendererManager::MoveSound(const char* soundName, const bs::Cartesia
 	{
 		threeDTI_renderer_.GetSound(threeDTI_soundIds_[soundName]).SetPosition(coord);
 	}
-	// Oleg@self: Call other implementations too
+	if (steamAudio_soundIds_.find(soundName) != steamAudio_soundIds_.end())
+	{
+		steamAudio_renderer_.GetSound(steamAudio_soundIds_[soundName]).SetPosition(coord);
+	}
 }
 
 void bsExp::RendererManager::MoveAllSounds(const bs::CartesianCoord coord)
@@ -159,7 +218,10 @@ void bsExp::RendererManager::MoveAllSounds(const bs::CartesianCoord coord)
 	{
 		threeDTI_renderer_.GetSound(pair.second).SetPosition(coord);
 	}
-	// Oleg@self: Call other implementations too
+	for (auto& pair : steamAudio_soundIds_)
+	{
+		steamAudio_renderer_.GetSound(pair.second).SetPosition(coord);
+	}
 }
 
 void bsExp::RendererManager::SetSelectedRenderer(const AudioRendererType type)
@@ -184,6 +246,12 @@ int bsExp::RendererManager::ServiceAudio_(const void* unused, void* outputBuffer
 		case bsExp::RendererManager::AudioRendererType::ThreeDTI:
 		{
 			self->threeDTI_renderer_.ProcessAudio(self->renderResult_);
+		}
+		break;
+
+		case bsExp::RendererManager::AudioRendererType::SteamAudio:
+		{
+			self->steamAudio_renderer_.ProcessAudio(self->renderResult_);
 		}
 		break;
 

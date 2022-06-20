@@ -70,6 +70,6 @@ namespace bsExp
 
 		UniDistrFloatGen_ distrAzimuth_, distrElevation_, distrRadius_;
 		UniDistrUintGen_ distrMiddleware_;
-		std::default_random_engine e_;
+		std::default_random_engine e_; // Important to have a single engine for generating all values, else it introduces patterns.
 	};
 }

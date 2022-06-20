@@ -3,6 +3,7 @@
 #include "portaudio.h"
 
 #include "ThreeDTI_AudioRenderer.h"
+#include "SteamAudio_AudioRenderer.h"
 
 namespace bsExp
 {
@@ -12,8 +13,9 @@ namespace bsExp
 		enum class AudioRendererType: size_t
 		{
 			ThreeDTI = 0,
+			SteamAudio = 1,
 
-			MAX = ThreeDTI
+			MAX = SteamAudio
 		};
 
 		BS_NON_COPYABLE(RendererManager);
@@ -29,7 +31,6 @@ namespace bsExp
 		bool IsPaused(const char* soundName);
 		void StopSound(const char* soundName);
 		void StopAll();
-
 
 		void MoveSound(const char* soundName, const bs::CartesianCoord coord);
 		void MoveAllSounds(const bs::CartesianCoord coord);
@@ -68,6 +69,8 @@ namespace bsExp
 		AudioRendererType selectedRenderer_ = AudioRendererType::ThreeDTI;
 		bs::ThreeDTI_AudioRenderer threeDTI_renderer_;
 		std::map<std::string, size_t> threeDTI_soundIds_;
+		bs::SteamAudio_AudioRenderer steamAudio_renderer_;
+		std::map<std::string, size_t> steamAudio_soundIds_;
 
 		PaStream* pStream_ = nullptr;
 		std::vector<float> renderResult_;

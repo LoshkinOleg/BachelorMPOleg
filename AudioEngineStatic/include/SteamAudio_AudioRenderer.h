@@ -1,50 +1,39 @@
 #pragma once
 
+#include <map>
+
 #include "SteamAudio_SoundMaker.h"
 
-// Oleg@self: make an abstraction out of this.
+namespace bs
+{
+	class SteamAudio_AudioRenderer
+	{
+	public:
+		BS_NON_COPYABLE(SteamAudio_AudioRenderer);
+		BS_NON_MOVEABLE(SteamAudio_AudioRenderer);
 
-//namespace bs
-//{
-//	class SteamAudio_AudioRenderer
-//	{
-//	public:
-//		// Oleg@self: replace with constructor / destructor
-//		bool Init(size_t BUFFER_SIZE = 1024, size_t SAMPLE_RATE = 44100);
-//		void Shutdown();
-//
-//		SoundMakerId CreateSoundMaker(const char* wavFileName, const ClipWrapMode wrapMode = ClipWrapMode::ONE_SHOT, const bool spatialize = true);
-//		void MoveSoundMaker(SoundMakerId id, const float globalX, const float globalY, const float globalZ);
-//		void ResetSoundMaker(SoundMakerId id);
-//
-//		inline const std::vector<SteamAudio_SoundMaker>& GetSounds() const { return sounds_; };
-//
-//		void SetIsActive(const bool isActive);
-//		void SetSelectedSound(const size_t soundId);
-//		size_t GetSelectedSound() const;
-//
-//		static size_t GetBufferSize() { return BUFFER_SIZE_; };
-//		static size_t GetSampleRate() { return SAMPLE_RATE_; };
-//
-//	private:
-//		static int ServiceAudio_
-//		(
-//			const void* unused, void* outputBuffer,
-//			unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo,
-//			PaStreamCallbackFlags statusFlags, void* userData
-//		);
-//
-//		// portaudio stuff
-//		PaStream* pStream_ = nullptr; // portaudio stream to playback device
-//		PaError err_;
-//
-//		// Renderer specific stuff
-//		std::vector<SteamAudio_SoundMaker> sounds_;
-//		size_t selectedSound_ = 0;
-//
-//		static size_t BUFFER_SIZE_;
-//		static size_t SAMPLE_RATE_;
-//
-//		bool isActive_ = true;
-//	};
-//}
+		SteamAudio_AudioRenderer() = delete;
+		SteamAudio_AudioRenderer(const size_t bufferSize, const size_t sampleRate, const float headAltitude);
+		~SteamAudio_AudioRenderer();
+
+		size_t CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize);
+		SteamAudio_SoundMaker& GetSound(const size_t soundId);
+
+		void ProcessAudio(std::vector<float>& interleavedStereoOut);
+
+		const size_t bufferSize;
+		const size_t sampleRate;
+		constexpr static size_t const HRTF_RESAMPLING_STEP = 15;
+
+	private:
+		std::vector<SteamAudio_SoundMaker> sounds_;
+		std::map<size_t, std::vector<float>> assets_;
+
+		IPLContext context_; // I think this is a ptr to a struct?... not sure, it's intentionally obfuscated. Treat as a hex variable.
+		IPLHRTF hrtf_;
+		IPLBinauralEffect effect_;
+		std::vector<float> currentlyProcessedSignal_;
+
+		std::hash<std::string> hasher_{};
+	};
+}

@@ -2,7 +2,6 @@
 
 bs::CartesianCoord bsExp::RandomEngine::GenCartesian(const float headAltitude)
 {
-	// Oleg@self: fix distrubutions, creating incoherent positions.
 	auto c = bs::ToCartesian(GenSpherical());
 	c.z += headAltitude;
 	return c;

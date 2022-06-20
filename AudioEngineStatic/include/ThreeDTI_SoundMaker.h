@@ -13,7 +13,6 @@ namespace bs
 		BS_MOVEABLE(ThreeDTI_SoundMaker);
 
 		ThreeDTI_SoundMaker() = delete;
-		ThreeDTI_SoundMaker(const std::vector<float>& data, Binaural::CCore& core, const bool loop, const bool spatialize, const size_t bufferSize);
 
 		void SetPosition(const bs::CartesianCoord coord);
 		void SetPosition(const bs::SphericalCoord coord);
@@ -31,6 +30,7 @@ namespace bs
 
 	private:
 		friend class ThreeDTI_AudioRenderer;
+		ThreeDTI_SoundMaker(const std::vector<float>& data, Binaural::CCore& core, const bool loop, const bool spatialize, const size_t bufferSize);
 		void ProcessAudio_(std::vector<float>& interlacedStereoOut); // Called by ThreeDTI_AudioRenderer.
 
 		std::shared_ptr<Binaural::CSingleSourceDSP> source_;

@@ -20,6 +20,7 @@ bsExp::Application::Application(const size_t randSeed):
 	sdlManager_.RegisterCallback(SdlManager::Input::NumMultiply, [this]() { currentSoundPos_.z += 0.1f; });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumDivide, [this]() { currentSoundPos_.z -= 0.1f; });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumMinus, [this]() { logger_.LogNewSoundPos(currentSoundPos_); });
+	sdlManager_.RegisterCallback(SdlManager::Input::Spacebar, [this]() { SelectRandomRenderer_(); });
 
 	SetRandomSourcePos_();
 	SelectRandomRenderer_();

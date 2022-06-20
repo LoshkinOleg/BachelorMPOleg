@@ -1,150 +1,177 @@
 #include <SteamAudio_SoundMaker.h>
 
-#include <iostream>
 #include <cassert>
-#include <algorithm>
 
-#include <SteamAudio_AudioRenderer.h>
-#include "BSCommon.h"
+bs::SteamAudio_SoundMaker::SteamAudio_SoundMaker(const std::vector<float>& data, const bool loop, const bool spatialize, const size_t bufferSize, const IPLContext& context, const IPLHRTF& hrtf):
+	soundData_(data), looping(loop), spatialized(spatialize), bufferSize(bufferSize), context_(context)
+{
+	if (iplAudioBufferAllocate(context, 2, bufferSize, &stereoSpatializedData_))
+	{
+		assert(true, "Phonon failed to allocate a buffer for stereoSpatializedData_!");
+	}
+	// if (iplAudioBufferAllocate(context, 2, bufferSize, &spatializationTail_))
+	// {
+	// 	assert(true, "Phonon failed to allocate a buffer for spatializationTail_!");
+	// }
 
-//bool bs::SteamAudio_SoundMaker::Init(bs::SteamAudio_AudioRenderer* engine, const char* wavFileName, const ClipWrapMode wrapMode, const bool spatialize)
-//{
-//	currentBegin_ = 0;
-//	currentEnd_ = 0;
-//	wrapMode_ = wrapMode;
-//	spatialized_ = spatialize;
-//
-//	soundData_ = LoadWav(wavFileName, 1, engine->GetSampleRate());
-//
-//	if (spatialized_)
-//	{
-//		// Phonon stuff
-//		IPLAudioSettings audioSettings{ engine->GetSampleRate(), engine->GetBufferSize() };
-//		IPLContextSettings contextSettings{};
-//		IPLBinauralEffectSettings effectSettings;
-//		IPLHRTFSettings hrtfSettings;
-//
-//		contextSettings.version = STEAMAUDIO_VERSION;
-//		hrtfSettings.type = IPL_HRTFTYPE_DEFAULT;
-//
-//		auto result = iplContextCreate(&contextSettings, &context_);
-//		assert(result == IPLerror::IPL_STATUS_SUCCESS, "Failed to create a phonon context!");
-//
-//		result = iplHRTFCreate(context_, &audioSettings, &hrtfSettings, &hrtf_);
-//		assert(result == IPLerror::IPL_STATUS_SUCCESS, "Failed to create a phonon hrtf!");
-//		effectSettings.hrtf = hrtf_; // Oleg@self: not sure this assignement has to be made after iplHRTFCreate() or not. I think it does since hrtf_ is a ptr and not a reference?
-//		spatializationParams_.hrtf = hrtf_;
-//
-//		result = iplBinauralEffectCreate(context_, &audioSettings, &effectSettings, &effect_);
-//		assert(result == IPLerror::IPL_STATUS_SUCCESS, "Failed to create a phonon binaural effect!");
-//
-//		constexpr const IPLint32 NR_OF_CHANNELS = 2;
-//		result = iplAudioBufferAllocate(context_, NR_OF_CHANNELS, engine->GetBufferSize(), &iplOutBuffer_);
-//		assert(result == IPLerror::IPL_STATUS_SUCCESS, "Failed to allocate a phonon buffer!");
-//	}
-//
-//	return true;
-//}
-//void bs::SteamAudio_SoundMaker::Shutdown()
-//{
-//	// Phonon stuff
-//	if (spatialized_)
-//	{
-//		iplAudioBufferFree(context_, &iplOutBuffer_);
-//		iplBinauralEffectRelease(&effect_);
-//		iplHRTFRelease(&hrtf_);
-//		iplContextRelease(&context_);
-//	}
-//}
-//void bs::SteamAudio_SoundMaker::SetPosition(float globalX, float globalY, float globalZ)
-//{
-//	// Oleg@self: this is completely wrong. Fine for testing purposes but fix it for actual use.
-//	if (spatialized_)
-//	{
-//		spatializationParams_.direction = IPLVector3{globalX, globalY, globalZ};
-//	}
-//}
-//
-//void bs::SteamAudio_SoundMaker::ProcessAudio(std::vector<float>& outBuff, SteamAudio_AudioRenderer& engine)
-//{
-//	const auto bufferSize = engine.GetBufferSize();
-//	const auto wavSize = soundData_.size();
-//	// static std::vector<float> frame(bufferSize);
-//	std::vector<float> frame(bufferSize);
-//
-//	// Fill all buffers with silence.
-//	std::fill(frame.begin(), frame.end(), 0.0f);
-//
-//	// Oleg@self: fix this fuckery, I'm getting confused by the indices / frame sizes, sample rates, etc...
-//
-//	if (!paused_)
-//	{
-//		// Fill out buffer here to avoid overwriting other sound's data.
-//		std::fill(outBuff.begin(), outBuff.end(), 0.0f);
-//
-//		// Advance frame indices.
-//		currentBegin_ = currentEnd_ + 1;
-//		if (wrapMode_ == ClipWrapMode::ONE_SHOT)
-//		{
-//			if (currentBegin_ < wavSize) // Not overruning wav data.
-//			{
-//				currentEnd_ = currentBegin_ + engine.GetBufferSize() - 1;
-//			}
-//			else
-//			{
-//				currentEnd_ = wavSize - 1;
-//			}
-//		}
-//		else
-//		{
-//			if (currentBegin_ + engine.GetBufferSize() - 1 > wavSize) currentBegin_ = 0;
-//			currentEnd_ = currentBegin_ + engine.GetBufferSize() - 1;
-//		}
-//
-//		// Load subset of audio data into frame.
-//		for (size_t i = 0; i < bufferSize; i++)
-//		{
-//			// Oleg@self: use memcpy?
-//			if ((currentBegin_ + i) < wavSize) // If we're not overruning the clip data, copy data.
-//			{
-//				frame[i] = soundData_[currentBegin_ + i];
-//			}
-//		}
-//
-//		if (spatialized_)
-//		{
-//			// Oleg@self: clean this sheit
-//			float* rawFrame[] = { frame.data() };
-//			IPLAudioBuffer iplInBuffer{ 1, engine.GetBufferSize(), rawFrame };
-//
-//			// Oleg@self: find a way to carry over the tail of the spatialized signal.
-//			auto remainingSamples = iplBinauralEffectApply(effect_, &spatializationParams_, &iplInBuffer, &iplOutBuffer_);
-//			// assert(remainingSamples == IPLAudioEffectState::IPL_AUDIOEFFECTSTATE_TAILCOMPLETE, "Couldn't write all spatialized sound into output buffer!");
-//			iplAudioBufferInterleave(context_, &iplOutBuffer_, outBuff.data());
-//		}
-//		else
-//		{
-//			for (size_t i = 0; i < bufferSize; i++)
-//			{
-//				outBuff[i * 2] = frame[i];
-//				outBuff[i * 2 + 1] = frame[i];
-//			}
-//		}
-//	}
-//}
-//
-//void bs::SteamAudio_SoundMaker::Reset(SteamAudio_AudioRenderer& renderer)
-//{
-//	currentBegin_ = 0;
-//	currentEnd_ = 0;
-//}
-//
-//void bs::SteamAudio_SoundMaker::SetPaused(const bool newPaused)
-//{
-//	paused_ = newPaused;
-//}
-//
-//bool bs::SteamAudio_SoundMaker::GetPaused() const
-//{
-//	return paused_;
-//}
+	spatializationParams_ =
+	{
+		IPLVector3{ 0.0f, 0.0f, 0.0f },
+		IPL_HRTFINTERPOLATION_NEAREST,
+		1.0f,
+		hrtf
+	};
+
+	soundDataSubset_.resize(bufferSize, 0.0f);
+	assert(soundData_.size() >= bufferSize, "The buffer size is greater than the wav data size! Something's wierd's going on, check your code.");
+	currentBegin_ = soundData_.size();
+	currentEnd_ = soundData_.size();
+
+	// TODO: init source
+}
+
+bs::SteamAudio_SoundMaker::~SteamAudio_SoundMaker()
+{
+	iplAudioBufferFree(context_, &stereoSpatializedData_); // Oleg@self: this should only be called on object shutdown, not destruction since this object can be moved!
+}
+
+void bs::SteamAudio_SoundMaker::SetPosition(const bs::CartesianCoord coord)
+{
+	spatializationParams_.direction = IPLVector3{ coord.x, coord.y, coord.z }; // Oleg@self: take into account coordinate system differences. And you're given a position, not a direction...
+}
+
+void bs::SteamAudio_SoundMaker::SetPosition(const bs::SphericalCoord coord)
+{
+	SetPosition(bs::ToCartesian(coord));
+}
+
+void bs::SteamAudio_SoundMaker::Play()
+{
+	// If this sound was paused, just unpause it.
+	if (paused_)
+	{
+		paused_ = false;
+	}
+	if (!IsPlaying())
+	{
+		// Reset wav data indices back to start of the data.
+		currentBegin_ = 0;
+		currentEnd_ = bufferSize - 1;
+	}
+}
+
+void bs::SteamAudio_SoundMaker::Pause()
+{
+	paused_ = true;
+}
+
+void bs::SteamAudio_SoundMaker::Stop()
+{
+	currentBegin_ = soundData_.size();
+}
+
+bool bs::SteamAudio_SoundMaker::IsPaused() const
+{
+	return paused_;
+}
+
+bool bs::SteamAudio_SoundMaker::IsPlaying() const
+{
+	return currentBegin_ != soundData_.size();
+}
+
+void bs::SteamAudio_SoundMaker::ProcessAudio_(std::vector<float>& interlacedStereoOut, const IPLBinauralEffect& effect)
+{
+	const auto wavSize = soundData_.size();
+
+	// Fill buffers with silence.
+	std::fill(interlacedStereoOut.begin(), interlacedStereoOut.end(), 0.0f);
+	std::fill(soundDataSubset_.begin(), soundDataSubset_.end(), 0.0f);
+
+	// Read wav subset.
+	if (!paused_ && currentBegin_ != wavSize) // Not paused and haven't reached end of the wav data if this is a non looping sound.
+	{
+		if (currentBegin_ > currentEnd_) // Wrapping around wav data.
+		{
+			for (size_t i = currentBegin_; i < wavSize; i++) // Finish reading end of the wav.
+			{
+				soundDataSubset_[i - currentBegin_] = soundData_[i];
+			}
+			for (size_t i = 0; i < currentEnd_ + 1; i++) // Read the start of the wav into the remaining not yet updated part of the soundDataSubset_.
+			{
+				soundDataSubset_[wavSize - currentBegin_ + i] = soundData_[i];
+			}
+		}
+		else // Not wrapping around wav data, just copy soundData into subset continuously.
+		{
+			for (size_t i = currentBegin_; i < currentEnd_ + 1; i++)
+			{
+				soundDataSubset_[i - currentBegin_] = soundData_[i];
+			}
+		}
+
+		// Spatialize sound and write to output buffer.
+		if (spatialized)
+		{
+			float* in = soundDataSubset_.data();
+			IPLAudioBuffer iplIn{ 1, bufferSize, &in };
+			auto remainingSamples = iplBinauralEffectApply(effect, &spatializationParams_, &iplIn, &stereoSpatializedData_);
+			if (remainingSamples == IPLAudioEffectState::IPL_AUDIOEFFECTSTATE_TAILREMAINING)
+			{
+				// TODO: implement carrying over trailing samples.
+			}
+			iplAudioBufferInterleave(context_, &stereoSpatializedData_, interlacedStereoOut.data());
+		}
+		else
+		{
+			bs::Interlace(interlacedStereoOut, soundDataSubset_, soundDataSubset_);
+		}
+
+		// Update indices.
+		if (looping) // currentBegin_ can never reach wavSize.
+		{
+			// Update currentBegin_
+			assert(currentEnd_ + 1 <= wavSize, "currentEnd_ somehow incremented past wavSize! Last iteration must have had currentEnd_ = wavSize, which shouldn't be possible. Check your code.");
+			if (currentEnd_ + 1 == wavSize) // If wavSize % bufferSize = 0, this can happen, wrap back to 0.
+			{
+				currentBegin_ = 0;
+			}
+			else // Just advance to next subset with no issues.
+			{
+				currentBegin_ = currentEnd_ + 1;
+			}
+
+			// Update currentEnd_
+			if (currentBegin_ + bufferSize - 1 >= wavSize) // If overruning wav data, wrap around.
+			{
+				currentEnd_ = bufferSize - 1 - (wavSize - currentBegin_);
+			}
+			else // Not overruning wav data, just update currentEnd_ with no issues.
+			{
+				currentEnd_ = currentBegin_ + bufferSize - 1;
+			}
+		}
+		else // currentBegin_ can reach wavSize.
+		{
+			if (currentEnd_ + 1 == wavSize) // Happens when clip reached the last window of the wav data.
+			{
+				currentBegin_ = wavSize;
+				currentEnd_ = wavSize;
+			}
+			else
+			{
+				assert(currentEnd_ + 1 <= wavSize, "Somehow currentEnd_ is greater than wavSize, this shouldn't be possible, check your code!");
+				currentBegin_ = currentEnd_ + 1;
+
+				if (currentBegin_ + bufferSize - 1 >= wavSize) // Reached end of the wav.
+				{
+					currentEnd_ = wavSize - 1;
+				}
+				else
+				{
+					currentEnd_ = currentBegin_ + bufferSize - 1;
+				}
+			}
+		}
+	}
+}
