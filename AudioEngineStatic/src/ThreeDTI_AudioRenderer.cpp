@@ -15,7 +15,7 @@
 	-Z is down
 */
 
-size_t bs::ThreeDTI_AudioRenderer::CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize)
+size_t bs::ThreeDTI_AudioRenderer::CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize, const ThreeDTI_SoundParams p)
 {
 	const auto hash = hasher_(wavFileName);
 
@@ -24,7 +24,7 @@ size_t bs::ThreeDTI_AudioRenderer::CreateSoundMaker(const char* wavFileName, con
 		assets_.emplace(hash, bs::LoadWav(wavFileName, 1, sampleRate));
 	}
 
-	sounds_.emplace_back(ThreeDTI_SoundMaker(assets_[hash], core_, loop, spatialize, bufferSize));
+	sounds_.emplace_back(ThreeDTI_SoundMaker(assets_[hash], core_, loop, spatialize, bufferSize, p));
 
 	return sounds_.size() - 1;
 }
@@ -35,7 +35,7 @@ bs::ThreeDTI_SoundMaker& bs::ThreeDTI_AudioRenderer::GetSound(const size_t sound
 	return sounds_[soundId];
 }
 
-bs::ThreeDTI_AudioRenderer::ThreeDTI_AudioRenderer(const char* hrtfFileName, const char* brirFileName, const size_t bufferSize, const size_t sampleRate, const float headAltitude):
+bs::ThreeDTI_AudioRenderer::ThreeDTI_AudioRenderer(const char* hrtfPath, const char* brirPath, const size_t bufferSize, const size_t sampleRate, const ThreeDTI_RendererParams p):
 	bufferSize(bufferSize), sampleRate(sampleRate)
 {
 	// Init 3dti core.
@@ -45,19 +45,34 @@ bs::ThreeDTI_AudioRenderer::ThreeDTI_AudioRenderer(const char* hrtfFileName, con
 	// Init 3dti listener.
 	listener_ = core_.CreateListener();
 	listener_->DisableCustomizedITD();
-	auto t = listener_->GetListenerTransform();
-	t.Translate(Common::CVector3(0.0f, 0.0f, headAltitude));
-	listener_->SetListenerTransform(t);
-	bool unused;
-	if (!HRTF::CreateFromSofa(hrtfFileName, listener_, unused)) assert(false, "Failed to load HRTF sofa file!");
+	UpdateRendererParams(p);
+	bool unused; // Oleg@self: investigate
+	if (!HRTF::CreateFromSofa(hrtfPath, listener_, unused)) assert(false, "Failed to load HRTF sofa file!");
 
 	// Init 3dti environment.
 	environment_ = core_.CreateEnvironment();
-	environment_->SetReverberationOrder(TReverberationOrder::BIDIMENSIONAL);
-	if (!BRIR::CreateFromSofa(brirFileName, environment_)) assert(false, "Failed to load BRIR sofa file!");
+	environment_->SetReverberationOrder(TReverberationOrder::BIDIMENSIONAL); // Oleg@self: investigate, I think this has to do with nr or ambisonic channels?
+	if (!BRIR::CreateFromSofa(brirPath, environment_)) assert(false, "Failed to load BRIR sofa file!");
 
 	interlacedReverb_.resize(2 * bufferSize, 0.0f);
 	currentlyProcessedSignal_.resize(2 * bufferSize, 0.0f);
+}
+
+bs::ThreeDTI_RendererParams bs::ThreeDTI_AudioRenderer::GetRendererParams() const
+{
+	bs::ThreeDTI_RendererParams returnVal;
+	auto t = listener_->GetListenerTransform();
+	returnVal.headAltitude = t.GetPosition().z;
+	returnVal.ILDEnabled = std::fabsf(listener_->GetILDAttenutaion()) < 0.001f ? false : true;
+	return returnVal;
+}
+
+void bs::ThreeDTI_AudioRenderer::UpdateRendererParams(const ThreeDTI_RendererParams p)
+{
+	listener_->SetILDAttenutaion(p.ILDEnabled ? -6.0f : 0.0f); // Oleg@self: check if this is the right values.
+	auto t = listener_->GetListenerTransform();
+	t.SetPosition(Common::CVector3(0.0f, 0.0f, p.headAltitude));
+	listener_->SetListenerTransform(t);
 }
 
 void bs::ThreeDTI_AudioRenderer::ProcessAudio(std::vector<float>& interleavedStereoOut)

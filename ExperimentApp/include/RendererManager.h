@@ -33,6 +33,12 @@ namespace bsExp
 		void MoveSound(const char* soundName, const bs::CartesianCoord coord);
 		void MoveAllSounds(const bs::CartesianCoord coord);
 
+		void UpdateRendererParams(const bs::ThreeDTI_RendererParams p);
+		
+		bs::ThreeDTI_RendererParams GetThreeDTIRendererParams() const; // Oleg@self: this smells, there should be an abstraction layer that contains params common to all renderers.
+		void UpdateSoundParams(const char* soundName, const bs::ThreeDTI_SoundParams p); // Oleg@self: idem
+		bs::ThreeDTI_SoundParams GetThreeDTISoundParams(const char* soundName); // Oleg@self: idem
+
 		void SetSelectedRenderer(const AudioRendererType type);
 		AudioRendererType GetSelectedRenderer() const;
 

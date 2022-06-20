@@ -10,16 +10,27 @@
 
 namespace bs
 {
+	struct ThreeDTI_RendererParams
+	{
+		float headAltitude;
+
+		bool ILDEnabled;
+	};
+
 	class ThreeDTI_AudioRenderer
 	{
 	public:
+
 		BS_NON_COPYABLE(ThreeDTI_AudioRenderer);
 		BS_NON_MOVEABLE(ThreeDTI_AudioRenderer);
 
 		ThreeDTI_AudioRenderer() = delete;
-		ThreeDTI_AudioRenderer(const char* hrtfFileName, const char* brirFileName, const size_t bufferSize, const size_t sampleRate, const float headAltitude);
+		ThreeDTI_AudioRenderer(const char* hrtfPath, const char* brirPath, const size_t bufferSize, const size_t sampleRate, const ThreeDTI_RendererParams p);
 
-		size_t CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize);
+		ThreeDTI_RendererParams GetRendererParams() const;
+		void UpdateRendererParams(const ThreeDTI_RendererParams p);
+
+		size_t CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize, const ThreeDTI_SoundParams p);
 		ThreeDTI_SoundMaker& GetSound(const size_t soundId);
 
 		void ProcessAudio(std::vector<float>& interleavedStereoOut);

@@ -6,9 +6,23 @@
 
 namespace bs
 {
+	struct ThreeDTI_SoundParams
+	{
+		bool anechoicEnabled;
+		bool distanceBasedAttenuationAnechoic;
+
+		bool reverbEnabled;
+		bool distanceBasedAttenuationReverb;
+
+		bool highQualitySimulation;
+		bool atmosphericFiltering;
+		bool nearFieldEffects;
+	};
+
 	class ThreeDTI_SoundMaker
 	{
 	public:
+
 		BS_NON_COPYABLE(ThreeDTI_SoundMaker);
 		BS_MOVEABLE(ThreeDTI_SoundMaker);
 
@@ -23,6 +37,9 @@ namespace bs
 
 		bool IsPaused() const;
 		bool IsPlaying() const;
+
+		ThreeDTI_SoundParams GetSoundParams() const;
+		void UpdateSpatializationParams(const ThreeDTI_SoundParams p);
 		
 		const bool looping;
 		const bool spatialized;
@@ -30,7 +47,7 @@ namespace bs
 
 	private:
 		friend class ThreeDTI_AudioRenderer;
-		ThreeDTI_SoundMaker(const std::vector<float>& data, Binaural::CCore& core, const bool loop, const bool spatialize, const size_t bufferSize);
+		ThreeDTI_SoundMaker(const std::vector<float>& data, Binaural::CCore& core, const bool loop, const bool spatialize, const size_t bufferSize, const ThreeDTI_SoundParams p);
 		void ProcessAudio_(std::vector<float>& interlacedStereoOut); // Called by ThreeDTI_AudioRenderer.
 
 		std::shared_ptr<Binaural::CSingleSourceDSP> source_;

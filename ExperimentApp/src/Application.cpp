@@ -20,7 +20,55 @@ bsExp::Application::Application(const size_t randSeed):
 	sdlManager_.RegisterCallback(SdlManager::Input::NumMultiply, [this]() { currentSoundPos_.z += 0.1f; });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumDivide, [this]() { currentSoundPos_.z -= 0.1f; });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumMinus, [this]() { logger_.LogNewSoundPos(currentSoundPos_); });
-	sdlManager_.RegisterCallback(SdlManager::Input::Spacebar, [this]() { SelectRandomRenderer_(); });
+
+	sdlManager_.RegisterCallback(SdlManager::Input::One, [this]()
+	{
+		auto p = rendererManager_.GetThreeDTIRendererParams();
+		p.ILDEnabled = !p.ILDEnabled;
+		rendererManager_.UpdateRendererParams(p);
+	});
+	sdlManager_.RegisterCallback(SdlManager::Input::Two, [this]()
+	{
+		auto p = rendererManager_.GetThreeDTISoundParams("speech");
+		p.anechoicEnabled = !p.anechoicEnabled;
+		rendererManager_.UpdateSoundParams("speech", p);
+	});
+	sdlManager_.RegisterCallback(SdlManager::Input::Three, [this]()
+	{
+		auto p = rendererManager_.GetThreeDTISoundParams("speech");
+		p.distanceBasedAttenuationAnechoic = !p.distanceBasedAttenuationAnechoic;
+		rendererManager_.UpdateSoundParams("speech", p);
+	});
+	sdlManager_.RegisterCallback(SdlManager::Input::Four, [this]()
+	{
+		auto p = rendererManager_.GetThreeDTISoundParams("speech");
+		p.reverbEnabled = !p.reverbEnabled;
+		rendererManager_.UpdateSoundParams("speech", p);
+	});
+	sdlManager_.RegisterCallback(SdlManager::Input::Five, [this]()
+	{
+		auto p = rendererManager_.GetThreeDTISoundParams("speech");
+		p.distanceBasedAttenuationReverb = !p.distanceBasedAttenuationReverb;
+		rendererManager_.UpdateSoundParams("speech", p);
+	});
+	sdlManager_.RegisterCallback(SdlManager::Input::Six, [this]()
+	{
+		auto p = rendererManager_.GetThreeDTISoundParams("speech");
+		p.highQualitySimulation = !p.highQualitySimulation;
+		rendererManager_.UpdateSoundParams("speech", p);
+	});
+	sdlManager_.RegisterCallback(SdlManager::Input::Seven, [this]()
+	{
+		auto p = rendererManager_.GetThreeDTISoundParams("speech");
+		p.nearFieldEffects = !p.nearFieldEffects;
+		rendererManager_.UpdateSoundParams("speech", p);
+	});
+	sdlManager_.RegisterCallback(SdlManager::Input::Eight, [this]()
+	{
+		auto p = rendererManager_.GetThreeDTISoundParams("speech");
+		p.atmosphericFiltering = !p.atmosphericFiltering;
+		rendererManager_.UpdateSoundParams("speech", p);
+	});
 
 	SetRandomSourcePos_();
 	SelectRandomRenderer_();

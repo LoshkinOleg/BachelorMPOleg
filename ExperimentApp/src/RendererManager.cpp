@@ -1,7 +1,7 @@
 #include "RendererManager.h"
 
 bsExp::RendererManager::RendererManager():
-	threeDTI_renderer_(bs::ThreeDTI_AudioRenderer(HRTF_PATH, BRIR_PATH, BUFFER_SIZE, SAMPLE_RATE, HEAD_ALTITUDE))
+	threeDTI_renderer_(bs::ThreeDTI_AudioRenderer(HRTF_PATH, BRIR_PATH, BUFFER_SIZE, SAMPLE_RATE, {HEAD_ALTITUDE, true}))
 {
 	// Init portaudio.
 	auto err = Pa_Initialize();
@@ -32,9 +32,9 @@ bsExp::RendererManager::RendererManager():
 
 	renderResult_.resize(2 * BUFFER_SIZE, 0.0f);
 
-	threeDTI_soundIds_.emplace("speech", threeDTI_renderer_.CreateSoundMaker(WAV_PATH_SPEECH, false, true));
-	threeDTI_soundIds_.emplace("noise", threeDTI_renderer_.CreateSoundMaker(WAV_PATH_BROWN_NOISE, true, false));
-	threeDTI_soundIds_.emplace("sweep", threeDTI_renderer_.CreateSoundMaker(WAV_PATH_SWEEP, false, true));
+	threeDTI_soundIds_.emplace("speech", threeDTI_renderer_.CreateSoundMaker(WAV_PATH_SPEECH, false, true, {true, true, true, true, true, true, true}));
+	threeDTI_soundIds_.emplace("noise", threeDTI_renderer_.CreateSoundMaker(WAV_PATH_BROWN_NOISE, true, false, { true, true, true, true, true, true, true }));
+	threeDTI_soundIds_.emplace("sweep", threeDTI_renderer_.CreateSoundMaker(WAV_PATH_SWEEP, false, true, { true, true, true, true, true, true, true }));
 }
 
 bsExp::RendererManager::~RendererManager()
@@ -157,6 +157,36 @@ void bsExp::RendererManager::MoveAllSounds(const bs::CartesianCoord coord)
 	for (auto& pair : threeDTI_soundIds_)
 	{
 		threeDTI_renderer_.GetSound(pair.second).SetPosition(coord);
+	}
+}
+
+void bsExp::RendererManager::UpdateRendererParams(const bs::ThreeDTI_RendererParams p)
+{
+	threeDTI_renderer_.UpdateRendererParams(p);
+}
+
+bs::ThreeDTI_RendererParams bsExp::RendererManager::GetThreeDTIRendererParams() const
+{
+	return threeDTI_renderer_.GetRendererParams();
+}
+
+void bsExp::RendererManager::UpdateSoundParams(const char* soundName, const bs::ThreeDTI_SoundParams p)
+{
+	if (threeDTI_soundIds_.find(soundName) != threeDTI_soundIds_.end())
+	{
+		threeDTI_renderer_.GetSound(threeDTI_soundIds_[soundName]).UpdateSpatializationParams(p);
+	}
+}
+
+bs::ThreeDTI_SoundParams bsExp::RendererManager::GetThreeDTISoundParams(const char* soundName)
+{
+	if (threeDTI_soundIds_.find(soundName) != threeDTI_soundIds_.end())
+	{
+		return threeDTI_renderer_.GetSound(threeDTI_soundIds_[soundName]).GetSoundParams();
+	}
+	else
+	{
+		return {};
 	}
 }
 
