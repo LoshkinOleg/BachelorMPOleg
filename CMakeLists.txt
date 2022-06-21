@@ -23,6 +23,7 @@ target_include_directories(AudioEngineStatic PUBLIC
 	${PROJECT_SOURCE_DIR}/thirdparty/openvr/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/dr_wav/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/sdl/include/
+	${PROJECT_SOURCE_DIR}/thirdparty/fmod/include/
 	)
 target_link_libraries(AudioEngineStatic PRIVATE
 	optimized ${PROJECT_SOURCE_DIR}/thirdparty/3dti/lib/3DTI_AudioToolkit_release.lib
@@ -42,6 +43,8 @@ target_link_libraries(AudioEngineStatic PRIVATE
 	general ${PROJECT_SOURCE_DIR}/thirdparty/sdl/lib/SDL2.lib
 	general ${PROJECT_SOURCE_DIR}/thirdparty/sdl/lib/SDL2main.lib
 	general ${PROJECT_SOURCE_DIR}/thirdparty/sdl/lib/SDL2test.lib
+	general ${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmod_vc.lib
+	general ${PROJECT_SOURCE_DIR}/thirdparty/fmod/lib/fmodL_vc.lib
 	)
 set_target_properties(AudioEngineStatic PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/AudioEngineStatic/lib"
@@ -51,12 +54,13 @@ set_target_properties(AudioEngineStatic PROPERTIES
 
 # Generate experiment app executable.
 file(GLOB_RECURSE ExperimentApp_include ${PROJECT_SOURCE_DIR}/ExperimentApp/include/*.h)
-file(GLOB_RECURSE ExperimentApp_src ${PROJECT_SOURCE_DIR}/ExperimentApp/src/*.cpp)
+file(GLOB_RECURSE ExperimentApp_src ${PROJECT_SOURCE_DIR}/ExperimentApp/src/*.cpp ${PROJECT_SOURCE_DIR}/thirdparty/imgui/src/*.cpp)
 add_executable(ExperimentApp ${ExperimentApp_include} ${ExperimentApp_src})
 target_include_directories(ExperimentApp PUBLIC
 	${PROJECT_SOURCE_DIR}/ExperimentApp/include/
 	${PROJECT_SOURCE_DIR}/AudioEngineStatic/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/spdlog/include/
+	${PROJECT_SOURCE_DIR}/thirdparty/imgui/include/
 	)
 target_link_libraries(ExperimentApp PRIVATE
 	general AudioEngineStatic
