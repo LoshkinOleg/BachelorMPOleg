@@ -21,7 +21,7 @@ size_t bs::ThreeDTI_AudioRenderer::CreateSoundMaker(const char* wavFileName, con
 
 	if (assets_.find(hash) == assets_.end()) // Sound not loaded.
 	{
-		assets_.emplace(hash, bs::LoadWav(wavFileName, 1, sampleRate));
+		assets_.emplace(hash, bs::LoadWav(wavFileName, 1, (uint32_t)sampleRate));
 	}
 
 	sounds_.emplace_back(ThreeDTI_SoundMaker(assets_[hash], core_, loop, spatialize, bufferSize, anechoicEnabled, distanceBasedAttenuationAnechoic, reverbEnabled, distanceBasedAttenuationReverb, highQualitySimulation, atmosphericFiltering, nearFieldEffects));

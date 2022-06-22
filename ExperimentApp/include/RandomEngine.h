@@ -19,7 +19,7 @@ namespace bsExp
 					 const float minSoundAzimuth, const float maxSoundAzimuth,
 					 const size_t minRendererIndex, const size_t maxRendererIndex):
 			seed(seed),
-			e_(std::default_random_engine(seed)),
+			e_(std::default_random_engine((unsigned int)seed)),
 			distrAzimuth_(seed, minSoundAzimuth, maxSoundAzimuth),
 			distrElevation_(seed, minSoundElevation, maxSoundElevation),
 			distrRadius_(seed, minSoundDist, maxSoundDist),
