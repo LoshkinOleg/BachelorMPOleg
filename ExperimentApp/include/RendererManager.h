@@ -3,6 +3,7 @@
 #include "portaudio.h"
 
 #include "ThreeDTI_AudioRenderer.h"
+#include "Fmod_AudioRenderer.h"
 
 namespace bsExp
 {
@@ -12,8 +13,29 @@ namespace bsExp
 		enum class AudioRendererType: size_t
 		{
 			ThreeDTI = 0,
+			Fmod = 1,
 
-			MAX = ThreeDTI
+			MAX = Fmod
+		};
+
+		struct RendererParams
+		{
+			AudioRendererType rendererType = AudioRendererType::ThreeDTI;
+			float headAltitude = 1.3f;
+			bool ILDEnabled = true;
+		};
+
+		struct SoundParams
+		{
+			bool anechoicEnabled = true;
+			bool distanceBasedAttenuationAnechoic = true;
+
+			bool reverbEnabled = true;
+			bool distanceBasedAttenuationReverb = true;
+
+			bool highQualitySimulation = true;
+			bool atmosphericFiltering = true;
+			bool nearFieldEffects = true;
 		};
 
 		BS_NON_COPYABLE(RendererManager);
@@ -33,11 +55,11 @@ namespace bsExp
 		void MoveSound(const char* soundName, const bs::CartesianCoord coord);
 		void MoveAllSounds(const bs::CartesianCoord coord);
 
-		void UpdateRendererParams(const bs::ThreeDTI_RendererParams p);
+		void UpdateRendererParams(const RendererParams p);
+		void UpdateSoundParams(const char* soundName, const SoundParams p);
 		
-		bs::ThreeDTI_RendererParams GetThreeDTIRendererParams() const; // Oleg@self: this smells, there should be an abstraction layer that contains params common to all renderers.
-		void UpdateSoundParams(const char* soundName, const bs::ThreeDTI_SoundParams p); // Oleg@self: idem
-		bs::ThreeDTI_SoundParams GetThreeDTISoundParams(const char* soundName); // Oleg@self: idem
+		RendererParams GetRendererParams() const;
+		SoundParams GetSoundParams(const char* soundName);
 
 		void SetSelectedRenderer(const AudioRendererType type);
 		AudioRendererType GetSelectedRenderer() const;
@@ -73,6 +95,8 @@ namespace bsExp
 		AudioRendererType selectedRenderer_ = AudioRendererType::ThreeDTI;
 		bs::ThreeDTI_AudioRenderer threeDTI_renderer_;
 		std::map<std::string, size_t> threeDTI_soundIds_;
+		bs::Fmod_AudioRenderer fmod_renderer_;
+		std::map<std::string, size_t> fmod_soundIds_;
 
 		PaStream* pStream_ = nullptr;
 		std::vector<float> renderResult_;

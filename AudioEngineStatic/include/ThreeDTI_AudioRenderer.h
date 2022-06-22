@@ -10,13 +10,6 @@
 
 namespace bs
 {
-	struct ThreeDTI_RendererParams
-	{
-		float headAltitude;
-
-		bool ILDEnabled;
-	};
-
 	class ThreeDTI_AudioRenderer
 	{
 	public:
@@ -25,12 +18,15 @@ namespace bs
 		BS_NON_MOVEABLE(ThreeDTI_AudioRenderer);
 
 		ThreeDTI_AudioRenderer() = delete;
-		ThreeDTI_AudioRenderer(const char* hrtfPath, const char* brirPath, const size_t bufferSize, const size_t sampleRate, const ThreeDTI_RendererParams p);
+		ThreeDTI_AudioRenderer(const char* hrtfPath, const char* brirPath, const size_t bufferSize, const size_t sampleRate, const float headAltitude, const bool ILDEnabled);
 
-		ThreeDTI_RendererParams GetRendererParams() const;
-		void UpdateRendererParams(const ThreeDTI_RendererParams p);
+		void GetRendererParams(float& outHeadAltitude, bool& outILDEnabled) const;
+		void UpdateRendererParams(const float headAltitude, const bool ILDEnabled);
 
-		size_t CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize, const ThreeDTI_SoundParams p);
+		size_t CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize,
+								const bool anechoicEnabled, const bool distanceBasedAttenuationAnechoic,
+								const bool reverbEnabled, const bool distanceBasedAttenuationReverb,
+								const bool highQualitySimulation, const bool atmosphericFiltering, const bool nearFieldEffects);
 		ThreeDTI_SoundMaker& GetSound(const size_t soundId);
 
 		void ProcessAudio(std::vector<float>& interleavedStereoOut);

@@ -54,7 +54,7 @@ set_target_properties(AudioEngineStatic PROPERTIES
 
 # Generate experiment app executable.
 file(GLOB_RECURSE ExperimentApp_include ${PROJECT_SOURCE_DIR}/ExperimentApp/include/*.h)
-file(GLOB_RECURSE ExperimentApp_src ${PROJECT_SOURCE_DIR}/ExperimentApp/src/*.cpp ${PROJECT_SOURCE_DIR}/thirdparty/imgui/src/*.cpp)
+file(GLOB_RECURSE ExperimentApp_src ${PROJECT_SOURCE_DIR}/ExperimentApp/src/*.cpp)
 add_executable(ExperimentApp ${ExperimentApp_include} ${ExperimentApp_src})
 target_include_directories(ExperimentApp PUBLIC
 	${PROJECT_SOURCE_DIR}/ExperimentApp/include/

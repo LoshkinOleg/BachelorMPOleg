@@ -14,11 +14,37 @@
 	-Z is down
 */
 
-bs::ThreeDTI_SoundMaker::ThreeDTI_SoundMaker(const std::vector<float>& data, Binaural::CCore& core, const bool loop, const bool spatialize, const size_t bufferSize, const ThreeDTI_SoundParams p):
+void bs::ThreeDTI_SoundMaker::GetSoundParams(bool& anechoicEnabled, bool& distanceBasedAttenuationAnechoic, bool& reverbEnabled, bool& distanceBasedAttenuationReverb, bool& highQualitySimulation, bool& atmosphericFiltering, bool& nearFieldEffects) const
+{
+	anechoicEnabled = source_->IsAnechoicProcessEnabled();
+	distanceBasedAttenuationAnechoic = source_->IsDistanceAttenuationEnabledAnechoic();
+	reverbEnabled = source_->IsReverbProcessEnabled();
+	distanceBasedAttenuationReverb = source_->IsDistanceAttenuationEnabledReverb();
+	highQualitySimulation = source_->GetSpatializationMode() == Binaural::TSpatializationMode::HighQuality ? true : false;
+	nearFieldEffects = source_->IsNearFieldEffectEnabled();
+	atmosphericFiltering = source_->IsFarDistanceEffectEnabled();
+}
+
+void bs::ThreeDTI_SoundMaker::UpdateSpatializationParams(const bool anechoicEnabled, const bool distanceBasedAttenuationAnechoic, const bool reverbEnabled, const bool distanceBasedAttenuationReverb, const bool highQualitySimulation, const bool atmosphericFiltering, const bool nearFieldEffects)
+{
+	if (spatialized)
+	{
+		if (anechoicEnabled) source_->EnableAnechoicProcess(); else source_->DisableAnechoicProcess();
+		if (distanceBasedAttenuationAnechoic) source_->EnableDistanceAttenuationAnechoic(); else source_->DisableDistanceAttenuationAnechoic();
+		if (reverbEnabled) source_->EnableReverbProcess(); else source_->DisableReverbProcess();
+		if (distanceBasedAttenuationReverb) source_->EnableDistanceAttenuationReverb(); else source_->DisableDistanceAttenuationReverb();
+		if (highQualitySimulation) source_->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality); else source_->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
+		if (nearFieldEffects) source_->EnableNearFieldEffect(); else source_->DisableNearFieldEffect();
+		if (atmosphericFiltering) source_->EnableFarDistanceEffect(); else source_->DisableFarDistanceEffect();
+		source_->ResetSourceBuffers();
+	}
+}
+
+bs::ThreeDTI_SoundMaker::ThreeDTI_SoundMaker(const std::vector<float>& data, Binaural::CCore& core, const bool loop, const bool spatialize, const size_t bufferSize, const bool anechoicEnabled, const bool distanceBasedAttenuationAnechoic, const bool reverbEnabled, const bool distanceBasedAttenuationReverb, const bool highQualitySimulation, const bool atmosphericFiltering, const bool nearFieldEffects):
 	soundData_(data), looping(loop), spatialized(spatialize), bufferSize(bufferSize)
 {
 	source_ = core.CreateSingleSourceDSP();
-	UpdateSpatializationParams(p);
+	UpdateSpatializationParams(anechoicEnabled, distanceBasedAttenuationAnechoic, reverbEnabled, distanceBasedAttenuationReverb, highQualitySimulation, atmosphericFiltering, nearFieldEffects);
 
 	soundDataSubset_.resize(bufferSize, 0.0f);
 	anechoic_.left.resize(bufferSize, 0.0f);
@@ -83,34 +109,6 @@ bool bs::ThreeDTI_SoundMaker::IsPaused() const
 bool bs::ThreeDTI_SoundMaker::IsPlaying() const
 {
 	return currentBegin_ != soundData_.size();
-}
-
-bs::ThreeDTI_SoundParams bs::ThreeDTI_SoundMaker::GetSoundParams() const
-{
-	bs::ThreeDTI_SoundParams returnVal;
-	returnVal.anechoicEnabled = source_->IsAnechoicProcessEnabled();
-	returnVal.distanceBasedAttenuationAnechoic = source_->IsDistanceAttenuationEnabledAnechoic();
-	returnVal.reverbEnabled = source_->IsReverbProcessEnabled();
-	returnVal.distanceBasedAttenuationReverb = source_->IsDistanceAttenuationEnabledReverb();
-	returnVal.highQualitySimulation = source_->GetSpatializationMode() == Binaural::TSpatializationMode::HighQuality ? true : false;
-	returnVal.nearFieldEffects = source_->IsNearFieldEffectEnabled();
-	returnVal.atmosphericFiltering = source_->IsFarDistanceEffectEnabled();
-	return returnVal;
-}
-
-void bs::ThreeDTI_SoundMaker::UpdateSpatializationParams(const ThreeDTI_SoundParams p)
-{
-	if (spatialized)
-	{
-		if (p.anechoicEnabled) source_->EnableAnechoicProcess(); else source_->DisableAnechoicProcess();
-		if (p.distanceBasedAttenuationAnechoic) source_->EnableDistanceAttenuationAnechoic(); else source_->DisableDistanceAttenuationAnechoic();
-		if (p.reverbEnabled) source_->EnableReverbProcess(); else source_->DisableReverbProcess();
-		if (p.distanceBasedAttenuationReverb) source_->EnableDistanceAttenuationReverb(); else source_->DisableDistanceAttenuationReverb();
-		if (p.highQualitySimulation) source_->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality); else source_->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
-		if (p.nearFieldEffects) source_->EnableNearFieldEffect(); else source_->DisableNearFieldEffect();
-		if (p.atmosphericFiltering) source_->EnableFarDistanceEffect(); else source_->DisableFarDistanceEffect();
-		source_->ResetSourceBuffers();
-	}
 }
 
 void bs::ThreeDTI_SoundMaker::ProcessAudio_(std::vector<float>& interlacedStereoOut)
