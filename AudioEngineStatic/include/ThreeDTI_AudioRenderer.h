@@ -29,6 +29,8 @@ namespace bs
 								const bool highQualitySimulation, const bool atmosphericFiltering, const bool nearFieldEffects);
 		ThreeDTI_SoundMaker& GetSound(const size_t soundId);
 
+		void StopAllSounds();
+
 		void ProcessAudio(std::vector<float>& interleavedStereoOut);
 
 		const size_t bufferSize;

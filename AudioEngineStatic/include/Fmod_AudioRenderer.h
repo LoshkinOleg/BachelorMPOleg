@@ -20,7 +20,7 @@ namespace bs
 		BS_NON_MOVEABLE(Fmod_AudioRenderer);
 
 		Fmod_AudioRenderer() = delete;
-		Fmod_AudioRenderer(const float headAltitude):
+		Fmod_AudioRenderer(const float headAltitude, const size_t bufferSize, const size_t sampleRate):
 			bufferSize(bufferSize), sampleRate(sampleRate)
 		{
 			FMOD_RESULT result = FMOD::System_Create(&context_);      // Create the main system object.
@@ -28,6 +28,16 @@ namespace bs
 
 			result = context_->init(32, FMOD_INIT_NORMAL, 0);    // Initialize FMOD.
 			assert(result == FMOD_OK, "Couldn't initialize Fmod system!");
+		}
+		~Fmod_AudioRenderer()
+		{
+			for (auto& sound : sounds_)
+			{
+				auto result = sound.first->release();
+				assert(result == FMOD_OK, "Failed to release fmod sound!");
+			}
+			auto result = context_->release();
+			assert(result == FMOD_OK, "Failed to release fmod context!");
 		}
 
 		void GetRendererParams(float& outHeadAltitude) const
@@ -91,8 +101,14 @@ namespace bs
 				}
 				else
 				{
+					assert(true, "This shouldn't be reachable...");
 					result = context_->playSound(sounds_[soundId].first, nullptr, false, &sounds_[soundId].second);
 				}
+				assert(result == FMOD_OK, "Failed to play fmod sound!");
+			}
+			else
+			{
+				result = context_->playSound(sounds_[soundId].first, nullptr, false, &sounds_[soundId].second);
 				assert(result == FMOD_OK, "Failed to play fmod sound!");
 			}
 		}
@@ -140,6 +156,16 @@ namespace bs
 
 		void Update()
 		{
+			for (auto& sound : sounds_)
+			{
+				if (sound.second)
+				{
+					bool playing;
+					auto result = sound.second->isPlaying(&playing);
+					assert(result == FMOD_OK, "Failed to retireve sound's isPlaying bool.");
+					if (!playing) sound.second = nullptr;
+				}
+			}
 			context_->update();
 		}
 
@@ -154,20 +180,34 @@ namespace bs
 			assert(soundId < sounds_.size(), "Invalid soundId passed to MoveSound()!");
 			if (sounds_[soundId].second)
 			{
-				FMOD_VECTOR pos, vel;
-				FMOD_RESULT result = sounds_[soundId].second->get3DAttributes(&pos, &vel);
-				assert(result == FMOD_OK, "Failed to retrieve fmod sound position.");
-				pos.x = coord.x; // Oleg@self: check that this is correct.
-				pos.y = coord.z;
-				pos.z = coord.y;
-				sounds_[soundId].second->set3DAttributes(&pos, &vel);
-				assert(result == FMOD_OK, "Failed to set fmod sound position.");
+				FMOD_MODE m;
+				auto result = sounds_[soundId].first->getMode(&m);
+				assert(result == FMOD_OK, "Failed to get mode of fmod sound.");
+				if (m & FMOD_3D)
+				{
+					FMOD_VECTOR pos, vel;
+					FMOD_RESULT result = sounds_[soundId].second->get3DAttributes(&pos, &vel);
+					assert(result == FMOD_OK, "Failed to retrieve fmod sound position.");
+					pos.x = coord.x; // Oleg@self: check that this is correct.
+					pos.y = coord.z;
+					pos.z = coord.y;
+					sounds_[soundId].second->set3DAttributes(&pos, &vel);
+					assert(result == FMOD_OK, "Failed to set fmod sound position.");
+				}
 			}
 		}
 
 		void GetSoundParams(const size_t soundId)
 		{
 			assert(soundId < sounds_.size(), "Invalid soundId passed to GetSoundParams()!");
+		}
+
+		void StopAllSounds()
+		{
+			for (size_t i = 0; i < sounds_.size(); i++)
+			{
+				StopSound(i);
+			}
 		}
 
 		const size_t bufferSize;

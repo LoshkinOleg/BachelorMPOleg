@@ -1,7 +1,7 @@
 #include "RendererManager.h"
 
 bsExp::RendererManager::RendererManager():
-	threeDTI_renderer_(bs::ThreeDTI_AudioRenderer(HRTF_PATH, BRIR_PATH, BUFFER_SIZE, SAMPLE_RATE, HEAD_ALTITUDE, true)), fmod_renderer_(bs::Fmod_AudioRenderer(HEAD_ALTITUDE))
+	threeDTI_renderer_(bs::ThreeDTI_AudioRenderer(HRTF_PATH, BRIR_PATH, BUFFER_SIZE, SAMPLE_RATE, HEAD_ALTITUDE, true)), fmod_renderer_(bs::Fmod_AudioRenderer(HEAD_ALTITUDE, BUFFER_SIZE, SAMPLE_RATE))
 {
 	// Init portaudio.
 	auto err = Pa_Initialize();
@@ -264,6 +264,9 @@ bsExp::RendererManager::SoundParams bsExp::RendererManager::GetSoundParams(const
 
 void bsExp::RendererManager::SetSelectedRenderer(const AudioRendererType type)
 {
+	assert((size_t)type < ((size_t)AudioRendererType::MAX) + 1);
+	threeDTI_renderer_.StopAllSounds();
+	fmod_renderer_.StopAllSounds();
 	selectedRenderer_ = type;
 }
 

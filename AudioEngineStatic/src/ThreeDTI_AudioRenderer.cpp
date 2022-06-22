@@ -35,6 +35,14 @@ bs::ThreeDTI_SoundMaker& bs::ThreeDTI_AudioRenderer::GetSound(const size_t sound
 	return sounds_[soundId];
 }
 
+void bs::ThreeDTI_AudioRenderer::StopAllSounds()
+{
+	for (size_t i = 0; i < sounds_.size(); i++)
+	{
+		sounds_[i].Stop();
+	}
+}
+
 bs::ThreeDTI_AudioRenderer::ThreeDTI_AudioRenderer(const char* hrtfPath, const char* brirPath, const size_t bufferSize, const size_t sampleRate, const float headAltitude, const bool ILDEnabled):
 	bufferSize(bufferSize), sampleRate(sampleRate)
 {
