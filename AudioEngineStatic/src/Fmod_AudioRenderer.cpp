@@ -2,7 +2,19 @@
 
 #include <cassert>
 
-bs::Fmod_AudioRenderer::Fmod_AudioRenderer(const float headAltitude, const size_t bufferSize, const size_t sampleRate):
+/*
+	+X is right
+	-X is left
+	+Y is up
+	-Y is down
+	+Z is front
+	-Z is back
+*/
+
+bs::Fmod_AudioRenderer::Fmod_AudioRenderer(const float headAltitude, const size_t bufferSize, const size_t sampleRate,
+										   const float DecayTime, const float EarlyDelay, const float LateDelay, const float HFReference,
+										   const float HFDecayRatio, const float Diffusion, const float Density, const float LowShelfFrequency,
+										   const float LowShelfGain, const float HighCut, const float EarlyLateMix, const float WetLevel):
 	bufferSize(bufferSize), sampleRate(sampleRate)
 {
 	FMOD_RESULT result = FMOD::System_Create(&context_);      // Create the main system object.
@@ -10,6 +22,17 @@ bs::Fmod_AudioRenderer::Fmod_AudioRenderer(const float headAltitude, const size_
 
 	result = context_->init(32, FMOD_INIT_NORMAL, 0);    // Initialize FMOD.
 	assert(result == FMOD_OK, "Couldn't initialize Fmod system!");
+
+	result = context_->createReverb3D(&reverb_);
+	assert(result == FMOD_OK, "Couldn't create fmod reverb object!");
+	FMOD_REVERB_PROPERTIES p = {DecayTime, EarlyDelay, LateDelay, HFReference, HFDecayRatio, Diffusion, Density, LowShelfFrequency, LowShelfGain, HighCut, EarlyLateMix, WetLevel};
+	result = reverb_->setProperties(&p);
+	assert(result == FMOD_OK, "Couldn't set fmod reverb properties!");
+	FMOD_VECTOR pos{0.0f, headAltitude, 0.0f};
+	result = context_->set3DListenerAttributes(0, &pos, 0, 0, 0);
+	assert(result == FMOD_OK, "Couldn't set listener position!");
+	result = reverb_->set3DAttributes(&pos, 0.0f, 10.0f); // Center reverb area on listener. Start attenuating at 0.0 meters away from listener and up to 10.0 meters.
+	assert(result == FMOD_OK, "Couldn't set reverb area position!");
 }
 bs::Fmod_AudioRenderer::~Fmod_AudioRenderer()
 {
@@ -18,7 +41,9 @@ bs::Fmod_AudioRenderer::~Fmod_AudioRenderer()
 		auto result = sound.first->release();
 		assert(result == FMOD_OK, "Failed to release fmod sound!");
 	}
-	auto result = context_->release();
+	auto result = reverb_->release();
+	assert(result == FMOD_OK, "Failed to release fmod reverb!");
+	result = context_->release();
 	assert(result == FMOD_OK, "Failed to release fmod context!");
 }
 
@@ -74,10 +99,11 @@ FMOD::Sound& bs::Fmod_AudioRenderer::GetSound(const size_t soundId)
 void bs::Fmod_AudioRenderer::PlaySound(const size_t soundId)
 {
 	assert(soundId < sounds_.size(), "Invalid soundId passed to PlaySound()!");
+
 	FMOD_RESULT result;
-	if (sounds_[soundId].second)
+	if (sounds_[soundId].second) // If sound handle is valid.
 	{
-		if (IsPaused(soundId))
+		if (IsPaused(soundId)) // If sound handle is valid, that means logically that the sound is paused since the handle is set to nullptr at end of playing.
 		{
 			result = sounds_[soundId].second->setPaused(false);
 		}
@@ -88,10 +114,21 @@ void bs::Fmod_AudioRenderer::PlaySound(const size_t soundId)
 		}
 		assert(result == FMOD_OK, "Failed to play fmod sound!");
 	}
-	else
+	else // Sound handle is invalid, meaning the sound is not paused and not playing.
 	{
-		result = context_->playSound(sounds_[soundId].first, nullptr, false, &sounds_[soundId].second);
+		result = context_->playSound(sounds_[soundId].first, nullptr, true, &sounds_[soundId].second);
 		assert(result == FMOD_OK, "Failed to play fmod sound!");
+
+		FMOD_MODE m;
+		result = sounds_[soundId].first->getMode(&m);
+		assert(result == FMOD_OK, "Failed to retrieve fmod's sound mode!");
+		if (m & FMOD_2D) // Disable reverb for 2d sounds.
+		{
+			sounds_[soundId].second->setReverbProperties(0, 0.0f); // Note: 0 is the default reverb object that doesn't apply any reverberations.
+			assert(result == FMOD_OK, "Failed to set fmod's sound's reverb properties!");
+		}
+		result = sounds_[soundId].second->setPaused(false);
+		assert(result == FMOD_OK, "Failed to unpause fmod sound!");
 	}
 }
 

@@ -16,7 +16,10 @@ namespace bs
 		BS_NON_MOVEABLE(Fmod_AudioRenderer);
 
 		Fmod_AudioRenderer() = delete;
-		Fmod_AudioRenderer(const float headAltitude, const size_t bufferSize, const size_t sampleRate);
+		Fmod_AudioRenderer(const float headAltitude, const size_t bufferSize, const size_t sampleRate,
+						   const float DecayTime, const float EarlyDelay, const float LateDelay, const float HFReference,
+						   const float HFDecayRatio, const float Diffusion, const float Density, const float LowShelfFrequency,
+						   const float LowShelfGain, const float HighCut, const float EarlyLateMix, const float WetLevel);
 		~Fmod_AudioRenderer();
 
 		void GetRendererParams(float& outHeadAltitude) const;
@@ -41,6 +44,7 @@ namespace bs
 
 	private:
 		FMOD::System* context_ = nullptr;
+		FMOD::Reverb3D* reverb_ = nullptr;
 
 		std::vector<std::pair<FMOD::Sound*, FMOD::Channel*>> sounds_;
 	};

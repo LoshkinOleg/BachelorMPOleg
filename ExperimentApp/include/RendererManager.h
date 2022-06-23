@@ -22,6 +22,8 @@ namespace bsExp
 		{
 			AudioRendererType rendererType = AudioRendererType::ThreeDTI;
 			float headAltitude = 1.3f;
+			
+			// Params for 3dti
 			bool ILDEnabled = true;
 		};
 
@@ -83,6 +85,7 @@ namespace bsExp
 		constexpr static float const ROOM_SIZE_Z = 3.0f;
 		constexpr static size_t const MIN_RENDERER_INDEX = 0;
 		constexpr static size_t const MAX_RENDERER_INDEX = (size_t)AudioRendererType::MAX;
+		constexpr static float const FMOD_DEFAULT_REVERB_PARAMS[12] = FMOD_PRESET_ROOM;
 
 	private:
 		static int ServiceAudio_
