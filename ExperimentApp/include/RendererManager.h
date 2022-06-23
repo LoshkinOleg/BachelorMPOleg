@@ -76,7 +76,7 @@ namespace bsExp
 		constexpr static char const* const WAV_PATH_SPEECH = "../resources/AudioSamples/AnechoicSpeech44100.wav";
 		constexpr static char const* const WAV_PATH_BROWN_NOISE = "../resources/AudioSamples/brownNoise_44100Hz_32f_5sec.wav";
 		constexpr static char const* const WAV_PATH_SWEEP = "../resources/AudioSamples/sweep20to16000_44100Hz_32f_10sec.wav";
-		constexpr static size_t const BUFFER_SIZE = 1024;
+		constexpr static size_t const BUFFER_SIZE = 2048; // Set this to 512 for release builds. Higher values are needed for debug build to avoid audio buffer underruns.
 		constexpr static size_t const SAMPLE_RATE = 44100;
 		constexpr static float const ROOM_SIZE_X = 7.0f;
 		constexpr static float const ROOM_SIZE_Y = 8.0f;

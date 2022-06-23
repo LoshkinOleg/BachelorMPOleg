@@ -1,8 +1,10 @@
 #include <ThreeDTI_AudioRenderer.h>
 
 #include <BinauralSpatializer/3DTI_BinauralSpatializer.h>
+#include <Common/ErrorHandler.h>
 #include <HRTF/HRTFFactory.h>
 #include <BRIR/BRIRFactory.h>
+#include <easy/profiler.h>
 
 #include "ThreeDTI_SoundMaker.h"
 
@@ -83,6 +85,8 @@ void bs::ThreeDTI_AudioRenderer::UpdateRendererParams(const float headAltitude, 
 
 void bs::ThreeDTI_AudioRenderer::ProcessAudio(std::vector<float>& interleavedStereoOut)
 {
+	EASY_FUNCTION("ThreeDTI_AudioRenderer::ProcessAudio");
+
 	// Process anechoic.
 	for (auto& sound : sounds_)
 	{
@@ -92,7 +96,10 @@ void bs::ThreeDTI_AudioRenderer::ProcessAudio(std::vector<float>& interleavedSte
 	}
 
 	// Process reverb_.
+	EASY_BLOCK("Reverb");
 	environment_->ProcessVirtualAmbisonicReverb(reverb_.left, reverb_.right);
+	EASY_END_BLOCK;
+	auto result = GET_LAST_RESULT_STRUCT();
 	
 	if (reverb_.left.size()) // 3dti sets size to 0 if there's no reverb_ to process.
 	{

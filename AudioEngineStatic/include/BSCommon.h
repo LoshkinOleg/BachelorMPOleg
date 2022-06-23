@@ -49,4 +49,6 @@ namespace bs
 		constexpr const float pi = 3.14159265359f;
 		return euler * (pi / 180.0f);
 	}
+
+	bool Equivalent(const bs::CartesianCoord a, const bs::CartesianCoord b);
 }

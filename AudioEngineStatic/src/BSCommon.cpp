@@ -76,6 +76,12 @@ void bs::SumSignals(std::vector<float>& out, const std::vector<float>& other)
 	}
 }
 
+bool bs::Equivalent(const bs::CartesianCoord a, const bs::CartesianCoord b)
+{
+	constexpr const float epsilon = 0.001f;
+	return std::fabsf(a.x - b.x) < epsilon && std::fabsf(a.y - b.y) && std::fabsf(a.z - b.z);
+}
+
 float bs::CartesianCoord::Magnitude() const
 {
 	return std::sqrtf(x * x + y * y + z * z);

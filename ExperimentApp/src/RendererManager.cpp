@@ -1,5 +1,7 @@
 #include "RendererManager.h"
 
+#include <easy/profiler.h>
+
 bsExp::RendererManager::RendererManager():
 	threeDTI_renderer_(bs::ThreeDTI_AudioRenderer(HRTF_PATH, BRIR_PATH, BUFFER_SIZE, SAMPLE_RATE, HEAD_ALTITUDE, true)), fmod_renderer_(bs::Fmod_AudioRenderer(HEAD_ALTITUDE, BUFFER_SIZE, SAMPLE_RATE))
 {
@@ -39,10 +41,17 @@ bsExp::RendererManager::RendererManager():
 	fmod_soundIds_.emplace("speech", fmod_renderer_.CreateSoundMaker(WAV_PATH_SPEECH, false, true));
 	fmod_soundIds_.emplace("noise", fmod_renderer_.CreateSoundMaker(WAV_PATH_BROWN_NOISE, true, false));
 	fmod_soundIds_.emplace("sweep", fmod_renderer_.CreateSoundMaker(WAV_PATH_SWEEP, false, true));
+
+	EASY_PROFILER_ENABLE;
 }
 
 bsExp::RendererManager::~RendererManager()
 {
+	if (!profiler::dumpBlocksToFile("profilingData/session0.prof"))
+	{
+		assert(true, "Couldn't write profiling session to file!");
+	}
+
 	auto err = Pa_AbortStream(pStream_);
 	assert(err == paNoError, "Failed to stop portaudio stream!");
 	err = Pa_Terminate();
@@ -218,7 +227,7 @@ void bsExp::RendererManager::MoveAllSounds(const bs::CartesianCoord coord)
 	{
 		threeDTI_renderer_.GetSound(pair.second).SetPosition(coord);
 	}
-	for (auto& pair : threeDTI_soundIds_)
+	for (auto& pair : fmod_soundIds_)
 	{
 		fmod_renderer_.MoveSound(pair.second, coord);
 	}
@@ -277,6 +286,8 @@ bsExp::RendererManager::AudioRendererType bsExp::RendererManager::GetSelectedRen
 
 int bsExp::RendererManager::ServiceAudio_(const void* unused, void* outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void* userData)
 {
+	EASY_FUNCTION("ServiceAudio_");
+
 	RendererManager* self = (RendererManager*)(userData);
 	float* out = (float*)outputBuffer;
 
@@ -286,6 +297,7 @@ int bsExp::RendererManager::ServiceAudio_(const void* unused, void* outputBuffer
 	{
 		case bsExp::RendererManager::AudioRendererType::ThreeDTI:
 		{
+			EASY_BLOCK("3dti spatializing.");
 			self->threeDTI_renderer_.ProcessAudio(self->renderResult_);
 		}
 		break;

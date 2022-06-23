@@ -72,7 +72,7 @@ namespace bsExp
 		constexpr static uint32_t const DISPLAY_HEIGHT = 720;
 
 	private:
-		void DrawSourceAndListener_(const bs::CartesianCoord sourcePos, const bs::CartesianCoord listenerCoord);
+		void DrawSourceAndListener_(const bs::CartesianCoord sourcePos, const bs::CartesianCoord listenerPos);
 
 		SDL_Event sdlEvent_{};
 		SDL_Window* sdlWindow_ = nullptr;

@@ -81,7 +81,7 @@ int bsExp::Application::RunProgram()
 	bool shutdown = false;
 	while (!shutdown)
 	{
-		rendererManager_.CallImplementationsUpdates();
+		// rendererManager_.CallImplementationsUpdates();
 		UpdateTransforms_();
 		rendererManager_.MoveAllSounds(currentSoundPos_);
 		shutdown = sdlManager_.Update(currentSoundPos_, {0.0f, 0.0f, RendererManager::HEAD_ALTITUDE});
