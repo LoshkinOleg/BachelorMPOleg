@@ -31,7 +31,7 @@ void bsExp::SdlManager::RegisterCallback(Input input, std::function<void(void)> 
 	callbacks_[input].push_back(callback);
 }
 
-bool bsExp::SdlManager::Update(const bs::CartesianCoord sourcePos, const bs::CartesianCoord listenerCoord)
+bool bsExp::SdlManager::Update(const bs::CartesianCoord sourcePos, const bs::CartesianCoord listenerPos, const float headAltitude)
 {
 	EASY_FUNCTION("SdlManager::Update");
 
@@ -67,12 +67,12 @@ bool bsExp::SdlManager::Update(const bs::CartesianCoord sourcePos, const bs::Car
 		}
 	}
 
-	DrawSourceAndListener_(sourcePos, listenerCoord);
+	DrawSourceAndListener_(sourcePos, listenerPos, headAltitude);
 
 	return false;
 }
 
-void bsExp::SdlManager::DrawSourceAndListener_(const bs::CartesianCoord sourcePos, const bs::CartesianCoord listenerPos)
+void bsExp::SdlManager::DrawSourceAndListener_(const bs::CartesianCoord sourcePos, const bs::CartesianCoord listenerPos, const float headAltitude)
 {
 	EASY_FUNCTION("SdlManager::DrawSourceAndListener_");
 
@@ -95,22 +95,38 @@ void bsExp::SdlManager::DrawSourceAndListener_(const bs::CartesianCoord sourcePo
 		SDL_RenderDrawLine(sdlRenderer_, 0, DISPLAY_SIZE / 2, DISPLAY_SIZE, DISPLAY_SIZE / 2);
 
 		// Draw positions.
-		int min = 0;
-		int max = DISPLAY_SIZE / 2;
-
-		const auto draw3x3crossXy = [this](const bs::CartesianCoord coord, const int min, const int max)
-		{
-			SDL_RenderDrawPoint(sdlRenderer_, (int)(coord.x * 100) + (max - min) / 2, (int)(coord.y * 100) + (max - min) / 2);
-			SDL_RenderDrawPoint(sdlRenderer_, (int)(coord.x * 100) + ((max - min) / 2) - 1, (int)(coord.y * 100) + (max - min) / 2);
-			SDL_RenderDrawPoint(sdlRenderer_, (int)(coord.x * 100) + ((max - min) / 2) + 1, (int)(coord.y * 100) + (max - min) / 2);
-			SDL_RenderDrawPoint(sdlRenderer_, (int)(coord.x * 100) + (max - min) / 2, (int)(coord.y * 100) + ((max - min) / 2) - 1);
-			SDL_RenderDrawPoint(sdlRenderer_, (int)(coord.x * 100) + (max - min) / 2, (int)(coord.y * 100) + ((max - min) / 2) + 1);
-		};
-		SDL_SetRenderDrawColor(sdlRenderer_, 255, 0, 0, 255);
+		constexpr const int SCALE_FACTOR = 50;
+		constexpr const int SQUARE_SIDE = 5;
+		constexpr const int SQUARE_HALF_SIDE = 2;
+		constexpr const int FRONT_DIR_INDICATOR_LEN = 5;
+		int centerX = DISPLAY_SIZE / 4;
+		int centerY = centerX;
 		const bs::CartesianCoord adjustedSourcePos = {-sourcePos.y, -sourcePos.x, sourcePos.z};
-		draw3x3crossXy(adjustedSourcePos, min, max);
+		SDL_Rect r = { (int)(adjustedSourcePos.x * SCALE_FACTOR) + centerX - SQUARE_HALF_SIDE, (int)(adjustedSourcePos.y * SCALE_FACTOR) + centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
+
+		// Draw source position in red.
+		SDL_SetRenderDrawColor(sdlRenderer_, 255, 0, 0, 255);
+		SDL_RenderDrawRect(sdlRenderer_, &r);
+		centerX += DISPLAY_SIZE / 2;
+		r = { (int)(-adjustedSourcePos.y * SCALE_FACTOR) + centerX - SQUARE_HALF_SIDE, (int)((adjustedSourcePos.z - headAltitude) * SCALE_FACTOR) + centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
+		SDL_RenderDrawRect(sdlRenderer_, &r);
+
+		// Draw listener position in green.
+		centerX = DISPLAY_SIZE / 4;
+		centerY = centerX;
+		r = { centerX - SQUARE_HALF_SIDE, centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
+
 		SDL_SetRenderDrawColor(sdlRenderer_, 0, 255, 0, 255);
-		draw3x3crossXy(listenerPos, min, max);
+		SDL_RenderDrawRect(sdlRenderer_, &r);
+		SDL_RenderDrawLine(sdlRenderer_,
+		 				centerX, centerY,
+		 				centerX, centerY - FRONT_DIR_INDICATOR_LEN);
+		centerX += DISPLAY_SIZE / 2;
+		r = { centerX - SQUARE_HALF_SIDE, centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
+		SDL_RenderDrawRect(sdlRenderer_, &r);
+		SDL_RenderDrawLine(sdlRenderer_,
+						   centerX, centerY,
+						   centerX + FRONT_DIR_INDICATOR_LEN, centerY);
 
 		// Present.
 		SDL_RenderPresent(sdlRenderer_);

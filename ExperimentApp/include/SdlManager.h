@@ -66,12 +66,12 @@ namespace bsExp
 		~SdlManager();
 
 		void RegisterCallback(Input input, std::function<void(void)> callback);
-		bool Update(const bs::CartesianCoord sourcePos, const bs::CartesianCoord listenerCoord);
+		bool Update(const bs::CartesianCoord sourcePos, const bs::CartesianCoord listenerPos, const float headAltitude);
 
 		constexpr static uint32_t const DISPLAY_SIZE = 720;
 
 	private:
-		void DrawSourceAndListener_(const bs::CartesianCoord sourcePos, const bs::CartesianCoord listenerPos);
+		void DrawSourceAndListener_(const bs::CartesianCoord sourcePos, const bs::CartesianCoord listenerPos, const float headAltitude);
 
 		SDL_Event sdlEvent_{};
 		SDL_Window* sdlWindow_ = nullptr;
