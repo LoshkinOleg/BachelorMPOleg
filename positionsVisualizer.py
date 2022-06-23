@@ -14,14 +14,27 @@ def lerp(a: float, b: float, t: float) -> float:
 logFile = open(sys.argv[1])
 lines = logFile.readlines()
 
-positions = []
+positionsScientist = []
+positionsParticipant = []
 
 for line in lines:
-    matchIdx = line.find("(")
+    matchIdx = line.find("Scientist controller")
     if (matchIdx != -1):
+        matchIdx = line.find("(")
         posStr = line[matchIdx:len(line) - 1]
         pos = ast.literal_eval(posStr)
-        positions.append(pos)
+        positionsScientist.append(pos)
+    
+    matchIdx = line.find("Paticipant controller")
+    if (matchIdx != -1):
+        matchIdx = line.find("(")
+        posStr = line[matchIdx:len(line) - 1]
+        pos = ast.literal_eval(posStr)
+        positionsParticipant.append(pos)
+
+if (positionsScientist.size() != positionsParticipant.size()):
+    print("Mismatch between number of scientist and participant data.")
+    quit()
 
 fig = plt.figure()
 ax = fig.add_subplot(projection='3d')
@@ -30,9 +43,9 @@ ax.set_ylabel('y (m)')
 ax.set_zlabel('z (m)')
 c = [0.0, 0.0, 0.0]
 idx = 0
-for pos in positions:
-    idx += 1
-    print(pos[0],pos[1],pos[2])
-    ax.scatter(pos[0],pos[1],pos[2],marker='o', color=(c[0], c[1], c[2]))
-    c[0] = lerp(0, 1.0, idx / len(positions))
+for i in range(positions.size()):
+    scientistPos = positionsScientist[i]
+    participantPos = positionsParticipant[i]
+    ax.scatter(scientistPos[0],scientistPos[1],scientistPos[2],marker='o', color=(0.0, 1.0, 0.0))
+    ax.scatter(participantPos[0],participantPos[1],participantPos[2],marker='o', color=(0.0, 0.0, 1.0))
 plt.show()
