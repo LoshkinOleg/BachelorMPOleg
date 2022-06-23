@@ -68,8 +68,7 @@ namespace bsExp
 		void RegisterCallback(Input input, std::function<void(void)> callback);
 		bool Update(const bs::CartesianCoord sourcePos, const bs::CartesianCoord listenerCoord);
 
-		constexpr static uint32_t const DISPLAY_WIDTH = 720;
-		constexpr static uint32_t const DISPLAY_HEIGHT = 720;
+		constexpr static uint32_t const DISPLAY_SIZE = 720;
 
 	private:
 		void DrawSourceAndListener_(const bs::CartesianCoord sourcePos, const bs::CartesianCoord listenerPos);

@@ -207,9 +207,9 @@ void bs::Fmod_AudioRenderer::MoveSound(const size_t soundId, const bs::Cartesian
 			FMOD_VECTOR pos, vel;
 			FMOD_RESULT result = sounds_[soundId].second->get3DAttributes(&pos, &vel);
 			assert(result == FMOD_OK, "Failed to retrieve fmod sound position.");
-			pos.x = coord.x; // Oleg@self: check that this is correct.
+			pos.z = coord.x; // Oleg@self: check that this is correct.
 			pos.y = coord.z;
-			pos.z = coord.y;
+			pos.x = -coord.y;
 			sounds_[soundId].second->set3DAttributes(&pos, &vel);
 			assert(result == FMOD_OK, "Failed to set fmod sound position.");
 		}

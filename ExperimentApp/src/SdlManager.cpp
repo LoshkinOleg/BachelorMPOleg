@@ -12,11 +12,10 @@ bsExp::SdlManager::SdlManager()
 	{
 		assert(false, "Failed to initialize SDL!");
 	}
-	if (SDL_CreateWindowAndRenderer(DISPLAY_WIDTH, DISPLAY_HEIGHT, SDL_WINDOW_SHOWN, &sdlWindow_, &sdlRenderer_))
+	if (SDL_CreateWindowAndRenderer(DISPLAY_SIZE, DISPLAY_SIZE, SDL_WINDOW_SHOWN, &sdlWindow_, &sdlRenderer_))
 	{
 		assert(sdlWindow_, "Failed to create sdl window and renderer!");
 	}
-	// sdlWindow_ = SDL_CreateWindow("ExperimentApp", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, DISPLAY_WIDTH, DISPLAY_HEIGHT, 0);
 	assert(sdlWindow_, "Failed to create sdl window!");
 }
 
@@ -86,33 +85,32 @@ void bsExp::SdlManager::DrawSourceAndListener_(const bs::CartesianCoord sourcePo
 	{
 		EASY_BLOCK("Drawing on display.");
 
-		auto draw3x3cross = [this](const bs::CartesianCoord coord, const int minX, const int maxX, const int minY, const int maxY)
-		{
-			SDL_RenderDrawPoint(sdlRenderer_, (int)(coord.x * 100) + (maxX - minX) / 2, (int)(coord.y * 100) + (maxY - minY) / 2);
-			SDL_RenderDrawPoint(sdlRenderer_, (int)(coord.x * 100) + ((maxX - minX) / 2) - 1, (int)(coord.y * 100) + (maxY - minY) / 2);
-			SDL_RenderDrawPoint(sdlRenderer_, (int)(coord.x * 100) + ((maxX - minX) / 2) + 1, (int)(coord.y * 100) + (maxY - minY) / 2);
-			SDL_RenderDrawPoint(sdlRenderer_, (int)(coord.x * 100) + (maxX - minX) / 2, (int)(coord.y * 100) + ((maxY - minY) / 2) - 1);
-			SDL_RenderDrawPoint(sdlRenderer_, (int)(coord.x * 100) + (maxX - minX) / 2, (int)(coord.y * 100) + ((maxY - minY) / 2) + 1);
-		};
-
 		// Clear screen.
 		SDL_SetRenderDrawColor(sdlRenderer_, 0, 0, 0, 255);
 		SDL_RenderClear(sdlRenderer_);
 
 		// Draw viewport separators.
 		SDL_SetRenderDrawColor(sdlRenderer_, 255, 255, 255, 255);
-		SDL_RenderDrawLine(sdlRenderer_, DISPLAY_WIDTH / 2, 0, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT);
-		SDL_RenderDrawLine(sdlRenderer_, 0, DISPLAY_HEIGHT / 2, DISPLAY_WIDTH, DISPLAY_HEIGHT / 2);
+		SDL_RenderDrawLine(sdlRenderer_, DISPLAY_SIZE / 2, 0, DISPLAY_SIZE / 2, DISPLAY_SIZE);
+		SDL_RenderDrawLine(sdlRenderer_, 0, DISPLAY_SIZE / 2, DISPLAY_SIZE, DISPLAY_SIZE / 2);
 
-		// Draw x,y positions.
-		int minX = 0;
-		int maxX = DISPLAY_WIDTH / 2;
-		int minY = 0;
-		int maxY = DISPLAY_HEIGHT / 2;
+		// Draw positions.
+		int min = 0;
+		int max = DISPLAY_SIZE / 2;
+
+		const auto draw3x3crossXy = [this](const bs::CartesianCoord coord, const int min, const int max)
+		{
+			SDL_RenderDrawPoint(sdlRenderer_, (int)(coord.x * 100) + (max - min) / 2, (int)(coord.y * 100) + (max - min) / 2);
+			SDL_RenderDrawPoint(sdlRenderer_, (int)(coord.x * 100) + ((max - min) / 2) - 1, (int)(coord.y * 100) + (max - min) / 2);
+			SDL_RenderDrawPoint(sdlRenderer_, (int)(coord.x * 100) + ((max - min) / 2) + 1, (int)(coord.y * 100) + (max - min) / 2);
+			SDL_RenderDrawPoint(sdlRenderer_, (int)(coord.x * 100) + (max - min) / 2, (int)(coord.y * 100) + ((max - min) / 2) - 1);
+			SDL_RenderDrawPoint(sdlRenderer_, (int)(coord.x * 100) + (max - min) / 2, (int)(coord.y * 100) + ((max - min) / 2) + 1);
+		};
 		SDL_SetRenderDrawColor(sdlRenderer_, 255, 0, 0, 255);
-		draw3x3cross(sourcePos, minX, maxX, minY, maxY);
+		const bs::CartesianCoord adjustedSourcePos = {-sourcePos.y, -sourcePos.x, sourcePos.z};
+		draw3x3crossXy(adjustedSourcePos, min, max);
 		SDL_SetRenderDrawColor(sdlRenderer_, 0, 255, 0, 255);
-		draw3x3cross(listenerPos, minX, maxX, minY, maxY);
+		draw3x3crossXy(listenerPos, min, max);
 
 		// Present.
 		SDL_RenderPresent(sdlRenderer_);
