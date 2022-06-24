@@ -3,7 +3,6 @@
 bsExp::Application::Application(const size_t randSeed):
 	rndEngine_(RandomEngine(randSeed, RendererManager::MIN_SOUND_DISTANCE, RendererManager::MAX_SOUND_DISTANCE, RendererManager::MIN_SOUND_ELEVATION, RendererManager::MAX_SOUND_ELEVATION, RendererManager::MIN_SOUND_AZIMUTH, RendererManager::MAX_SOUND_AZIMUTH, RendererManager::MIN_RENDERER_INDEX, RendererManager::MAX_RENDERER_INDEX))
 {
-	// DEBUG
 	sdlManager_.RegisterCallback(SdlManager::Input::NumZero, [this]() { rendererManager_.StopAll(); });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumOne, [this]() { rendererManager_.PlaySound("noise"); });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumTwo, [this]() { rendererManager_.PlaySound("speech"); });
@@ -26,6 +25,9 @@ bsExp::Application::Application(const size_t randSeed):
 	sdlManager_.RegisterCallback(SdlManager::Input::One, [this]() { OnLeftTrigger_(); });
 	sdlManager_.RegisterCallback(SdlManager::Input::Two, [this]() { OnRightTrigger_(); });
 
+	openVrManager_.RegisterCallback(OpenVrManager::Input::LeftTrigger, [this]() { OnLeftTrigger_(); });
+	openVrManager_.RegisterCallback(OpenVrManager::Input::RightTrigger, [this]() { OnRightTrigger_(); });
+
 	SetRandomSourcePos_();
 	SelectRandomRenderer_();
 }
@@ -36,7 +38,9 @@ int bsExp::Application::RunProgram()
 	while (!shutdown)
 	{
 		rendererManager_.CallImplementationsUpdates();
-		UpdateTransforms_();
+		openVrManager_.Update();
+		leftControllerPos_ = openVrManager_.LeftControllerPos();
+		rightControllerPos_ = openVrManager_.RightControllerPos();
 		rendererManager_.MoveAllSounds(currentSoundPos_);
 		shutdown = sdlManager_.Update(currentSoundPos_, {0.0f, 0.0f, RendererManager::HEAD_ALTITUDE}, RendererManager::HEAD_ALTITUDE);
 	}
@@ -65,13 +69,6 @@ void bsExp::Application::SelectRandomRenderer_()
 	}
 }
 
-void bsExp::Application::UpdateTransforms_()
-{
-	// Dummy implementation, move openvr code here to retireve controller positions.
-	leftControllerPos = rndEngine_.GenCartesian(rendererManager_.HEAD_ALTITUDE);
-	rightControllerPos = rndEngine_.GenCartesian(rendererManager_.HEAD_ALTITUDE);
-}
-
 void bsExp::Application::SetRandomSourcePos_()
 {
 	currentSoundPos_ = rndEngine_.GenCartesian(rendererManager_.HEAD_ALTITUDE);
@@ -80,12 +77,12 @@ void bsExp::Application::SetRandomSourcePos_()
 
 void bsExp::Application::OnLeftTrigger_()
 {
-	logger_.LogControllerPosition("Participant controller", leftControllerPos);
+	logger_.LogControllerPosition("Participant controller", leftControllerPos_);
 }
 
 void bsExp::Application::OnRightTrigger_()
 {
-	logger_.LogControllerPosition("Scientist controller", rightControllerPos);
+	logger_.LogControllerPosition("Scientist controller", rightControllerPos_);
 }
 
 void bsExp::Application::OnRightGrip_()

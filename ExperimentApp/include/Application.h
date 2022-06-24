@@ -4,6 +4,7 @@
 #include "RendererManager.h"
 #include "RandomEngine.h"
 #include "Logger.h"
+#include "OpenVrManager.h"
 
 namespace bsExp
 {
@@ -20,7 +21,6 @@ namespace bsExp
 
 	private:
 		void SelectRandomRenderer_();
-		void UpdateTransforms_();
 		void SetRandomSourcePos_();
 
 		void OnLeftTrigger_();
@@ -30,11 +30,12 @@ namespace bsExp
 
 		RendererManager rendererManager_{};
 		SdlManager sdlManager_{};
+		OpenVrManager openVrManager_{};
 		Logger logger_{};
 		RandomEngine rndEngine_;
 
 		bs::CartesianCoord currentSoundPos_{};
-		bs::CartesianCoord leftControllerPos{};
-		bs::CartesianCoord rightControllerPos{};
+		bs::CartesianCoord leftControllerPos_{};
+		bs::CartesianCoord rightControllerPos_{};
 	};
 }

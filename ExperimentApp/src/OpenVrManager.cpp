@@ -1,0 +1,87 @@
+#include "..\include\OpenVrManager.h"
+
+#include <cassert>
+
+bsExp::OpenVrManager::OpenVrManager()
+{
+	vr::EVRInitError err;
+	context_ = vr::VR_Init(&err, vr::EVRApplicationType::VRApplication_Background);
+	assert(err == vr::EVRInitError::VRInitError_None && "Failed to initialize openvr!");
+}
+
+bsExp::OpenVrManager::~OpenVrManager()
+{
+	vr::VR_Shutdown();
+}
+
+void bsExp::OpenVrManager::RegisterCallback(Input input, std::function<void(void)> callback)
+{
+	callbacks_[input].push_back(callback);
+}
+
+void bsExp::OpenVrManager::Update()
+{
+	while (context_->PollNextEvent(&event_, sizeof(vr::VREvent_t)))
+	{
+		if (event_.trackedDeviceIndex != leftControllerId || event_.trackedDeviceIndex != rightControllerId) continue;
+
+		const bool left = event_.trackedDeviceIndex == leftControllerId ? true : false;
+
+		switch (event_.eventType)
+		{
+			case vr::EVREventType::VREvent_ButtonPress:
+			{
+				vr::VRControllerState_t state;
+				vr::TrackedDevicePose_t pose;
+				auto result = context_->GetControllerStateWithPose(vr::ETrackingUniverseOrigin::TrackingUniverseRawAndUncalibrated, event_.trackedDeviceIndex, &state, sizeof(vr::VRControllerState_t), &pose);
+				assert(result && "Failed to get controller state with pose!");
+
+				if (left)
+				{
+					leftControllerPos_ = { pose.mDeviceToAbsoluteTracking.m[0][3], pose.mDeviceToAbsoluteTracking.m[1][3], pose.mDeviceToAbsoluteTracking.m[2][3] };
+				}
+				else
+				{
+					rightControllerPos_ = { pose.mDeviceToAbsoluteTracking.m[0][3], pose.mDeviceToAbsoluteTracking.m[1][3], pose.mDeviceToAbsoluteTracking.m[2][3] };
+				}
+
+				if (state.ulButtonPressed & vr::EVRButtonId::k_EButton_SteamVR_Trigger)
+				{
+					const auto& callbacks = callbacks_[left ? Input::LeftGrip : Input::RightGrip];
+					for (auto& callback : callbacks)
+					{
+						callback();
+					}
+				}
+				else if (state.ulButtonPressed & vr::EVRButtonId::k_EButton_SteamVR_Touchpad)
+				{
+					const auto& callbacks = callbacks_[left ? Input::LeftPad : Input::RightPad];
+					for (auto& callback : callbacks)
+					{
+						callback();
+					}
+				}
+				else if (state.ulButtonPressed & vr::EVRButtonId::k_EButton_Grip)
+				{
+					const auto& callbacks = callbacks_[left ? Input::LeftGrip : Input::RightGrip];
+					for (auto& callback : callbacks)
+					{
+						callback();
+					}
+				}
+			}break;
+			default:
+			break;
+		}
+	}
+}
+
+bs::CartesianCoord bsExp::OpenVrManager::LeftControllerPos() const
+{
+	return leftControllerPos_;
+}
+
+bs::CartesianCoord bsExp::OpenVrManager::RightControllerPos() const
+{
+	return rightControllerPos_;
+}
