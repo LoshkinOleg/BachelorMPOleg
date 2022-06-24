@@ -27,6 +27,7 @@ namespace bsExp
 		void OnRightTrigger_();
 		void OnRightGrip_();
 		void OnRightPad_();
+		void OnRightMenu_();
 
 		RendererManager rendererManager_{};
 		SdlManager sdlManager_{};

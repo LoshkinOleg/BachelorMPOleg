@@ -19,7 +19,9 @@ namespace bsExp
 			LeftGrip = 2,
 			RightTrigger = 3,
 			RightGrip = 4,
-			RightPad = 5
+			RightPad = 5,
+			LeftMenu = 6,
+			RightMenu = 7
 		};
 
 		BS_NON_COPYABLE(OpenVrManager);

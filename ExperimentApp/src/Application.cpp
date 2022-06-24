@@ -27,6 +27,9 @@ bsExp::Application::Application(const size_t randSeed):
 
 	openVrManager_.RegisterCallback(OpenVrManager::Input::LeftTrigger, [this]() { OnLeftTrigger_(); });
 	openVrManager_.RegisterCallback(OpenVrManager::Input::RightTrigger, [this]() { OnRightTrigger_(); });
+	openVrManager_.RegisterCallback(OpenVrManager::Input::RightGrip, [this]() { OnRightGrip_(); });
+	openVrManager_.RegisterCallback(OpenVrManager::Input::RightPad, [this]() { OnRightPad_(); });
+	openVrManager_.RegisterCallback(OpenVrManager::Input::RightMenu, [this]() { OnRightMenu_(); });
 
 	SetRandomSourcePos_();
 	SelectRandomRenderer_();
@@ -102,4 +105,9 @@ void bsExp::Application::OnRightGrip_()
 void bsExp::Application::OnRightPad_()
 {
 	SelectRandomRenderer_();
+}
+
+void bsExp::Application::OnRightMenu_()
+{
+	logger_.LogDelimiter();
 }

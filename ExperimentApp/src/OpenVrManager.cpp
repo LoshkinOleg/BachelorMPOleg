@@ -1,4 +1,4 @@
-#include "..\include\OpenVrManager.h"
+#include <OpenVrManager.h>
 
 #include <cassert>
 
@@ -7,6 +7,23 @@ bsExp::OpenVrManager::OpenVrManager()
 	vr::EVRInitError err;
 	context_ = vr::VR_Init(&err, vr::EVRApplicationType::VRApplication_Background);
 	assert(err == vr::EVRInitError::VRInitError_None && "Failed to initialize openvr!");
+
+	for (uint32_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++)
+	{
+		const auto deviceClass = context_->GetTrackedDeviceClass(i);
+		if (deviceClass == vr::TrackedDeviceClass::TrackedDeviceClass_Controller)
+		{
+			if (leftControllerId == vr::k_unTrackedDeviceIndexInvalid)
+			{
+				leftControllerId = i;
+			}
+			else
+			{
+				rightControllerId = i;
+				break;
+			}
+		}
+	}
 }
 
 bsExp::OpenVrManager::~OpenVrManager()
@@ -23,7 +40,7 @@ void bsExp::OpenVrManager::Update()
 {
 	while (context_->PollNextEvent(&event_, sizeof(vr::VREvent_t)))
 	{
-		if (event_.trackedDeviceIndex != leftControllerId || event_.trackedDeviceIndex != rightControllerId) continue;
+		if (event_.trackedDeviceIndex != leftControllerId && event_.trackedDeviceIndex != rightControllerId) continue;
 
 		const bool left = event_.trackedDeviceIndex == leftControllerId ? true : false;
 
@@ -45,15 +62,15 @@ void bsExp::OpenVrManager::Update()
 					rightControllerPos_ = { pose.mDeviceToAbsoluteTracking.m[0][3], pose.mDeviceToAbsoluteTracking.m[1][3], pose.mDeviceToAbsoluteTracking.m[2][3] };
 				}
 
-				if (state.ulButtonPressed & vr::EVRButtonId::k_EButton_SteamVR_Trigger)
+				if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_SteamVR_Trigger))
 				{
-					const auto& callbacks = callbacks_[left ? Input::LeftGrip : Input::RightGrip];
+					const auto& callbacks = callbacks_[left ? Input::LeftTrigger : Input::RightTrigger];
 					for (auto& callback : callbacks)
 					{
 						callback();
 					}
 				}
-				else if (state.ulButtonPressed & vr::EVRButtonId::k_EButton_SteamVR_Touchpad)
+				else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_SteamVR_Touchpad))
 				{
 					const auto& callbacks = callbacks_[left ? Input::LeftPad : Input::RightPad];
 					for (auto& callback : callbacks)
@@ -61,9 +78,17 @@ void bsExp::OpenVrManager::Update()
 						callback();
 					}
 				}
-				else if (state.ulButtonPressed & vr::EVRButtonId::k_EButton_Grip)
+				else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Grip))
 				{
 					const auto& callbacks = callbacks_[left ? Input::LeftGrip : Input::RightGrip];
+					for (auto& callback : callbacks)
+					{
+						callback();
+					}
+				}
+				else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_ApplicationMenu))
+				{
+					const auto& callbacks = callbacks_[left ? Input::LeftMenu : Input::RightMenu];
 					for (auto& callback : callbacks)
 					{
 						callback();
