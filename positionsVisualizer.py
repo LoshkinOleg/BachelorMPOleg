@@ -25,15 +25,15 @@ for line in lines:
         pos = ast.literal_eval(posStr)
         positionsScientist.append(pos)
     
-    matchIdx = line.find("Paticipant controller")
+    matchIdx = line.find("Participant controller")
     if (matchIdx != -1):
         matchIdx = line.find("(")
         posStr = line[matchIdx:len(line) - 1]
         pos = ast.literal_eval(posStr)
         positionsParticipant.append(pos)
 
-if (positionsScientist.size() != positionsParticipant.size()):
-    print("Mismatch between number of scientist and participant data.")
+if (len(positionsScientist) != len(positionsParticipant)):
+    print("Mismatch between number of scientist and participant data: %d, %d" %(len(positionsScientist),len(positionsParticipant)))
     quit()
 
 fig = plt.figure()
@@ -41,11 +41,10 @@ ax = fig.add_subplot(projection='3d')
 ax.set_xlabel('x (m)')
 ax.set_ylabel('y (m)')
 ax.set_zlabel('z (m)')
-c = [0.0, 0.0, 0.0]
-idx = 0
-for i in range(positions.size()):
+for i in range(len(positionsScientist)):
     scientistPos = positionsScientist[i]
     participantPos = positionsParticipant[i]
     ax.scatter(scientistPos[0],scientistPos[1],scientistPos[2],marker='o', color=(0.0, 1.0, 0.0))
     ax.scatter(participantPos[0],participantPos[1],participantPos[2],marker='o', color=(0.0, 0.0, 1.0))
+    ax.plot([scientistPos[0], participantPos[0]], [scientistPos[1], participantPos[1]], [scientistPos[2], participantPos[2]], color='r')
 plt.show()

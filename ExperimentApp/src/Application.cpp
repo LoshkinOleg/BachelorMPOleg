@@ -23,54 +23,8 @@ bsExp::Application::Application(const size_t randSeed):
 
 	sdlManager_.RegisterCallback(SdlManager::Input::Spacebar, [this]() { SelectRandomRenderer_(); });
 
-	sdlManager_.RegisterCallback(SdlManager::Input::One, [this]()
-	{
-		auto p = rendererManager_.GetRendererParams();
-		p.ILDEnabled = !p.ILDEnabled;
-		rendererManager_.UpdateRendererParams(p);
-	});
-	sdlManager_.RegisterCallback(SdlManager::Input::Two, [this]()
-	{
-		auto p = rendererManager_.GetSoundParams("speech");
-		p.anechoicEnabled = !p.anechoicEnabled;
-		rendererManager_.UpdateSoundParams("speech", p);
-	});
-	sdlManager_.RegisterCallback(SdlManager::Input::Three, [this]()
-	{
-		auto p = rendererManager_.GetSoundParams("speech");
-		p.distanceBasedAttenuationAnechoic = !p.distanceBasedAttenuationAnechoic;
-		rendererManager_.UpdateSoundParams("speech", p);
-	});
-	sdlManager_.RegisterCallback(SdlManager::Input::Four, [this]()
-	{
-		auto p = rendererManager_.GetSoundParams("speech");
-		p.reverbEnabled = !p.reverbEnabled;
-		rendererManager_.UpdateSoundParams("speech", p);
-	});
-	sdlManager_.RegisterCallback(SdlManager::Input::Five, [this]()
-	{
-		auto p = rendererManager_.GetSoundParams("speech");
-		p.distanceBasedAttenuationReverb = !p.distanceBasedAttenuationReverb;
-		rendererManager_.UpdateSoundParams("speech", p);
-	});
-	sdlManager_.RegisterCallback(SdlManager::Input::Six, [this]()
-	{
-		auto p = rendererManager_.GetSoundParams("speech");
-		p.highQualitySimulation = !p.highQualitySimulation;
-		rendererManager_.UpdateSoundParams("speech", p);
-	});
-	sdlManager_.RegisterCallback(SdlManager::Input::Seven, [this]()
-	{
-		auto p = rendererManager_.GetSoundParams("speech");
-		p.nearFieldEffects = !p.nearFieldEffects;
-		rendererManager_.UpdateSoundParams("speech", p);
-	});
-	sdlManager_.RegisterCallback(SdlManager::Input::Eight, [this]()
-	{
-		auto p = rendererManager_.GetSoundParams("speech");
-		p.atmosphericFiltering = !p.atmosphericFiltering;
-		rendererManager_.UpdateSoundParams("speech", p);
-	});
+	sdlManager_.RegisterCallback(SdlManager::Input::One, [this]() { OnLeftTrigger_(); });
+	sdlManager_.RegisterCallback(SdlManager::Input::Two, [this]() { OnRightTrigger_(); });
 
 	SetRandomSourcePos_();
 	SelectRandomRenderer_();
