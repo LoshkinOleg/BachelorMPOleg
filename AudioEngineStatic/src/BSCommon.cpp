@@ -82,6 +82,36 @@ bool bs::Equivalent(const bs::CartesianCoord a, const bs::CartesianCoord b)
 	return std::fabsf(a.x - b.x) < epsilon && std::fabsf(a.y - b.y) && std::fabsf(a.z - b.z);
 }
 
+std::array<float, 3> bs::QuatToEuler(const std::array<float, 4> quat)
+{
+	// Taken from: https://steamcommunity.com/app/250820/discussions/0/1728711392744037419/
+
+	std::array<float, 3> v;
+	const float test = quat[0] * quat[1] + quat[2] * quat[3];
+	constexpr const float pi = 3.14159f;
+	if (test > 0.499f)
+	{ // singularity at north pole
+		v[0] = 2.0f * std::atan2f(quat[0], quat[3]); // heading
+		v[1] = pi / 2.0f; // attitude
+		v[2] = 0; // bank
+		return v;
+	}
+	if (test < -0.499f)
+	{ // singularity at south pole
+		v[0] = -2.0f * std::atan2f(quat[0], quat[3]); // headingq
+		v[1] = pi / 2.0f; // attitude
+		v[2] = 0; // bank
+		return v;
+	}
+	const float sqx = quat[0] * quat[0];
+	const float sqy = quat[1] * quat[1];
+	const float sqz = quat[2] * quat[2];
+	v[0] = std::atan2f(2.0f * quat[1] * quat[3] - 2.0f * quat[0] * quat[2], 1.0f - 2.0f * sqy - 2.0f * sqz); // heading
+	v[1] = std::asinf(2.0f * test); // attitude
+	v[2] = std::atan2f(2.0f * quat[0] * quat[3] - 2 * quat[1] * quat[2], 1.0f - 2.0f * sqx - 2.0f * sqz); // bank
+	return v;
+}
+
 float bs::CartesianCoord::Magnitude() const
 {
 	return std::sqrtf(x * x + y * y + z * z);

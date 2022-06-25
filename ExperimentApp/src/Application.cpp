@@ -19,6 +19,12 @@ bsExp::Application::Application(const size_t randSeed):
 	sdlManager_.RegisterCallback(SdlManager::Input::NumMultiply, [this]() { currentSoundPos_.z += 0.1f; });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumDivide, [this]() { currentSoundPos_.z -= 0.1f; });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumMinus, [this]() { logger_.LogNewSoundPos(currentSoundPos_); });
+	sdlManager_.RegisterCallback(SdlManager::Input::Backspace, [this]()
+	{
+		const auto mat = openVrManager_.HmdMatrix();
+
+		logger_.LogHmdPosAndRot(hmdPos_, bs::QuatToEuler(hmdQuat_));
+	});
 
 	sdlManager_.RegisterCallback(SdlManager::Input::Spacebar, [this]() { SelectRandomRenderer_(); });
 
@@ -30,6 +36,12 @@ bsExp::Application::Application(const size_t randSeed):
 	openVrManager_.RegisterCallback(OpenVrManager::Input::RightGrip, [this]() { OnRightGrip_(); });
 	openVrManager_.RegisterCallback(OpenVrManager::Input::RightPad, [this]() { OnRightPad_(); });
 	openVrManager_.RegisterCallback(OpenVrManager::Input::RightMenu, [this]() { OnRightMenu_(); });
+	openVrManager_.RegisterCallback(OpenVrManager::Input::LeftGrip, [this]()
+	{
+		const auto mat = openVrManager_.HmdMatrix();
+
+		logger_.LogHmdPosAndRot(hmdPos_, bs::QuatToEuler(hmdQuat_));
+	});
 
 	SetRandomSourcePos_();
 	SelectRandomRenderer_();
@@ -44,8 +56,11 @@ int bsExp::Application::RunProgram()
 		openVrManager_.Update();
 		leftControllerPos_ = openVrManager_.LeftControllerPos();
 		rightControllerPos_ = openVrManager_.RightControllerPos();
+		hmdPos_ = openVrManager_.CartesianFromMatrix(openVrManager_.HmdMatrix());
+		hmdQuat_ = openVrManager_.QuaternionFromMatrix(openVrManager_.HmdMatrix());
 		rendererManager_.MoveAllSounds(currentSoundPos_);
-		shutdown = sdlManager_.Update(currentSoundPos_, {0.0f, 0.0f, RendererManager::HEAD_ALTITUDE}, RendererManager::HEAD_ALTITUDE);
+		rendererManager_.MoveListener(hmdPos_, hmdQuat_);
+		shutdown = sdlManager_.Update(currentSoundPos_, hmdPos_, RendererManager::HEAD_ALTITUDE);
 	}
 
 	return 0;

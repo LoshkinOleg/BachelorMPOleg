@@ -36,6 +36,8 @@ namespace bs
 		void UpdateSoundParams(const size_t soundId);
 		void MoveSound(const size_t soundId, const bs::CartesianCoord coord);
 
+		void MoveListener(const bs::CartesianCoord pos, const std::array<float, 4> quat);
+
 		void Update();
 		void StopAllSounds();
 

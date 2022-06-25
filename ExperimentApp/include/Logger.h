@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include <spdlog/sinks/basic_file_sink.h>
 
 #include "BSCommon.h"
@@ -19,6 +21,7 @@ namespace bsExp
 		void LogRendererChange(const char* rendererName);
 		void LogNoiseToggle(const bool enabled);
 		void LogNewSoundPos(const bs::CartesianCoord coord);
+		void LogHmdPosAndRot(const bs::CartesianCoord pos, const std::array<float, 3> euler);
 
 		constexpr static const char* const LOGS_DIR = "experimentData";
 

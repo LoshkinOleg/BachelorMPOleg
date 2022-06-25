@@ -38,5 +38,7 @@ namespace bsExp
 		bs::CartesianCoord currentSoundPos_{};
 		bs::CartesianCoord leftControllerPos_{};
 		bs::CartesianCoord rightControllerPos_{};
+		bs::CartesianCoord hmdPos_{};
+		std::array<float, 4> hmdQuat_{};
 	};
 }

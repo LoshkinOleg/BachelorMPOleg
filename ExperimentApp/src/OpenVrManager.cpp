@@ -50,7 +50,7 @@ void bsExp::OpenVrManager::Update()
 			{
 				vr::VRControllerState_t state;
 				vr::TrackedDevicePose_t pose;
-				auto result = context_->GetControllerStateWithPose(vr::ETrackingUniverseOrigin::TrackingUniverseRawAndUncalibrated, event_.trackedDeviceIndex, &state, sizeof(vr::VRControllerState_t), &pose);
+				auto result = context_->GetControllerStateWithPose(vr::ETrackingUniverseOrigin::TrackingUniverseStanding, event_.trackedDeviceIndex, &state, sizeof(vr::VRControllerState_t), &pose);
 				assert(result && "Failed to get controller state with pose!");
 
 				if (left)
@@ -109,4 +109,11 @@ bs::CartesianCoord bsExp::OpenVrManager::LeftControllerPos() const
 bs::CartesianCoord bsExp::OpenVrManager::RightControllerPos() const
 {
 	return rightControllerPos_;
+}
+
+vr::HmdMatrix34_t bsExp::OpenVrManager::HmdMatrix()
+{
+	vr::TrackedDevicePose_t pose;
+	context_->GetDeviceToAbsoluteTrackingPose(vr::ETrackingUniverseOrigin::TrackingUniverseStanding, 0.0f, &pose, 1);
+	return pose.mDeviceToAbsoluteTracking;
 }

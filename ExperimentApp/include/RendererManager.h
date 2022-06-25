@@ -56,6 +56,7 @@ namespace bsExp
 
 		void MoveSound(const char* soundName, const bs::CartesianCoord coord);
 		void MoveAllSounds(const bs::CartesianCoord coord);
+		void MoveListener(const bs::CartesianCoord pos, const std::array<float, 4> quat);
 
 		void UpdateRendererParams(const RendererParams p);
 		void UpdateSoundParams(const char* soundName, const SoundParams p);
@@ -69,12 +70,12 @@ namespace bsExp
 		constexpr static float const MIN_SOUND_AZIMUTH = bs::ToRadians(-180.0f);
 		constexpr static float const MAX_SOUND_AZIMUTH = bs::ToRadians(180.0f);
 		constexpr static float const MIN_SOUND_DISTANCE = 0.33f;
-		constexpr static float const MAX_SOUND_DISTANCE = 3.0f;
-		constexpr static float const HEAD_ALTITUDE = 1.3f; // Oleg@self: find a way to pass this as argument to program. Move to application maybe since that's where it's used mostly?
-		constexpr static float const MIN_SOUND_ELEVATION = bs::ToRadians(50.0f);
-		constexpr static float const MAX_SOUND_ELEVATION = bs::ToRadians(120.0f);
+		constexpr static float const MAX_SOUND_DISTANCE = 2.0f;
+		constexpr static float const HEAD_ALTITUDE = 0.0f; // Oleg@self: find a way to pass this as argument to program. Move to application maybe since that's where it's used mostly?
+		constexpr static float const MIN_SOUND_ELEVATION = bs::ToRadians(70.0f); // Values chosen to land at ~(2,0,2) in cartesian relative to ground.
+		constexpr static float const MAX_SOUND_ELEVATION = bs::ToRadians(123.0f); // Values chosen to land at ~(2,0,0) in cartesian relative to ground.
 		constexpr static char const* const HRTF_PATH = "../resources/HRTF/3DTI_HRTF_IRC1008_128s_44100Hz.sofa";
-		constexpr static char const* const BRIR_PATH = "../resources/BRIR/3DTI_BRIR_medium_44100Hz.sofa";
+		constexpr static char const* const BRIR_PATH = "../resources/BRIR/3DTI_BRIR_small_44100Hz.sofa";
 		constexpr static char const* const WAV_PATH_SPEECH = "../resources/AudioSamples/AnechoicSpeech44100.wav";
 		constexpr static char const* const WAV_PATH_BROWN_NOISE = "../resources/AudioSamples/brownNoise_44100Hz_32f_5sec.wav";
 		constexpr static char const* const WAV_PATH_SWEEP = "../resources/AudioSamples/sweep20to16000_44100Hz_32f_10sec.wav";

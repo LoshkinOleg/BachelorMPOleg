@@ -74,3 +74,23 @@ void bsExp::Logger::LogNewSoundPos(const bs::CartesianCoord coord)
 	std::cout << s;
 
 }
+
+void bsExp::Logger::LogHmdPosAndRot(const bs::CartesianCoord pos, const std::array<float, 3> euler)
+{
+	pLogger_->info("Position of headset is: ({0:03.2f},{1:03.2f},{2:03.2f}) and rotation is: ({3:03.2f};{4:03.2f};{5:03.2f})", pos.x, pos.y, pos.z, euler[0], euler[1], euler[2]);
+
+	std::string s = "Position of headset is: (";
+	s += std::to_string(pos.x);
+	s += ",";
+	s += std::to_string(pos.y);
+	s += ",";
+	s += std::to_string(pos.z);
+	s += "). and rotation is: (";
+	s += std::to_string(euler[0]);
+	s += ",";
+	s += std::to_string(euler[1]);
+	s += ",";
+	s += std::to_string(euler[2]);
+	s += ").\n";
+	std::cout << s;
+}

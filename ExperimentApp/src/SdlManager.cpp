@@ -101,32 +101,27 @@ void bsExp::SdlManager::DrawSourceAndListener_(const bs::CartesianCoord sourcePo
 		constexpr const int FRONT_DIR_INDICATOR_LEN = 5;
 		int centerX = DISPLAY_SIZE / 4;
 		int centerY = centerX;
-		const bs::CartesianCoord adjustedSourcePos = {-sourcePos.y, -sourcePos.x, sourcePos.z};
-		SDL_Rect r = { (int)(adjustedSourcePos.x * SCALE_FACTOR) + centerX - SQUARE_HALF_SIDE, (int)(adjustedSourcePos.y * SCALE_FACTOR) + centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
+		// const bs::CartesianCoord adjustedSourcePos = {-sourcePos.y, -sourcePos.x, sourcePos.z};
+		// const bs::CartesianCoord adjustedListenerPos = {-listenerPos.y, -listenerPos.x, listenerPos.z};
+		SDL_Rect r = { (int)(-sourcePos.y * SCALE_FACTOR) + centerX - SQUARE_HALF_SIDE, (int)(-sourcePos.x * SCALE_FACTOR) + centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
 
 		// Draw source position in red.
 		SDL_SetRenderDrawColor(sdlRenderer_, 255, 0, 0, 255);
 		SDL_RenderDrawRect(sdlRenderer_, &r);
 		centerX += DISPLAY_SIZE / 2;
-		r = { (int)(-adjustedSourcePos.y * SCALE_FACTOR) + centerX - SQUARE_HALF_SIDE, (int)((adjustedSourcePos.z - headAltitude) * SCALE_FACTOR) + centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
+		r = { (int)(-sourcePos.y * SCALE_FACTOR) + centerX - SQUARE_HALF_SIDE, (int)((-sourcePos.z) * SCALE_FACTOR) + centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
 		SDL_RenderDrawRect(sdlRenderer_, &r);
 
 		// Draw listener position in green.
 		centerX = DISPLAY_SIZE / 4;
 		centerY = centerX;
-		r = { centerX - SQUARE_HALF_SIDE, centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
+		r = { (int)(-listenerPos.y * SCALE_FACTOR) + centerX - SQUARE_HALF_SIDE, (int)(-listenerPos.x * SCALE_FACTOR) + centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
 
 		SDL_SetRenderDrawColor(sdlRenderer_, 0, 255, 0, 255);
 		SDL_RenderDrawRect(sdlRenderer_, &r);
-		SDL_RenderDrawLine(sdlRenderer_,
-		 				centerX, centerY,
-		 				centerX, centerY - FRONT_DIR_INDICATOR_LEN);
 		centerX += DISPLAY_SIZE / 2;
-		r = { centerX - SQUARE_HALF_SIDE, centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
+		r = { (int)(-listenerPos.y * SCALE_FACTOR) + centerX - SQUARE_HALF_SIDE, (int)((-listenerPos.z) * SCALE_FACTOR) + centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
 		SDL_RenderDrawRect(sdlRenderer_, &r);
-		SDL_RenderDrawLine(sdlRenderer_,
-						   centerX, centerY,
-						   centerX + FRONT_DIR_INDICATOR_LEN, centerY);
 
 		// Present.
 		SDL_RenderPresent(sdlRenderer_);

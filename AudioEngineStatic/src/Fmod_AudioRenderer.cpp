@@ -216,6 +216,10 @@ void bs::Fmod_AudioRenderer::MoveSound(const size_t soundId, const bs::Cartesian
 	}
 }
 
+void bs::Fmod_AudioRenderer::MoveListener(const bs::CartesianCoord pos, const std::array<float, 4> quat)
+{
+}
+
 void bs::Fmod_AudioRenderer::GetSoundParams(const size_t soundId)
 {
 	assert(soundId < sounds_.size(), "Invalid soundId passed to GetSoundParams()!");

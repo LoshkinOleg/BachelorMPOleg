@@ -33,6 +33,8 @@ namespace bs
 
 		void ProcessAudio(std::vector<float>& interleavedStereoOut);
 
+		void MoveListener(const bs::CartesianCoord pos, const std::array<float, 4> quat);
+
 		const size_t bufferSize;
 		const size_t sampleRate;
 		constexpr static size_t const HRTF_RESAMPLING_STEP = 15;

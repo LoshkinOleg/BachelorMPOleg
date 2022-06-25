@@ -35,6 +35,25 @@ namespace bsExp
 
 		bs::CartesianCoord LeftControllerPos() const;
 		bs::CartesianCoord RightControllerPos() const;
+		vr::HmdMatrix34_t HmdMatrix();
+
+		static bs::CartesianCoord ToStandardAxisSystem(const bs::CartesianCoord coord)
+		{
+			return { -coord.z, -coord.x, coord.y };
+		}
+		static bs::CartesianCoord CartesianFromMatrix(const vr::HmdMatrix34_t matrix)
+		{
+			return ToStandardAxisSystem({matrix.m[0][3], matrix.m[1][3], matrix.m[2][3]});
+		};
+		static std::array<float, 4> QuaternionFromMatrix(const vr::HmdMatrix34_t m)
+		{
+			vr::HmdQuaternionf_t q;
+			q.w = std::sqrtf(1.0f + m.m[0][0] + m.m[1][1] + m.m[2][2]) / 2.0f; // Scalar
+			q.x = (m.m[2][1] - m.m[1][2]) / (4.0f * q.w);
+			q.y = (m.m[0][2] - m.m[2][0]) / (4.0f * q.w);
+			q.z = (m.m[1][0] - m.m[0][1]) / (4.0f * q.w);
+			return {q.x, q.y, q.z, q.w};
+		}
 
 	private:
 

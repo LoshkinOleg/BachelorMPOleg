@@ -13,9 +13,25 @@ bsExp::RendererManager::RendererManager():
 	// Init portaudio.
 	auto err = Pa_Initialize();
 	assert(err == paNoError, "Portaudio failed to initialize!");
+	PaDeviceIndex selectedDevice = -1;
+
+	const auto deviceCount = Pa_GetDeviceCount();
+	for (PaDeviceIndex i = 0; i < deviceCount; i++)
+	{
+		auto* pDevice = Pa_GetDeviceInfo(i);
+		const char* name = pDevice->name;
+		constexpr const char* desired = "Speakers (VIVE Pro Mutimedia Audio)";
+		if (std::strcmp(name, desired) == 0)
+		{
+			selectedDevice = i;
+			break;
+		}
+		// std::cout << pDevice->name << std::endl;
+	}
+	assert(selectedDevice >= 0 && "Failed to retrieve desired output device by name!");
 
 	PaStreamParameters outputParams{
-		Pa_GetDefaultOutputDevice(), // Oleg@self: handle this properly.
+		selectedDevice,
 		2,
 		paFloat32,
 		0.050, // Oleg@self: magic number. Investigate.
@@ -236,6 +252,12 @@ void bsExp::RendererManager::MoveAllSounds(const bs::CartesianCoord coord)
 	{
 		fmod_renderer_.MoveSound(pair.second, coord);
 	}
+}
+
+void bsExp::RendererManager::MoveListener(const bs::CartesianCoord pos, const std::array<float, 4> quat)
+{
+	threeDTI_renderer_.MoveListener(pos, quat);
+	fmod_renderer_.MoveListener(pos, quat);
 }
 
 void bsExp::RendererManager::UpdateRendererParams(const RendererParams p)

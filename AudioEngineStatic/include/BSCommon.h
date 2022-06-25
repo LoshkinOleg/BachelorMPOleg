@@ -51,4 +51,6 @@ namespace bs
 	}
 
 	bool Equivalent(const bs::CartesianCoord a, const bs::CartesianCoord b);
+
+	std::array<float, 3> QuatToEuler(const std::array<float, 4> quat);
 }
