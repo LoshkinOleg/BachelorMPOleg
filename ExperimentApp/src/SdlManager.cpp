@@ -101,16 +101,14 @@ void bsExp::SdlManager::DrawSourceAndListener_(const bs::CartesianCoord sourcePo
 		constexpr const int FRONT_DIR_INDICATOR_LEN = 5;
 		int centerX = DISPLAY_SIZE / 4;
 		int centerY = centerX;
-		// const bs::CartesianCoord adjustedSourcePos = {-sourcePos.y, -sourcePos.x, sourcePos.z};
-		// const bs::CartesianCoord adjustedListenerPos = {-listenerPos.y, -listenerPos.x, listenerPos.z};
-		SDL_Rect r = { (int)(-sourcePos.y * SCALE_FACTOR) + centerX - SQUARE_HALF_SIDE, (int)(-sourcePos.x * SCALE_FACTOR) + centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
 
 		// Draw source position in red.
+		SDL_Rect r = { (int)(-sourcePos.y * SCALE_FACTOR) + centerX - SQUARE_HALF_SIDE, (int)(-sourcePos.x * SCALE_FACTOR) + centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
 		SDL_SetRenderDrawColor(sdlRenderer_, 255, 0, 0, 255);
-		SDL_RenderDrawRect(sdlRenderer_, &r);
+		SDL_RenderDrawRect(sdlRenderer_, &r); // Top down view
 		centerX += DISPLAY_SIZE / 2;
 		r = { (int)(-sourcePos.y * SCALE_FACTOR) + centerX - SQUARE_HALF_SIDE, (int)((-sourcePos.z) * SCALE_FACTOR) + centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
-		SDL_RenderDrawRect(sdlRenderer_, &r);
+		SDL_RenderDrawRect(sdlRenderer_, &r); // Back to front view
 
 		// Draw listener position in green.
 		centerX = DISPLAY_SIZE / 4;
@@ -118,10 +116,10 @@ void bsExp::SdlManager::DrawSourceAndListener_(const bs::CartesianCoord sourcePo
 		r = { (int)(-listenerPos.y * SCALE_FACTOR) + centerX - SQUARE_HALF_SIDE, (int)(-listenerPos.x * SCALE_FACTOR) + centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
 
 		SDL_SetRenderDrawColor(sdlRenderer_, 0, 255, 0, 255);
-		SDL_RenderDrawRect(sdlRenderer_, &r);
+		SDL_RenderDrawRect(sdlRenderer_, &r); // Top down view
 		centerX += DISPLAY_SIZE / 2;
 		r = { (int)(-listenerPos.y * SCALE_FACTOR) + centerX - SQUARE_HALF_SIDE, (int)((-listenerPos.z) * SCALE_FACTOR) + centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
-		SDL_RenderDrawRect(sdlRenderer_, &r);
+		SDL_RenderDrawRect(sdlRenderer_, &r); // Back to front view
 
 		// Present.
 		SDL_RenderPresent(sdlRenderer_);
