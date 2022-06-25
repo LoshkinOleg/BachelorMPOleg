@@ -79,36 +79,36 @@ void bs::SumSignals(std::vector<float>& out, const std::vector<float>& other)
 bool bs::Equivalent(const bs::CartesianCoord a, const bs::CartesianCoord b)
 {
 	constexpr const float epsilon = 0.001f;
-	return std::fabsf(a.x - b.x) < epsilon && std::fabsf(a.y - b.y) && std::fabsf(a.z - b.z);
+	return std::fabsf(a.x - b.x) < epsilon && std::fabsf(a.y - b.y) < epsilon && std::fabsf(a.z - b.z) < epsilon;
 }
 
-std::array<float, 3> bs::QuatToEuler(const std::array<float, 4> quat)
+bs::Euler bs::QuatToEuler(const bs::Quaternion quat)
 {
 	// Taken from: https://steamcommunity.com/app/250820/discussions/0/1728711392744037419/
 
 	std::array<float, 3> v;
-	const float test = quat[0] * quat[1] + quat[2] * quat[3];
+	const float test = quat.x * quat.y + quat.z * quat.w;
 	constexpr const float pi = 3.14159f;
 	if (test > 0.499f)
 	{ // singularity at north pole
-		v[0] = 2.0f * std::atan2f(quat[0], quat[3]); // heading
+		v[0] = 2.0f * std::atan2f(quat.x, quat.w); // heading
 		v[1] = pi / 2.0f; // attitude
 		v[2] = 0; // bank
 		return v;
 	}
 	if (test < -0.499f)
 	{ // singularity at south pole
-		v[0] = -2.0f * std::atan2f(quat[0], quat[3]); // headingq
+		v[0] = -2.0f * std::atan2f(quat.x, quat.w); // headingq
 		v[1] = pi / 2.0f; // attitude
 		v[2] = 0; // bank
 		return v;
 	}
-	const float sqx = quat[0] * quat[0];
-	const float sqy = quat[1] * quat[1];
-	const float sqz = quat[2] * quat[2];
-	v[0] = std::atan2f(2.0f * quat[1] * quat[3] - 2.0f * quat[0] * quat[2], 1.0f - 2.0f * sqy - 2.0f * sqz); // heading
+	const float sqx = quat.x * quat.x;
+	const float sqy = quat.y * quat.y;
+	const float sqz = quat.z * quat.z;
+	v[0] = std::atan2f(2.0f * quat.y * quat.w - 2.0f * quat.x * quat.z, 1.0f - 2.0f * sqy - 2.0f * sqz); // heading
 	v[1] = std::asinf(2.0f * test); // attitude
-	v[2] = std::atan2f(2.0f * quat[0] * quat[3] - 2 * quat[1] * quat[2], 1.0f - 2.0f * sqx - 2.0f * sqz); // bank
+	v[2] = std::atan2f(2.0f * quat.x * quat.w - 2 * quat.y * quat.z, 1.0f - 2.0f * sqx - 2.0f * sqz); // bank
 	return v;
 }
 

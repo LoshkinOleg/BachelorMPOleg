@@ -21,7 +21,7 @@ bsExp::Application::Application(const size_t randSeed):
 	sdlManager_.RegisterCallback(SdlManager::Input::NumMinus, [this]() { logger_.LogNewSoundPos(currentSoundPos_); });
 	sdlManager_.RegisterCallback(SdlManager::Input::Backspace, [this]()
 	{
-		const auto mat = openVrManager_.HmdMatrix();
+		const auto mat = openVrManager_.GetHeadsetMatrix();
 
 		logger_.LogHmdPosAndRot(hmdPos_, bs::QuatToEuler(hmdQuat_));
 	});

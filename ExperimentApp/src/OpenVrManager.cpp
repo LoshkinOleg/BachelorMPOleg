@@ -2,8 +2,11 @@
 
 #include <cassert>
 
+#undef USE_DUMMY_INPUTS
+
 bsExp::OpenVrManager::OpenVrManager()
 {
+#ifndef USE_DUMMY_INPUTS
 	vr::EVRInitError err;
 	context_ = vr::VR_Init(&err, vr::EVRApplicationType::VRApplication_Background);
 	assert(err == vr::EVRInitError::VRInitError_None && "Failed to initialize openvr!");
@@ -24,11 +27,18 @@ bsExp::OpenVrManager::OpenVrManager()
 			}
 		}
 	}
+#else
+
+#endif // USE_DUMMY_INPUTS
 }
 
 bsExp::OpenVrManager::~OpenVrManager()
 {
+#ifndef USE_DUMMY_INPUTS
 	vr::VR_Shutdown();
+#else
+
+#endif // USE_DUMMY_INPUTS
 }
 
 void bsExp::OpenVrManager::RegisterCallback(Input input, std::function<void(void)> callback)
@@ -38,6 +48,11 @@ void bsExp::OpenVrManager::RegisterCallback(Input input, std::function<void(void
 
 void bsExp::OpenVrManager::Update()
 {
+#ifndef USE_DUMMY_INPUTS
+	vr::TrackedDevicePose_t pose;
+	context_->GetDeviceToAbsoluteTrackingPose(vr::ETrackingUniverseOrigin::TrackingUniverseStanding, 0.0f, &pose, 1);
+	hmdMat_ = pose.mDeviceToAbsoluteTracking;
+
 	while (context_->PollNextEvent(&event_, sizeof(vr::VREvent_t)))
 	{
 		if (event_.trackedDeviceIndex != leftControllerId && event_.trackedDeviceIndex != rightControllerId) continue;
@@ -99,9 +114,12 @@ void bsExp::OpenVrManager::Update()
 			break;
 		}
 	}
+#else
+
+#endif // USE_DUMMY_INPUTS
 }
 
-bs::CartesianCoord bsExp::OpenVrManager::LeftControllerPos() const
+vr::HmdVector3_t bsExp::OpenVrManager::LeftControllerPos() const
 {
 	return leftControllerPos_;
 }
@@ -113,7 +131,24 @@ bs::CartesianCoord bsExp::OpenVrManager::RightControllerPos() const
 
 vr::HmdMatrix34_t bsExp::OpenVrManager::HmdMatrix()
 {
-	vr::TrackedDevicePose_t pose;
-	context_->GetDeviceToAbsoluteTrackingPose(vr::ETrackingUniverseOrigin::TrackingUniverseStanding, 0.0f, &pose, 1);
-	return pose.mDeviceToAbsoluteTracking;
+	return hmdMat_;
 }
+
+#ifdef USE_DUMMY_INPUTS
+void bsExp::OpenVrManager::SetHmdPos(const bs::CartesianCoord coord)
+{
+	
+}
+
+void bsExp::OpenVrManager::SetHmdRot(const vr::HmdQuaternionf_t quat)
+{
+}
+
+void bsExp::OpenVrManager::SetLeftControllerPos(const bs::CartesianCoord coord)
+{
+}
+
+void bsExp::OpenVrManager::SetRightControllerPos(const bs::CartesianCoord coord)
+{
+}
+#endif // USE_DUMMY_INPUTS

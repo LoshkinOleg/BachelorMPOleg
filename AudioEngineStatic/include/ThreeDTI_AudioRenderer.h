@@ -33,7 +33,7 @@ namespace bs
 
 		void ProcessAudio(std::vector<float>& interleavedStereoOut);
 
-		void MoveListener(const bs::CartesianCoord pos, const std::array<float, 4> quat);
+		void MoveListener(const bs::CartesianCoord pos, const bs::Quaternion quat);
 
 		const size_t bufferSize;
 		const size_t sampleRate;

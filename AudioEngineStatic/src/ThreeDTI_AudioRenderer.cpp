@@ -108,10 +108,10 @@ void bs::ThreeDTI_AudioRenderer::ProcessAudio(std::vector<float>& interleavedSte
 	}
 }
 
-void bs::ThreeDTI_AudioRenderer::MoveListener(const bs::CartesianCoord pos, const std::array<float, 4> quat)
+void bs::ThreeDTI_AudioRenderer::MoveListener(const bs::CartesianCoord pos, const bs::Quaternion quat)
 {
 	auto t = listener_->GetListenerTransform();
 	t.SetPosition({pos.x, pos.y, pos.z});
-	t.SetOrientation({quat[3], quat[0], quat[1], quat[2]});
+	t.SetOrientation({quat.w, quat.x, quat.y, quat.z});
 	listener_->SetListenerTransform(t);
 }

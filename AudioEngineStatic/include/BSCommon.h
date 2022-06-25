@@ -33,6 +33,26 @@ namespace bs
 		float azimuth{ 0 }, elevation{ 0 }, radius{ 0 };
 	};
 
+	struct Mat3x4
+	{
+		float m[3][4] = {0};
+	};
+
+	struct Quaternion
+	{
+		float w, x, y, z;
+	};
+
+	struct Euler
+	{
+		float x, y, z;
+	};
+
+	struct Radians
+	{
+		float x, y, z;
+	};
+
 	std::vector<float> LoadWav(const char* path, const uint32_t nrOfChannels, const uint32_t sampleRate);
 
 	std::array<float, 3> ToStdArray(const CartesianCoord coord); // Oleg@self: inline those
@@ -49,8 +69,13 @@ namespace bs
 		constexpr const float pi = 3.14159265359f;
 		return euler * (pi / 180.0f);
 	}
+	constexpr inline float ToEuler(const float radians)
+	{
+		constexpr const float pi = 3.14159265359f;
+		return radians * (180.0f / pi);
+	}
 
 	bool Equivalent(const bs::CartesianCoord a, const bs::CartesianCoord b);
 
-	std::array<float, 3> QuatToEuler(const std::array<float, 4> quat);
+	bs::Euler QuatToEuler(const bs::Quaternion quat);
 }
