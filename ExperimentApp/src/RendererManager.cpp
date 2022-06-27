@@ -13,6 +13,10 @@ bsExp::RendererManager::RendererManager():
 	// Init portaudio.
 	auto err = Pa_Initialize();
 	assert(err == paNoError, "Portaudio failed to initialize!");
+
+#ifdef USE_DUMMY_INPUTS
+	const PaDeviceIndex selectedDevice = Pa_GetDefaultOutputDevice();
+#else
 	PaDeviceIndex selectedDevice = -1;
 
 	const auto deviceCount = Pa_GetDeviceCount();
@@ -29,6 +33,7 @@ bsExp::RendererManager::RendererManager():
 		// std::cout << pDevice->name << std::endl;
 	}
 	assert(selectedDevice >= 0 && "Failed to retrieve desired output device by name!");
+#endif // USE_DUMMY_INPUTS
 
 	PaStreamParameters outputParams{
 		selectedDevice,

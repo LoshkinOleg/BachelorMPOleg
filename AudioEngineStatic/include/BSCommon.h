@@ -44,7 +44,7 @@ namespace bs
 
 		CartesianCoord() = default;
 		CartesianCoord(const float x, const float y, const float z): x(x), y(y), z(z) {}
-		CartesianCoord(const SphericalCoord& coord);
+		explicit CartesianCoord(const SphericalCoord& coord);
 		CartesianCoord& operator=(const SphericalCoord& coord);
 
 		float GetMagnitude() const;
@@ -65,7 +65,7 @@ namespace bs
 
 		SphericalCoord() = default;
 		SphericalCoord(const float a, const float e, const float r): a(a), e(e), r(r) {}
-		SphericalCoord(const CartesianCoord& coord);
+		explicit SphericalCoord(const CartesianCoord& coord);
 		SphericalCoord& operator=(const CartesianCoord& coord);
 	};
 
@@ -75,7 +75,7 @@ namespace bs
 
 		Euler() = default;
 		Euler(const float r, const float p, const float y): r(r), p(p), y(y) {}
-		Euler(Radians& rad);
+		explicit Euler(Radians& rad);
 		Euler& operator=(Radians& rad);
 	};
 
@@ -85,7 +85,7 @@ namespace bs
 
 		Radians() = default;
 		Radians(const float r, const float p, const float y): r(r), p(p), y(y) {}
-		Radians(Euler& deg);
+		explicit Radians(Euler& deg);
 		Radians& operator=(Euler& deg);
 	};
 
@@ -107,6 +107,15 @@ namespace bs
 		float	m00{ 1.0f }, m01{ 0.0f }, m02{ 0.0f },
 				m10{ 0.0f }, m11{ 1.0f }, m12{ 0.0f },
 				m20{ 0.0f }, m21{ 0.0f }, m22{ 1.0f };
+
+		Mat3x3() = default;
+		explicit Mat3x3(const Quaternion quat);
+		Mat3x3(const float m00, const float m01, const float m02, 
+			   const float m10, const float m11, const float m12,
+			   const float m20, const float m21, const float m22):
+			m00(m00), m01(m01), m02(m02),
+			m10(m10), m11(m11), m12(m12),
+			m20(m20), m21(m21), m22(m22){}
 
 		Mat3x3 GetTranspose() const;
 	};

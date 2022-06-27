@@ -67,7 +67,7 @@ void bs::ThreeDTI_SoundMaker::SetPosition(const bs::CartesianCoord coord)
 
 void bs::ThreeDTI_SoundMaker::SetPosition(const bs::SphericalCoord coord)
 {
-	const bs::CartesianCoord cartCoord = coord;
+	const auto cartCoord = bs::CartesianCoord(coord);
 	SetPosition(cartCoord);
 }
 

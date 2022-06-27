@@ -2,7 +2,7 @@
 
 bs::CartesianCoord bsExp::RandomEngine::GenCartesian(const float headAltitude)
 {
-	bs::CartesianCoord c = GenSpherical();
+	auto c = bs::CartesianCoord(GenSpherical());
 	c.z += headAltitude;
 	return c;
 }

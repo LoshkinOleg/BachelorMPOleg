@@ -93,9 +93,10 @@ bs::CartesianCoord::CartesianCoord(const SphericalCoord& coord):
 
 bs::CartesianCoord& bs::CartesianCoord::operator=(const SphericalCoord& coord)
 {
-	return {	coord.r * sinf(coord.e) * cosf(coord.a),
-				coord.r * sinf(coord.e) * sinf(coord.a),
-				coord.r * cosf(coord.e) };
+	x = coord.r * sinf(coord.e) * cosf(coord.a);
+	y = coord.r * sinf(coord.e) * sinf(coord.a);
+	z = coord.r * cosf(coord.e);
+	return *this;
 }
 
 bs::SphericalCoord::SphericalCoord(const CartesianCoord& coord)
@@ -147,7 +148,7 @@ bs::Radians bs::Quaternion::GetRadians() const
 
 bs::Euler bs::Quaternion::GetEuler() const
 {
-	return {GetRadians()};
+	return bs::Euler(GetRadians());
 }
 
 bs::Euler::Euler(Radians& rad): r(ToEuler(rad.r)), p(ToEuler(rad.p)), y(ToEuler(rad.y)) {}
@@ -170,26 +171,49 @@ bs::Radians& bs::Radians::operator=(Euler& deg)
 	return *this;
 }
 
+bs::Mat3x3::Mat3x3(const Quaternion quat):
+	m00(2.0f * (quat.w * quat.w + quat.i * quat.i) - 1.0f),		m01(2.0f * (quat.i * quat.j - quat.w * quat.k)),			m02(2.0f * (quat.i * quat.k + quat.w * quat.j)),
+	m10(2.0f * (quat.i * quat.j + quat.w * quat.k)),			m11(2.0f * (quat.w * quat.w + quat.j * quat.j) - 1.0f),		m12(2.0f * (quat.j * quat.k - quat.w * quat.i)),
+	m20(2.0f * (quat.i * quat.k - quat.w * quat.j)),			m21(2.0f * (quat.j * quat.k + quat.w * quat.i)),			m22(2.0f * (quat.w * quat.w + quat.k * quat.k) - 1.0f)
+{
+	// Taken from: https://automaticaddison.com/how-to-convert-a-quaternion-to-a-rotation-matrix/
+}
+
 bs::Mat3x3 bs::Mat3x3::GetTranspose() const
 {
-	assert(false && "Implement this.");
-	return {};
+	return
+	{
+		m00, m10, m20,
+		m01, m11, m21,
+		m02, m12, m22
+	};
 }
 
 bs::Mat3x3 bs::Mat3x4::GetRotationMatrix() const
 {
-	assert(false && "Implement this.");
-	return {};
+	return
+	{
+		m00, m01, m02,
+		m10, m11, m12,
+		m20, m21, m22
+	};
 }
 
 bs::CartesianCoord bs::Mat3x4::GetPosition() const
 {
-	assert(false && "Implement this.");
-	return {};
+	return {m03, m13, m23};
 }
 
 bs::Quaternion bs::Mat3x4::GetQuaternion() const
 {
-	assert(false && "Implement this.");
-	return {};
+	// Taken from: https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
+
+	const float w = std::sqrtf(1.0f + m00 + m11 + m22) * 0.5f;
+	return
+	{
+		w,
+		(m21 - m12) / (4.0f * w),
+		(m02 - m20) / (4.0f * w),
+		(m10 - m01) / (4.0f * w)
+	};
 }

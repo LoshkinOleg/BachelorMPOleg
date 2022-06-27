@@ -2,8 +2,6 @@
 
 #include <cassert>
 
-// #undef USE_DUMMY_INPUTS
-
 bsExp::OpenVrManager::OpenVrManager()
 {
 #ifndef USE_DUMMY_INPUTS
@@ -217,8 +215,8 @@ bs::CartesianCoord bsExp::OpenVrManager::ToStandardBasis_(const vr::HmdVector3_t
 }
 bs::Quaternion bsExp::OpenVrManager::ToStandardBasis_(const vr::HmdQuaternionf_t quat)
 {
-	assert(false && "Implement this."); // TODO
-	return {};
+	// No operations needed? https://stackoverflow.com/questions/1274936/flipping-a-quaternion-from-right-to-left-handed-coordinates
+	return {quat.w, quat.x, quat.y, quat.z};
 }
 vr::HmdVector3_t bsExp::OpenVrManager::ToHmdBasis_(const bs::CartesianCoord coord)
 {
@@ -226,18 +224,31 @@ vr::HmdVector3_t bsExp::OpenVrManager::ToHmdBasis_(const bs::CartesianCoord coor
 }
 vr::HmdQuaternionf_t bsExp::OpenVrManager::ToHmdBasis_(const bs::Quaternion quat)
 {
-	assert(false && "Implement this."); // TODO
-	return {};
+	// No operations needed? https://stackoverflow.com/questions/1274936/flipping-a-quaternion-from-right-to-left-handed-coordinates
+	return { quat.w, quat.i, quat.j, quat.k };
 }
 bs::Mat3x4 bsExp::OpenVrManager::ToStandardBasis_(const vr::HmdMatrix34_t mat)
 {
-	assert(false && "Implement this."); // TODO
-	return {};
+	const auto stdPos = ToStandardBasis_(HmdPosFromHmdMatrix_(mat));
+	const bs::Mat3x3 stdRotMat = bs::Mat3x3(ToStandardBasis_(HmdQuatFromHmdMatrix_(mat)));
+	
+	return
+	{
+		stdRotMat.m00, stdRotMat.m01, stdRotMat.m02, stdPos.x,
+		stdRotMat.m10, stdRotMat.m11, stdRotMat.m12, stdPos.y,
+		stdRotMat.m20, stdRotMat.m21, stdRotMat.m22, stdPos.z
+	};
 }
 vr::HmdMatrix34_t bsExp::OpenVrManager::ToHmdBasis_(const bs::Mat3x4 mat)
 {
-	assert(false && "Implement this."); // TODO
-	return {};
+	const auto hmdPos = ToHmdBasis_(mat.GetPosition());
+	const auto hmdRotMat = HmdRotMatFromHmdQuat_(ToHmdBasis_(mat.GetQuaternion()));
+	return
+	{
+		hmdRotMat.m[0][0], hmdRotMat.m[0][1], hmdRotMat.m[0][2], hmdPos.v[0],
+		hmdRotMat.m[1][0], hmdRotMat.m[1][1], hmdRotMat.m[1][2], hmdPos.v[1],
+		hmdRotMat.m[2][0], hmdRotMat.m[2][1], hmdRotMat.m[2][2], hmdPos.v[2]
+	};
 }
 vr::HmdVector3_t bsExp::OpenVrManager::HmdPosFromHmdMatrix_(const vr::HmdMatrix34_t matrix)
 {
@@ -309,12 +320,25 @@ vr::HmdQuaternionf_t bsExp::OpenVrManager::HmdQuatFromHmdMatrix_(const vr::HmdMa
 
 vr::HmdMatrix33_t bsExp::OpenVrManager::HmdRotMatFromHmdQuat_(const vr::HmdQuaternionf_t quat)
 {
-	assert(false && "Implement this.");
-	return {};
+	// Taken from: https://automaticaddison.com/how-to-convert-a-quaternion-to-a-rotation-matrix/
+	return
+	{
+		(2.0f * (quat.w * quat.w + quat.x * quat.x) - 1.0f),	(2.0f * (quat.x * quat.y - quat.w * quat.z)),			(2.0f * (quat.x * quat.z + quat.w * quat.y)),
+		(2.0f * (quat.x * quat.y + quat.w * quat.z)),			(2.0f * (quat.w * quat.w + quat.y * quat.y) - 1.0f),	(2.0f * (quat.y * quat.z - quat.w * quat.x)),
+		(2.0f * (quat.x * quat.z - quat.w * quat.y)),			(2.0f * (quat.y * quat.z + quat.w * quat.x)),			(2.0f * (quat.w * quat.w + quat.z * quat.z) - 1.0f)
+	};
 }
 
 vr::HmdQuaternionf_t bsExp::OpenVrManager::HmdQuatFromHmdRotMat(const vr::HmdMatrix33_t matrix)
 {
-	assert(false && "Implement this.");
-	return {};
+	// Taken from: https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
+	const auto& m = matrix.m; // Just an alias.
+	const float w = std::sqrtf(1.0f + m[0][0] + m[1][1] + m[2][2]) * 0.5f;
+	return
+	{
+		w,
+		(m[2][1] - m[1][2]) / (4.0f * w),
+		(m[0][2] - m[2][0]) / (4.0f * w),
+		(m[1][0] - m[0][1]) / (4.0f * w)
+	};
 }
