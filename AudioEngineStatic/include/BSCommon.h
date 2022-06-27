@@ -93,7 +93,10 @@ namespace bs
 	{
 		float w{ 1.0f }, i{ 0.0f }, j{ 0.0f }, k{ 0.0f };
 
-		Quaternion GetInverse() const;
+		Quaternion(const float w, const float i, const float j, const float k): w(w), i(i), j(j), k(k) {}
+		Quaternion(const bs::Radians radians);
+		Quaternion(const bs::Euler euler);
+
 		Radians GetRadians() const;
 		Euler GetEuler() const;
 	};

@@ -101,19 +101,29 @@ bs::CartesianCoord& bs::CartesianCoord::operator=(const SphericalCoord& coord)
 
 bs::SphericalCoord::SphericalCoord(const CartesianCoord& coord)
 {
-	assert(false && "Implement this.");
+	// Taken from https://keisan.casio.com/exec/system/1359533867
+
+	r = std::sqrtf(coord.x * coord.x + coord.y * coord.y + coord.z * coord.z);
+	a = std::atanf(coord.y / coord.x);
+	e = std::atanf(std::sqrtf(coord.x * coord.x + coord.y * coord.y) / coord.z);
 }
 
 bs::SphericalCoord& bs::SphericalCoord::operator=(const CartesianCoord& coord)
 {
-	assert(false && "Implement this.");
+	r = std::sqrtf(coord.x * coord.x + coord.y * coord.y + coord.z * coord.z);
+	a = std::atanf(coord.y / coord.x);
+	e = std::atanf(std::sqrtf(coord.x * coord.x + coord.y * coord.y) / coord.z);
 	return *this;
 }
 
-bs::Quaternion bs::Quaternion::GetInverse() const
+bs::Quaternion::Quaternion(const bs::Radians radians)
 {
-	assert(false && "Implement this.");
-	return {};
+	assert(false && "Implement this");
+}
+
+bs::Quaternion::Quaternion(const bs::Euler euler)
+{
+	assert(false && "Implement this");
 }
 
 bs::Radians bs::Quaternion::GetRadians() const
