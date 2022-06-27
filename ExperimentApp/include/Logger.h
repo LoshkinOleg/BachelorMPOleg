@@ -21,7 +21,7 @@ namespace bsExp
 		void LogRendererChange(const char* rendererName);
 		void LogNoiseToggle(const bool enabled);
 		void LogNewSoundPos(const bs::CartesianCoord coord);
-		void LogHmdPosAndRot(const bs::CartesianCoord pos, const std::array<float, 3> euler);
+		void LogHeadSetPosAndRot(const bs::CartesianCoord pos, const bs::Euler euler);
 
 		constexpr static const char* const LOGS_DIR = "experimentData";
 

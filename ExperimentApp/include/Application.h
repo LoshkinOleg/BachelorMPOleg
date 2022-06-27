@@ -35,10 +35,6 @@ namespace bsExp
 		Logger logger_{};
 		RandomEngine rndEngine_;
 
-		bs::CartesianCoord currentSoundPos_{};
-		bs::CartesianCoord leftControllerPos_{};
-		bs::CartesianCoord rightControllerPos_{};
-		bs::CartesianCoord hmdPos_{};
-		std::array<float, 4> hmdQuat_{};
+		bs::Mat3x4 sourceTransform_{};
 	};
 }

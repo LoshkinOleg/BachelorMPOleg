@@ -254,10 +254,10 @@ void bsExp::RendererManager::MoveAllSounds(const bs::CartesianCoord coord)
 	}
 }
 
-void bsExp::RendererManager::MoveListener(const bs::CartesianCoord pos, const std::array<float, 4> quat)
+void bsExp::RendererManager::SetListenerTransform(const bs::Mat3x4& mat)
 {
-	threeDTI_renderer_.MoveListener(pos, quat);
-	fmod_renderer_.MoveListener(pos, quat);
+	threeDTI_renderer_.MoveListener(mat);
+	fmod_renderer_.MoveListener(mat);
 }
 
 void bsExp::RendererManager::UpdateRendererParams(const RendererParams p)

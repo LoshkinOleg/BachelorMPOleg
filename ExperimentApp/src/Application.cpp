@@ -12,18 +12,16 @@ bsExp::Application::Application(const size_t randSeed):
 	sdlManager_.RegisterCallback(SdlManager::Input::NumSix, [this]() { rendererManager_.PauseSound("sweep"); });
 	sdlManager_.RegisterCallback(SdlManager::Input::NumPlus, [this]() { SetRandomSourcePos_(); });
 
-	sdlManager_.RegisterCallback(SdlManager::Input::ArrowUp, [this]() { currentSoundPos_.x += 0.1f; });
-	sdlManager_.RegisterCallback(SdlManager::Input::ArrowDown, [this]() { currentSoundPos_.x -= 0.1f; });
-	sdlManager_.RegisterCallback(SdlManager::Input::ArrowLeft, [this]() { currentSoundPos_.y += 0.1f; });
-	sdlManager_.RegisterCallback(SdlManager::Input::ArrowRight, [this]() { currentSoundPos_.y -= 0.1f; });
-	sdlManager_.RegisterCallback(SdlManager::Input::NumMultiply, [this]() { currentSoundPos_.z += 0.1f; });
-	sdlManager_.RegisterCallback(SdlManager::Input::NumDivide, [this]() { currentSoundPos_.z -= 0.1f; });
-	sdlManager_.RegisterCallback(SdlManager::Input::NumMinus, [this]() { logger_.LogNewSoundPos(currentSoundPos_); });
+	sdlManager_.RegisterCallback(SdlManager::Input::ArrowUp, [this]() { sourceTransform_.m03 += 0.1f; });
+	sdlManager_.RegisterCallback(SdlManager::Input::ArrowDown, [this]() { sourceTransform_.m03 -= 0.1f; });
+	sdlManager_.RegisterCallback(SdlManager::Input::ArrowLeft, [this]() { sourceTransform_.m13 += 0.1f; });
+	sdlManager_.RegisterCallback(SdlManager::Input::ArrowRight, [this]() { sourceTransform_.m13 -= 0.1f; });
+	sdlManager_.RegisterCallback(SdlManager::Input::NumMultiply, [this]() { sourceTransform_.m23 += 0.1f; });
+	sdlManager_.RegisterCallback(SdlManager::Input::NumDivide, [this]() { sourceTransform_.m23 -= 0.1f; });
+	sdlManager_.RegisterCallback(SdlManager::Input::NumMinus, [this]() { logger_.LogNewSoundPos(sourceTransform_.GetPosition()); });
 	sdlManager_.RegisterCallback(SdlManager::Input::Backspace, [this]()
 	{
-		const auto mat = openVrManager_.GetHeadsetMatrix();
-
-		logger_.LogHmdPosAndRot(hmdPos_, bs::QuatToEuler(hmdQuat_));
+		logger_.LogHeadSetPosAndRot(openVrManager_.GetHeadsetPos(), openVrManager_.GetHeadsetRot().GetEuler());
 	});
 
 	sdlManager_.RegisterCallback(SdlManager::Input::Spacebar, [this]() { SelectRandomRenderer_(); });
@@ -36,12 +34,6 @@ bsExp::Application::Application(const size_t randSeed):
 	openVrManager_.RegisterCallback(OpenVrManager::Input::RightGrip, [this]() { OnRightGrip_(); });
 	openVrManager_.RegisterCallback(OpenVrManager::Input::RightPad, [this]() { OnRightPad_(); });
 	openVrManager_.RegisterCallback(OpenVrManager::Input::RightMenu, [this]() { OnRightMenu_(); });
-	openVrManager_.RegisterCallback(OpenVrManager::Input::LeftGrip, [this]()
-	{
-		const auto mat = openVrManager_.HmdMatrix();
-
-		logger_.LogHmdPosAndRot(hmdPos_, bs::QuatToEuler(hmdQuat_));
-	});
 
 	SetRandomSourcePos_();
 	SelectRandomRenderer_();
@@ -54,13 +46,8 @@ int bsExp::Application::RunProgram()
 	{
 		rendererManager_.CallImplementationsUpdates();
 		openVrManager_.Update();
-		leftControllerPos_ = openVrManager_.LeftControllerPos();
-		rightControllerPos_ = openVrManager_.RightControllerPos();
-		hmdPos_ = openVrManager_.CartesianFromMatrix(openVrManager_.HmdMatrix());
-		hmdQuat_ = openVrManager_.QuaternionFromMatrix(openVrManager_.HmdMatrix());
-		rendererManager_.MoveAllSounds(currentSoundPos_);
-		rendererManager_.MoveListener(hmdPos_, hmdQuat_);
-		shutdown = sdlManager_.Update(currentSoundPos_, hmdPos_, RendererManager::HEAD_ALTITUDE);
+		rendererManager_.MoveAllSounds(sourceTransform_.GetPosition());
+		shutdown = sdlManager_.Update(sourceTransform_, openVrManager_.GetHeadsetMat(), RendererManager::HEAD_ALTITUDE);
 	}
 
 	return 0;
@@ -89,18 +76,21 @@ void bsExp::Application::SelectRandomRenderer_()
 
 void bsExp::Application::SetRandomSourcePos_()
 {
-	currentSoundPos_ = rndEngine_.GenCartesian(rendererManager_.HEAD_ALTITUDE);
-	logger_.LogNewSoundPos(currentSoundPos_);
+	const auto pos = rndEngine_.GenCartesian(rendererManager_.HEAD_ALTITUDE);
+	sourceTransform_.m03 = pos.x;
+	sourceTransform_.m13 = pos.y;
+	sourceTransform_.m23 = pos.z;
+	logger_.LogNewSoundPos(pos);
 }
 
 void bsExp::Application::OnLeftTrigger_()
 {
-	logger_.LogControllerPosition("Participant controller", leftControllerPos_);
+	logger_.LogControllerPosition("Participant controller", openVrManager_.GetLeftControllerPos());
 }
 
 void bsExp::Application::OnRightTrigger_()
 {
-	logger_.LogControllerPosition("Scientist controller", rightControllerPos_);
+	logger_.LogControllerPosition("Scientist controller", openVrManager_.GetRightControllerPos());
 }
 
 void bsExp::Application::OnRightGrip_()

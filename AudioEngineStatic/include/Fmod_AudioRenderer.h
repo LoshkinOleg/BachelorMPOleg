@@ -26,7 +26,7 @@ namespace bs
 		void UpdateRendererParams(const float headAltitude);
 
 		size_t CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize);
-		FMOD::Sound& GetSound(const size_t soundId);
+		FMOD::Sound& GetSound(const size_t soundId);  // Oleg@self: return an abstraction of a sound instead.
 
 		void PlaySound(const size_t soundId);
 		void PauseSound(const size_t soundId);
@@ -36,7 +36,7 @@ namespace bs
 		void UpdateSoundParams(const size_t soundId);
 		void MoveSound(const size_t soundId, const bs::CartesianCoord coord);
 
-		void MoveListener(const bs::CartesianCoord pos, const std::array<float, 4> quat);
+		void MoveListener(const bs::Mat3x4& mat);
 
 		void Update();
 		void StopAllSounds();

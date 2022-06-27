@@ -33,23 +33,6 @@ std::vector<float> bs::LoadWav(const char* path, const uint32_t desiredNrOfChane
 	return returnVal;
 }
 
-std::array<float, 3> bs::ToStdArray(const CartesianCoord coord)
-{
-	return {coord.x, coord.y, coord.z};
-}
-
-std::array<float, 3> bs::ToStdArray(const SphericalCoord coord)
-{
-	return {coord.azimuth, coord.elevation, coord.radius};
-}
-
-bs::CartesianCoord bs::ToCartesian(const SphericalCoord coord)
-{
-	return {coord.radius * sinf(coord.elevation) * cosf(coord.azimuth),
-			coord.radius * sinf(coord.elevation) * sinf(coord.azimuth),
-			coord.radius * cosf(coord.elevation)};
-}
-
 float bs::RemapToRange(const float value, const float inMin, const float inMax, const float outMin, const float outMax)
 {
 	return outMin + (value - inMin) * (outMax - outMin) / (inMax - inMin);
@@ -76,54 +59,137 @@ void bs::SumSignals(std::vector<float>& out, const std::vector<float>& other)
 	}
 }
 
-bool bs::Equivalent(const bs::CartesianCoord a, const bs::CartesianCoord b)
-{
-	constexpr const float epsilon = 0.001f;
-	return std::fabsf(a.x - b.x) < epsilon && std::fabsf(a.y - b.y) < epsilon && std::fabsf(a.z - b.z) < epsilon;
-}
-
-bs::Euler bs::QuatToEuler(const bs::Quaternion quat)
-{
-	// Taken from: https://steamcommunity.com/app/250820/discussions/0/1728711392744037419/
-
-	std::array<float, 3> v;
-	const float test = quat.x * quat.y + quat.z * quat.w;
-	constexpr const float pi = 3.14159f;
-	if (test > 0.499f)
-	{ // singularity at north pole
-		v[0] = 2.0f * std::atan2f(quat.x, quat.w); // heading
-		v[1] = pi / 2.0f; // attitude
-		v[2] = 0; // bank
-		return v;
-	}
-	if (test < -0.499f)
-	{ // singularity at south pole
-		v[0] = -2.0f * std::atan2f(quat.x, quat.w); // headingq
-		v[1] = pi / 2.0f; // attitude
-		v[2] = 0; // bank
-		return v;
-	}
-	const float sqx = quat.x * quat.x;
-	const float sqy = quat.y * quat.y;
-	const float sqz = quat.z * quat.z;
-	v[0] = std::atan2f(2.0f * quat.y * quat.w - 2.0f * quat.x * quat.z, 1.0f - 2.0f * sqy - 2.0f * sqz); // heading
-	v[1] = std::asinf(2.0f * test); // attitude
-	v[2] = std::atan2f(2.0f * quat.x * quat.w - 2 * quat.y * quat.z, 1.0f - 2.0f * sqx - 2.0f * sqz); // bank
-	return v;
-}
-
-float bs::CartesianCoord::Magnitude() const
+float bs::CartesianCoord::GetMagnitude() const
 {
 	return std::sqrtf(x * x + y * y + z * z);
 }
 
-bs::CartesianCoord bs::CartesianCoord::Normalized() const
+bs::CartesianCoord bs::CartesianCoord::GetNormalized() const
 {
-	const auto magnitude = Magnitude();
+	const auto magnitude = GetMagnitude();
 	return { x / magnitude, y / magnitude, z / magnitude };
 }
 
 bs::CartesianCoord bs::CartesianCoord::operator-(const CartesianCoord other) const
 {
 	return { x - other.x, y - other.y, z - other.z };
+}
+
+bool bs::CartesianCoord::operator==(const CartesianCoord other) const
+{
+	constexpr const float epsilon = 0.001f;
+	return std::fabsf(other.x - x) < epsilon && std::fabsf(other.y - y) < epsilon && std::fabsf(other.z - z) < epsilon;
+}
+
+bool bs::CartesianCoord::operator!=(const CartesianCoord other) const
+{
+	return !(*this == other);
+}
+
+bs::CartesianCoord::CartesianCoord(const SphericalCoord& coord):
+	x(coord.r* sinf(coord.e)* cosf(coord.a)),
+	y(coord.r* sinf(coord.e)* sinf(coord.a)),
+	z(coord.r* cosf(coord.e)){}
+
+bs::CartesianCoord& bs::CartesianCoord::operator=(const SphericalCoord& coord)
+{
+	return {	coord.r * sinf(coord.e) * cosf(coord.a),
+				coord.r * sinf(coord.e) * sinf(coord.a),
+				coord.r * cosf(coord.e) };
+}
+
+bs::SphericalCoord::SphericalCoord(const CartesianCoord& coord)
+{
+	assert(false && "Implement this.");
+}
+
+bs::SphericalCoord& bs::SphericalCoord::operator=(const CartesianCoord& coord)
+{
+	assert(false && "Implement this.");
+	return *this;
+}
+
+bs::Quaternion bs::Quaternion::GetInverse() const
+{
+	assert(false && "Implement this.");
+	return {};
+}
+
+bs::Radians bs::Quaternion::GetRadians() const
+{
+	// Taken from: https://steamcommunity.com/app/250820/discussions/0/1728711392744037419/
+
+	std::array<float, 3> v;
+	const float test = i * j + k * w;
+	constexpr const float pi = 3.14159f;
+	if (test > 0.499f)
+	{ // singularity at north pole
+		v[0] = 2.0f * std::atan2f(i, w); // heading
+		v[1] = pi / 2.0f; // attitude
+		v[2] = 0; // bank
+		return { ToEuler(v[0]), ToEuler(v[1]), ToEuler(v[2]) };
+	}
+	if (test < -0.499f)
+	{ // singularity at south pole
+		v[0] = -2.0f * std::atan2f(i, w); // headingq
+		v[1] = pi / 2.0f; // attitude
+		v[2] = 0; // bank
+		return { ToEuler(v[0]), ToEuler(v[1]), ToEuler(v[2]) };
+	}
+	const float sqx = i * i;
+	const float sqy = j * j;
+	const float sqz = k * k;
+	v[0] = std::atan2f(2.0f * j * w - 2.0f * i * k, 1.0f - 2.0f * sqy - 2.0f * sqz); // heading
+	v[1] = std::asinf(2.0f * test); // attitude
+	v[2] = std::atan2f(2.0f * i * w - 2 * j * k, 1.0f - 2.0f * sqx - 2.0f * sqz); // bank
+	return { v[0], v[1], v[2] };
+}
+
+bs::Euler bs::Quaternion::GetEuler() const
+{
+	return {GetRadians()};
+}
+
+bs::Euler::Euler(Radians& rad): r(ToEuler(rad.r)), p(ToEuler(rad.p)), y(ToEuler(rad.y)) {}
+
+bs::Euler& bs::Euler::operator=(Radians& rad)
+{
+	r = ToEuler(rad.r);
+	p = ToEuler(rad.p);
+	y = ToEuler(rad.y);
+	return *this;
+}
+
+bs::Radians::Radians(Euler& deg): r(ToRadians(deg.r)), p(ToRadians(deg.p)), y(ToRadians(deg.y)) {}
+
+bs::Radians& bs::Radians::operator=(Euler& deg)
+{
+	r = ToRadians(deg.r);
+	p = ToRadians(deg.p);
+	y = ToRadians(deg.y);
+	return *this;
+}
+
+bs::Mat3x3 bs::Mat3x3::GetTranspose() const
+{
+	assert(false && "Implement this.");
+	return {};
+}
+
+bs::Mat3x3 bs::Mat3x4::GetRotationMatrix() const
+{
+	assert(false && "Implement this.");
+	return {};
+}
+
+bs::CartesianCoord bs::Mat3x4::GetPosition() const
+{
+	assert(false && "Implement this.");
+	return {};
+}
+
+bs::Quaternion bs::Mat3x4::GetQuaternion() const
+{
+	assert(false && "Implement this.");
+	return {};
 }

@@ -31,7 +31,7 @@ void bsExp::SdlManager::RegisterCallback(Input input, std::function<void(void)> 
 	callbacks_[input].push_back(callback);
 }
 
-bool bsExp::SdlManager::Update(const bs::CartesianCoord sourcePos, const bs::CartesianCoord listenerPos, const float headAltitude)
+bool bsExp::SdlManager::Update(const bs::Mat3x4& sourceTransform, const bs::Mat3x4& listenerTransform, const float headAltitude)
 {
 	EASY_FUNCTION("SdlManager::Update");
 
@@ -67,21 +67,24 @@ bool bsExp::SdlManager::Update(const bs::CartesianCoord sourcePos, const bs::Car
 		}
 	}
 
-	DrawSourceAndListener_(sourcePos, listenerPos, headAltitude);
+	DrawSourceAndListener_(sourceTransform, listenerTransform, headAltitude);
 
 	return false;
 }
 
-void bsExp::SdlManager::DrawSourceAndListener_(const bs::CartesianCoord sourcePos, const bs::CartesianCoord listenerPos, const float headAltitude)
+void bsExp::SdlManager::DrawSourceAndListener_(const bs::Mat3x4& sourceTransform, const bs::Mat3x4& listenerTransform, const float headAltitude)
 {
 	EASY_FUNCTION("SdlManager::DrawSourceAndListener_");
 
 	static bs::CartesianCoord lastSourcePos{};
 	static bs::CartesianCoord lastListenerPos{};
 
+	const auto sourcePos = sourceTransform.GetPosition();
+	const auto listenerPos = listenerTransform.GetPosition();
+
 	if (!sdlRenderer_) return;
 
-	if (!bs::Equivalent(sourcePos, lastListenerPos) || !bs::Equivalent(listenerPos, lastListenerPos)) // Avoid visual processing if there's no change.
+	if (sourcePos != lastListenerPos || listenerPos != lastListenerPos) // Avoid visual processing if there's no change.
 	{
 		EASY_BLOCK("Drawing on display.");
 

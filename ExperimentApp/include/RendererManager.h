@@ -56,7 +56,7 @@ namespace bsExp
 
 		void MoveSound(const char* soundName, const bs::CartesianCoord coord);
 		void MoveAllSounds(const bs::CartesianCoord coord);
-		void MoveListener(const bs::CartesianCoord pos, const std::array<float, 4> quat);
+		void SetListenerTransform(const bs::Mat3x4& mat);
 
 		void UpdateRendererParams(const RendererParams p);
 		void UpdateSoundParams(const char* soundName, const SoundParams p);

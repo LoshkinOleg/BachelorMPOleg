@@ -67,13 +67,8 @@ void bs::ThreeDTI_SoundMaker::SetPosition(const bs::CartesianCoord coord)
 
 void bs::ThreeDTI_SoundMaker::SetPosition(const bs::SphericalCoord coord)
 {
-	const auto cartCoord = bs::ToCartesian(coord);
-	if (spatialized)
-	{
-		Common::CTransform t = source_->GetSourceTransform(); // Have to copy it to preserve rotation.
-		t.SetPosition(Common::CVector3(cartCoord.x, cartCoord.y, cartCoord.z)); // Oleg@self: account for axis system difference.
-		source_->SetSourceTransform(t);
-	}
+	const bs::CartesianCoord cartCoord = coord;
+	SetPosition(cartCoord);
 }
 
 void bs::ThreeDTI_SoundMaker::Play()

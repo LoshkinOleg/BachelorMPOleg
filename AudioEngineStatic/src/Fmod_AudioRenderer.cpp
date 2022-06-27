@@ -52,7 +52,7 @@ void bs::Fmod_AudioRenderer::GetRendererParams(float& outHeadAltitude) const
 	FMOD_VECTOR pos;
 	FMOD_RESULT result = context_->get3DListenerAttributes(0, &pos, nullptr, nullptr, nullptr);
 	assert(result == FMOD_OK, "Couldn't retrieve listener attributes!");
-	outHeadAltitude = pos.y; // y is up in fmod
+	outHeadAltitude = pos.y; // j is up in fmod
 }
 void bs::Fmod_AudioRenderer::UpdateRendererParams(const float headAltitude)
 {
@@ -216,8 +216,9 @@ void bs::Fmod_AudioRenderer::MoveSound(const size_t soundId, const bs::Cartesian
 	}
 }
 
-void bs::Fmod_AudioRenderer::MoveListener(const bs::CartesianCoord pos, const std::array<float, 4> quat)
+void bs::Fmod_AudioRenderer::MoveListener(const bs::Mat3x4& mat)
 {
+	assert(false && "Implement this.");
 }
 
 void bs::Fmod_AudioRenderer::GetSoundParams(const size_t soundId)
