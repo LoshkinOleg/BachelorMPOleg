@@ -75,8 +75,8 @@ namespace bs
 
 		Euler() = default;
 		Euler(const float r, const float p, const float y): r(r), p(p), y(y) {}
-		explicit Euler(Radians& rad);
-		Euler& operator=(Radians& rad);
+		explicit Euler(const Radians& rad);
+		Euler& operator=(const Radians& rad);
 	};
 
 	struct Radians
@@ -85,8 +85,8 @@ namespace bs
 
 		Radians() = default;
 		Radians(const float r, const float p, const float y): r(r), p(p), y(y) {}
-		explicit Radians(Euler& deg);
-		Radians& operator=(Euler& deg);
+		explicit Radians(const Euler& deg);
+		Radians& operator=(const Euler& deg);
 	};
 
 	struct Quaternion
@@ -96,6 +96,8 @@ namespace bs
 		Quaternion(const float w, const float i, const float j, const float k): w(w), i(i), j(j), k(k) {}
 		Quaternion(const bs::Radians radians);
 		Quaternion(const bs::Euler euler);
+
+		Quaternion operator*(const Quaternion& other) const;
 
 		Radians GetRadians() const;
 		Euler GetEuler() const;
@@ -137,6 +139,9 @@ namespace bs
 		Mat3x3 GetRotationMatrix() const;
 		CartesianCoord GetPosition() const;
 		Quaternion GetQuaternion() const;
+		CartesianCoord GetLocalFront() const;
+		CartesianCoord GetLocalUp() const;
+		CartesianCoord GetLocalLeft() const;
 	};
 
 	std::vector<float> LoadWav(const char* path, const uint32_t nrOfChannels, const uint32_t sampleRate);

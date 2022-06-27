@@ -36,7 +36,8 @@ bsExp::RendererManager::RendererManager():
 #endif // USE_DUMMY_INPUTS
 
 	PaStreamParameters outputParams{
-		selectedDevice,
+		// selectedDevice,
+		Pa_GetDefaultOutputDevice(),
 		2,
 		paFloat32,
 		0.050, // Oleg@self: magic number. Investigate.

@@ -1,6 +1,7 @@
 #include "Fmod_AudioRenderer.h"
 
 #include <cassert>
+#include <iostream>
 
 /*
 	+X is right
@@ -218,7 +219,12 @@ void bs::Fmod_AudioRenderer::MoveSound(const size_t soundId, const bs::Cartesian
 
 void bs::Fmod_AudioRenderer::MoveListener(const bs::Mat3x4& mat)
 {
-	assert(false && "Implement this.");
+	const bs::CartesianCoord bsPos = mat.GetPosition();
+	const bs::CartesianCoord bsFront = mat.GetLocalFront();
+	const bs::CartesianCoord bsUp = mat.GetLocalUp();
+	FMOD_VECTOR pos{bsPos.x, bsPos.y, bsPos.z}, front{ bsFront.x, bsFront.y, bsFront.z }, up{ bsUp.x, bsUp.y, bsUp.z };
+	auto err = context_->set3DListenerAttributes(0, &pos, nullptr, &front, &up);
+	assert(err == FMOD_OK && "Couldn't set fmod's listener 3d attributes!");
 }
 
 void bs::Fmod_AudioRenderer::GetSoundParams(const size_t soundId)
@@ -231,5 +237,29 @@ void bs::Fmod_AudioRenderer::StopAllSounds()
 	for (size_t i = 0; i < sounds_.size(); i++)
 	{
 		StopSound(i);
+	}
+}
+
+void bs::Fmod_AudioRenderer::DEBUGSetPlaybackDevice()
+{
+	int nrOfDevices;
+	auto result = context_->getNumDrivers(&nrOfDevices);
+	constexpr const char* desiredDevice = "Speakers (2- VIVE Pro Mutimedia Audio)";
+	assert(result == FMOD_OK, "Couldn't retrieve the number of playback devices for Fmod!");
+	for (int i = 0; i < nrOfDevices; i++)
+	{
+		char* name = new char[64];
+		FMOD_GUID guid;
+		int systemRate;
+		FMOD_SPEAKERMODE mode;
+		int channels;
+		result = context_->getDriverInfo(i, name, 64, &guid, &systemRate, &mode, &channels);
+		assert(result == FMOD_OK, "Couldn't retrieve name of playback device!");
+		if (strcmp(name, desiredDevice) == 0)
+		{
+			result = context_->setDriver(i);
+			assert(result == FMOD_OK, "Couldn't set playback device for fmod!");
+		}
+		delete[] name;
 	}
 }

@@ -41,6 +41,8 @@ namespace bs
 		void Update();
 		void StopAllSounds();
 
+		void DEBUGSetPlaybackDevice();
+
 		const size_t bufferSize;
 		const size_t sampleRate;
 

@@ -118,12 +118,30 @@ bs::SphericalCoord& bs::SphericalCoord::operator=(const CartesianCoord& coord)
 
 bs::Quaternion::Quaternion(const bs::Radians radians)
 {
-	assert(false && "Implement this");
+	// Taken from https://math.stackexchange.com/questions/2975109/how-to-convert-euler-angles-to-quaternions-and-get-the-same-euler-angles-back-fr
+
+	i = (std::sinf(radians.r * 0.5f) * std::cosf(radians.p * 0.5f) * std::cosf(radians.y * 0.5f)) - (std::cosf(radians.r * 0.5f) * std::sinf(radians.p * 0.5f) * std::sinf(radians.y * 0.5f));
+	j = (std::cosf(radians.r * 0.5f) * std::sinf(radians.p * 0.5f) * std::cosf(radians.y * 0.5f)) + (std::sinf(radians.r * 0.5f) * std::cosf(radians.p * 0.5f) * std::sinf(radians.y * 0.5f));
+	k = (std::cosf(radians.r * 0.5f) * std::cosf(radians.p * 0.5f) * std::sinf(radians.y * 0.5f)) - (std::sinf(radians.r * 0.5f) * std::sinf(radians.p * 0.5f) * std::cosf(radians.y * 0.5f));
+	w = (std::cosf(radians.r * 0.5f) * std::cosf(radians.p * 0.5f) * std::cosf(radians.y * 0.5f)) + (std::sinf(radians.r * 0.5f) * std::sinf(radians.p * 0.5f) * std::sinf(radians.y * 0.5f));
 }
 
 bs::Quaternion::Quaternion(const bs::Euler euler)
 {
-	assert(false && "Implement this");
+	const auto rad = bs::Radians(euler);
+	*this = Quaternion(rad);
+}
+
+bs::Quaternion bs::Quaternion::operator*(const Quaternion& other) const
+{
+	// Taken from https://stackoverflow.com/questions/19956555/how-to-multiply-two-quaternions
+
+	return {
+		w * other.w - i * other.i - j * other.j - k * other.k,
+		w * other.i + i * other.w + j * other.k - k * other.j,
+		w * other.j - i * other.k + j * other.w + k * other.i,
+		w * other.k + i * other.j - j * other.i + k * other.w
+	};
 }
 
 bs::Radians bs::Quaternion::GetRadians() const
@@ -161,9 +179,9 @@ bs::Euler bs::Quaternion::GetEuler() const
 	return bs::Euler(GetRadians());
 }
 
-bs::Euler::Euler(Radians& rad): r(ToEuler(rad.r)), p(ToEuler(rad.p)), y(ToEuler(rad.y)) {}
+bs::Euler::Euler(const Radians& rad): r(ToEuler(rad.r)), p(ToEuler(rad.p)), y(ToEuler(rad.y)) {}
 
-bs::Euler& bs::Euler::operator=(Radians& rad)
+bs::Euler& bs::Euler::operator=(const Radians& rad)
 {
 	r = ToEuler(rad.r);
 	p = ToEuler(rad.p);
@@ -171,9 +189,9 @@ bs::Euler& bs::Euler::operator=(Radians& rad)
 	return *this;
 }
 
-bs::Radians::Radians(Euler& deg): r(ToRadians(deg.r)), p(ToRadians(deg.p)), y(ToRadians(deg.y)) {}
+bs::Radians::Radians(const Euler& deg): r(ToRadians(deg.r)), p(ToRadians(deg.p)), y(ToRadians(deg.y)) {}
 
-bs::Radians& bs::Radians::operator=(Euler& deg)
+bs::Radians& bs::Radians::operator=(const Euler& deg)
 {
 	r = ToRadians(deg.r);
 	p = ToRadians(deg.p);
@@ -226,4 +244,19 @@ bs::Quaternion bs::Mat3x4::GetQuaternion() const
 		(m02 - m20) / (4.0f * w),
 		(m10 - m01) / (4.0f * w)
 	};
+}
+
+bs::CartesianCoord bs::Mat3x4::GetLocalFront() const
+{
+	return { m00, m10, m20 };
+}
+
+bs::CartesianCoord bs::Mat3x4::GetLocalUp() const
+{
+	return { m02, m12, m22 };
+}
+
+bs::CartesianCoord bs::Mat3x4::GetLocalLeft() const
+{
+	return { m01, m11, m21 };
 }

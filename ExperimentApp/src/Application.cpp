@@ -47,6 +47,7 @@ int bsExp::Application::RunProgram()
 		rendererManager_.CallImplementationsUpdates();
 		openVrManager_.Update();
 		rendererManager_.MoveAllSounds(sourceTransform_.GetPosition());
+		rendererManager_.SetListenerTransform(openVrManager_.GetHeadsetMat());
 		shutdown = sdlManager_.Update(sourceTransform_, openVrManager_.GetHeadsetMat(), RendererManager::HEAD_ALTITUDE);
 	}
 
