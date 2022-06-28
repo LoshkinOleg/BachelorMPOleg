@@ -76,9 +76,9 @@ namespace bsExp
 		constexpr static float const MAX_SOUND_ELEVATION = bs::ToRadians(123.0f); // Values chosen to land at ~(2,0,0) in cartesian relative to ground.
 		constexpr static char const* const HRTF_PATH = "../resources/HRTF/3DTI_HRTF_IRC1008_128s_44100Hz.sofa";
 		constexpr static char const* const BRIR_PATH = "../resources/BRIR/3DTI_BRIR_small_44100Hz.sofa";
-		constexpr static char const* const WAV_PATH_SPEECH = "../resources/AudioSamples/AnechoicSpeech44100.wav";
+		constexpr static char const* const WAV_PATH_SPEECH = "../resources/AudioSamples/olegSpeech_44100Hz_32f.wav";
 		constexpr static char const* const WAV_PATH_BROWN_NOISE = "../resources/AudioSamples/brownNoise_44100Hz_32f_5sec.wav";
-		constexpr static char const* const WAV_PATH_SWEEP = "../resources/AudioSamples/sweep20to16000_44100Hz_32f_10sec.wav";
+		constexpr static char const* const WAV_PATH_SQUEAK = "../resources/AudioSamples/squeak_44100Hz_32f.wav";
 		constexpr static size_t const BUFFER_SIZE = 2048; // Set this to 512 for release builds. Higher values are needed for debug build to avoid audio buffer underruns.
 		constexpr static size_t const SAMPLE_RATE = 44100;
 		constexpr static float const ROOM_SIZE_X = 7.0f;
