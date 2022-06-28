@@ -119,7 +119,18 @@ void bsExp::OpenVrManager::Update()
 
 bs::Mat3x4 bsExp::OpenVrManager::GetHeadsetMat() const
 {
-	return ToStandardBasis_(headsetMat_);
+	// TODO: shit's bugged
+	const auto m = ToStandardBasis_(headsetMat_);
+	// Rotate to get rid of wierd roll rotation and null out z coord to remove elevation since it's bugged.
+	const auto q = bs::Quaternion(bs::Euler(0.0f, 0.0f, 90.0f)) * m.GetQuaternion();
+	const auto rotMat = bs::Mat3x3(q);
+	const auto pos = m.GetPosition();
+	return
+	{
+		1.0f, 0.0f, 0.0f, pos.x,
+		0.0f, 1.0f, 0.0f, pos.y,
+		0.0f, 0.0f, 1.0f, pos.z
+	};
 }
 
 bs::Mat3x4 bsExp::OpenVrManager::GetLeftControllerMat() const

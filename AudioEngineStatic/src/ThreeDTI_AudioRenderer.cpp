@@ -111,8 +111,6 @@ void bs::ThreeDTI_AudioRenderer::ProcessAudio(std::vector<float>& interleavedSte
 void bs::ThreeDTI_AudioRenderer::MoveListener(const bs::Mat3x4& mat)
 {
 	const auto pos = mat.GetPosition();
-	// constexpr const float pi = 3.14159f;
-	// const auto quat = mat.GetQuaternion() * bs::Quaternion(bs::Radians(0.0f, 0.0f, 0.0f));
 	const auto quat = mat.GetQuaternion();
 	auto t = listener_->GetListenerTransform();
 	t.SetPosition({pos.x, pos.y, 0.0f});

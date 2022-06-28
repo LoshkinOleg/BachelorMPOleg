@@ -220,10 +220,10 @@ void bs::Fmod_AudioRenderer::MoveSound(const size_t soundId, const bs::Cartesian
 void bs::Fmod_AudioRenderer::MoveListener(const bs::Mat3x4& mat)
 {
 	const bs::CartesianCoord bsPos = mat.GetPosition();
-	const bs::CartesianCoord bsFront = mat.GetLocalFront();
-	const bs::CartesianCoord bsUp = mat.GetLocalUp();
-	FMOD_VECTOR pos{bsPos.x, bsPos.y, bsPos.z}, front{ bsFront.x, bsFront.y, bsFront.z }, up{ bsUp.x, bsUp.y, bsUp.z };
-	auto err = context_->set3DListenerAttributes(0, &pos, nullptr, &front, &up);
+	// const bs::CartesianCoord bsFront = mat.GetLocalFront();
+	// const bs::CartesianCoord bsUp = mat.GetLocalUp();
+	FMOD_VECTOR pos{ bsPos.x, bsPos.y, bsPos.z };
+	auto err = context_->set3DListenerAttributes(0, &pos, nullptr, nullptr, nullptr);
 	assert(err == FMOD_OK && "Couldn't set fmod's listener 3d attributes!");
 }
 
