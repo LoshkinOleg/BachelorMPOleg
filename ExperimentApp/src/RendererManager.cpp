@@ -61,11 +61,11 @@ bsExp::RendererManager::RendererManager():
 
 	renderResult_.resize(2 * BUFFER_SIZE, 0.0f);
 
-	threeDTI_soundIds_.emplace("speech", threeDTI_renderer_.CreateSoundMaker(WAV_PATH_SPEECH, true, true, true, true, true, true, true, true, true));
+	threeDTI_soundIds_.emplace("speech", threeDTI_renderer_.CreateSoundMaker(WAV_PATH_SPEECH, false, true, true, true, true, true, true, true, true));
 	threeDTI_soundIds_.emplace("noise", threeDTI_renderer_.CreateSoundMaker(WAV_PATH_BROWN_NOISE, true, false, true, true, true, true, true, true, true));
 	threeDTI_soundIds_.emplace("squeak", threeDTI_renderer_.CreateSoundMaker(WAV_PATH_SQUEAK, false, true, true, true, true, true, true, true, true));
 
-	fmod_soundIds_.emplace("speech", fmod_renderer_.CreateSoundMaker(WAV_PATH_SPEECH, true, true));
+	fmod_soundIds_.emplace("speech", fmod_renderer_.CreateSoundMaker(WAV_PATH_SPEECH, false, true));
 	fmod_soundIds_.emplace("noise", fmod_renderer_.CreateSoundMaker(WAV_PATH_BROWN_NOISE, true, false));
 	fmod_soundIds_.emplace("squeak", fmod_renderer_.CreateSoundMaker(WAV_PATH_SQUEAK, false, true));
 

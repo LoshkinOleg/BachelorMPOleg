@@ -60,7 +60,6 @@ target_include_directories(ExperimentApp PUBLIC
 	${PROJECT_SOURCE_DIR}/ExperimentApp/include/
 	${PROJECT_SOURCE_DIR}/AudioEngineStatic/include/
 	${PROJECT_SOURCE_DIR}/thirdparty/spdlog/include/
-	${PROJECT_SOURCE_DIR}/thirdparty/imgui/include/
 	)
 target_link_libraries(ExperimentApp PRIVATE
 	general AudioEngineStatic

@@ -22,7 +22,9 @@ namespace bsExp
 			RightGrip = 4,
 			RightPad = 5,
 			LeftMenu = 6,
-			RightMenu = 7
+			RightMenu = 7,
+			LeftPadRight = 8,
+			RightPadRight = 9
 		};
 
 		BS_NON_COPYABLE(OpenVrManager);
@@ -68,11 +70,10 @@ namespace bsExp
 		static vr::HmdQuaternionf_t HmdQuatFromHmdRotMat(const vr::HmdMatrix33_t matrix);
 
 		vr::IVRSystem* context_ = nullptr;
-		vr::IVRInput* input_ = nullptr;
 		vr::VREvent_t event_{};
 
-		vr::TrackedDeviceIndex_t leftControllerId = vr::k_unTrackedDeviceIndexInvalid;
-		vr::TrackedDeviceIndex_t rightControllerId = vr::k_unTrackedDeviceIndexInvalid;
+		vr::TrackedDeviceIndex_t leftControllerId_ = vr::k_unTrackedDeviceIndexInvalid;
+		vr::TrackedDeviceIndex_t rightControllerId_ = vr::k_unTrackedDeviceIndexInvalid;
 
 		vr::HmdMatrix34_t headsetMat_{};
 		vr::HmdMatrix34_t leftControllerMat_{};

@@ -14,13 +14,13 @@ bsExp::OpenVrManager::OpenVrManager()
 		const auto deviceClass = context_->GetTrackedDeviceClass(i);
 		if (deviceClass == vr::TrackedDeviceClass::TrackedDeviceClass_Controller)
 		{
-			if (leftControllerId == vr::k_unTrackedDeviceIndexInvalid)
+			if (leftControllerId_ == vr::k_unTrackedDeviceIndexInvalid)
 			{
-				leftControllerId = i;
+				leftControllerId_ = i;
 			}
 			else
 			{
-				rightControllerId = i;
+				rightControllerId_ = i;
 				break;
 			}
 		}
@@ -53,9 +53,9 @@ void bsExp::OpenVrManager::Update()
 
 	while (context_->PollNextEvent(&event_, sizeof(vr::VREvent_t)))
 	{
-		if (event_.trackedDeviceIndex != leftControllerId && event_.trackedDeviceIndex != rightControllerId) continue;
+		if (event_.trackedDeviceIndex != leftControllerId_ && event_.trackedDeviceIndex != rightControllerId_) continue;
 
-		const bool left = event_.trackedDeviceIndex == leftControllerId ? true : false;
+		const bool left = event_.trackedDeviceIndex == leftControllerId_ ? true : false;
 
 		switch (event_.eventType)
 		{
@@ -102,6 +102,14 @@ void bsExp::OpenVrManager::Update()
 				else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_ApplicationMenu))
 				{
 					const auto& callbacks = callbacks_[left ? Input::LeftMenu : Input::RightMenu];
+					for (auto& callback : callbacks)
+					{
+						callback();
+					}
+				}
+				else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_DPad_Right))
+				{
+					const auto& callbacks = callbacks_[left ? Input::LeftPadRight : Input::RightPadRight];
 					for (auto& callback : callbacks)
 					{
 						callback();

@@ -34,6 +34,7 @@ bsExp::Application::Application(const size_t randSeed):
 	openVrManager_.RegisterCallback(OpenVrManager::Input::RightGrip, [this]() { OnRightGrip_(); });
 	openVrManager_.RegisterCallback(OpenVrManager::Input::RightPad, [this]() { OnRightPad_(); });
 	openVrManager_.RegisterCallback(OpenVrManager::Input::RightMenu, [this]() { OnRightMenu_(); });
+	openVrManager_.RegisterCallback(OpenVrManager::Input::RightPadRight, [this]() { rendererManager_.PlaySound("speech"); });
 
 	SetRandomSourcePos_();
 	SelectRandomRenderer_();
@@ -91,7 +92,7 @@ void bsExp::Application::OnLeftTrigger_()
 
 void bsExp::Application::OnRightTrigger_()
 {
-	logger_.LogControllerPosition("Scientist controller", openVrManager_.GetRightControllerPos());
+	logger_.LogControllerPosition("Conductor controller", openVrManager_.GetRightControllerPos());
 }
 
 void bsExp::Application::OnRightGrip_()
