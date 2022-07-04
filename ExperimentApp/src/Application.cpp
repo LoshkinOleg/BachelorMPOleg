@@ -30,11 +30,15 @@ bsExp::Application::Application(const size_t randSeed):
 	sdlManager_.RegisterCallback(SdlManager::Input::Two, [this]() { OnRightTrigger_(); });
 
 	openVrManager_.RegisterCallback(OpenVrManager::Input::LeftTrigger, [this]() { OnLeftTrigger_(); });
+
 	openVrManager_.RegisterCallback(OpenVrManager::Input::RightTrigger, [this]() { OnRightTrigger_(); });
 	openVrManager_.RegisterCallback(OpenVrManager::Input::RightGrip, [this]() { OnRightGrip_(); });
-	openVrManager_.RegisterCallback(OpenVrManager::Input::RightPad, [this]() { OnRightPad_(); });
+	openVrManager_.RegisterCallback(OpenVrManager::Input::RightPadRight, [this]() { OnRightPadRight_(); });
 	openVrManager_.RegisterCallback(OpenVrManager::Input::RightMenu, [this]() { OnRightMenu_(); });
-	openVrManager_.RegisterCallback(OpenVrManager::Input::RightPadRight, [this]() { rendererManager_.PlaySound("speech"); });
+	openVrManager_.RegisterCallback(OpenVrManager::Input::RightPadRight, [this]() { logger_.LogMsg("Right pad right."); });
+	openVrManager_.RegisterCallback(OpenVrManager::Input::RightPadUp, [this]() { logger_.LogMsg("Right pad up."); });
+	openVrManager_.RegisterCallback(OpenVrManager::Input::RightPadLeft, [this]() { logger_.LogMsg("Right pad left."); });
+	openVrManager_.RegisterCallback(OpenVrManager::Input::RightPadDown, [this]() { logger_.LogMsg("Right pad down."); });
 
 	SetRandomSourcePos_();
 	SelectRandomRenderer_();
@@ -48,7 +52,8 @@ int bsExp::Application::RunProgram()
 		rendererManager_.CallImplementationsUpdates();
 		openVrManager_.Update();
 		rendererManager_.MoveAllSounds(sourceTransform_.GetPosition());
-		rendererManager_.SetListenerTransform(openVrManager_.GetHeadsetMat());
+
+		rendererManager_.SetListenerTransform(openVrManager_.GetHeadsetMat()); // Oleg@self: add head height offset here to allow the headset to remain static on the ground.
 		shutdown = sdlManager_.Update(sourceTransform_, openVrManager_.GetHeadsetMat(), RendererManager::HEAD_ALTITUDE);
 	}
 
@@ -78,11 +83,11 @@ void bsExp::Application::SelectRandomRenderer_()
 
 void bsExp::Application::SetRandomSourcePos_()
 {
-	const auto pos = rndEngine_.GenCartesian(rendererManager_.HEAD_ALTITUDE);
+	const auto pos = rndEngine_.GenCartesian();
 	sourceTransform_.m03 = pos.x;
 	sourceTransform_.m13 = pos.y;
-	sourceTransform_.m23 = pos.z;
-	logger_.LogNewSoundPos(pos);
+	sourceTransform_.m23 = pos.z + rendererManager_.HEAD_ALTITUDE;
+	logger_.LogNewSoundPos({ sourceTransform_.m03 , sourceTransform_.m13 , sourceTransform_.m23 });
 }
 
 void bsExp::Application::OnLeftTrigger_()
@@ -109,9 +114,13 @@ void bsExp::Application::OnRightGrip_()
 	}
 }
 
-void bsExp::Application::OnRightPad_()
+void bsExp::Application::OnRightPadRight_()
 {
 	SelectRandomRenderer_();
+}
+
+void bsExp::Application::OnRightPadLeft_()
+{
 }
 
 void bsExp::Application::OnRightMenu_()

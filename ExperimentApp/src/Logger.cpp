@@ -94,3 +94,8 @@ void bsExp::Logger::LogHeadSetPosAndRot(const bs::CartesianCoord pos, const bs::
 	s += ").\n";
 	std::cout << s;
 }
+
+void bsExp::Logger::LogMsg(const char* msg)
+{
+	pLogger_->info(msg);
+}

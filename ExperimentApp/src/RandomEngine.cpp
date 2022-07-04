@@ -1,10 +1,8 @@
 #include "RandomEngine.h"
 
-bs::CartesianCoord bsExp::RandomEngine::GenCartesian(const float headAltitude)
+bs::CartesianCoord bsExp::RandomEngine::GenCartesian()
 {
-	auto c = bs::CartesianCoord(GenSpherical());
-	c.z += headAltitude;
-	return c;
+	return bs::CartesianCoord(GenSpherical());
 }
 
 bs::SphericalCoord bsExp::RandomEngine::GenSpherical()

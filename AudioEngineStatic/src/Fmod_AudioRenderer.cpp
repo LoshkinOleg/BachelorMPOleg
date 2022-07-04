@@ -12,7 +12,7 @@
 	-Z is back
 */
 
-bs::Fmod_AudioRenderer::Fmod_AudioRenderer(const float headAltitude, const size_t bufferSize, const size_t sampleRate,
+bs::Fmod_AudioRenderer::Fmod_AudioRenderer(const size_t bufferSize, const size_t sampleRate,
 										   const float DecayTime, const float EarlyDelay, const float LateDelay, const float HFReference,
 										   const float HFDecayRatio, const float Diffusion, const float Density, const float LowShelfFrequency,
 										   const float LowShelfGain, const float HighCut, const float EarlyLateMix, const float WetLevel):
@@ -29,7 +29,7 @@ bs::Fmod_AudioRenderer::Fmod_AudioRenderer(const float headAltitude, const size_
 	FMOD_REVERB_PROPERTIES p = {DecayTime, EarlyDelay, LateDelay, HFReference, HFDecayRatio, Diffusion, Density, LowShelfFrequency, LowShelfGain, HighCut, EarlyLateMix, WetLevel};
 	result = reverb_->setProperties(&p);
 	assert(result == FMOD_OK, "Couldn't set fmod reverb properties!");
-	FMOD_VECTOR pos{0.0f, headAltitude, 0.0f};
+	FMOD_VECTOR pos{0.0f, 0.0f, 0.0f};
 	result = context_->set3DListenerAttributes(0, &pos, 0, 0, 0);
 	assert(result == FMOD_OK, "Couldn't set listener position!");
 	result = reverb_->set3DAttributes(&pos, 0.0f, 10.0f); // Center reverb area on listener. Start attenuating at 0.0 meters away from listener and up to 10.0 meters.
@@ -48,21 +48,13 @@ bs::Fmod_AudioRenderer::~Fmod_AudioRenderer()
 	assert(result == FMOD_OK, "Failed to release fmod context!");
 }
 
-void bs::Fmod_AudioRenderer::GetRendererParams(float& outHeadAltitude) const
+void bs::Fmod_AudioRenderer::GetRendererParams() const
 {
-	FMOD_VECTOR pos;
-	FMOD_RESULT result = context_->get3DListenerAttributes(0, &pos, nullptr, nullptr, nullptr);
-	assert(result == FMOD_OK, "Couldn't retrieve listener attributes!");
-	outHeadAltitude = pos.y; // j is up in fmod
+
 }
-void bs::Fmod_AudioRenderer::UpdateRendererParams(const float headAltitude)
+void bs::Fmod_AudioRenderer::UpdateRendererParams()
 {
-	FMOD_VECTOR pos, vel, forward, up;
-	FMOD_RESULT result = context_->get3DListenerAttributes(0, &pos, &vel, &forward, &up);
-	assert(result == FMOD_OK, "Couldn't retrieve listener attributes!");
-	pos.y = headAltitude;
-	result = context_->set3DListenerAttributes(0, &pos, &vel, &forward, &up);
-	assert(result == FMOD_OK, "Couldn't set listener attributes!");
+
 }
 
 size_t bs::Fmod_AudioRenderer::CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize)
@@ -170,7 +162,7 @@ bool bs::Fmod_AudioRenderer::IsPaused(const size_t soundId)
 	}
 	else
 	{
-		return false;
+		return true;
 	}
 }
 
@@ -222,7 +214,7 @@ void bs::Fmod_AudioRenderer::MoveListener(const bs::Mat3x4& mat)
 	const bs::CartesianCoord bsPos = mat.GetPosition();
 	// const bs::CartesianCoord bsFront = mat.GetLocalFront();
 	// const bs::CartesianCoord bsUp = mat.GetLocalUp();
-	FMOD_VECTOR pos{ bsPos.x, bsPos.y, bsPos.z };
+	FMOD_VECTOR pos{ bsPos.x, bsPos.y, bsPos.z}; // Oleg@self: shouldn't this be converted to fmod basis system?
 	auto err = context_->set3DListenerAttributes(0, &pos, nullptr, nullptr, nullptr);
 	assert(err == FMOD_OK && "Couldn't set fmod's listener 3d attributes!");
 }

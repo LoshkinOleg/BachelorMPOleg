@@ -16,14 +16,14 @@ namespace bs
 		BS_NON_MOVEABLE(Fmod_AudioRenderer);
 
 		Fmod_AudioRenderer() = delete;
-		Fmod_AudioRenderer(const float headAltitude, const size_t bufferSize, const size_t sampleRate,
+		Fmod_AudioRenderer(const size_t bufferSize, const size_t sampleRate,
 						   const float DecayTime, const float EarlyDelay, const float LateDelay, const float HFReference,
 						   const float HFDecayRatio, const float Diffusion, const float Density, const float LowShelfFrequency,
 						   const float LowShelfGain, const float HighCut, const float EarlyLateMix, const float WetLevel);
 		~Fmod_AudioRenderer();
 
-		void GetRendererParams(float& outHeadAltitude) const;
-		void UpdateRendererParams(const float headAltitude);
+		void GetRendererParams() const;
+		void UpdateRendererParams();
 
 		size_t CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize);
 		FMOD::Sound& GetSound(const size_t soundId);  // Oleg@self: return an abstraction of a sound instead.

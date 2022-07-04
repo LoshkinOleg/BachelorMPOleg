@@ -21,7 +21,6 @@ namespace bsExp
 		struct RendererParams
 		{
 			AudioRendererType rendererType = AudioRendererType::ThreeDTI;
-			float headAltitude = 1.3f;
 			
 			// Params for 3dti
 			bool ILDEnabled = true;
@@ -70,9 +69,9 @@ namespace bsExp
 		constexpr static float const MIN_SOUND_AZIMUTH = bs::ToRadians(-180.0f);
 		constexpr static float const MAX_SOUND_AZIMUTH = bs::ToRadians(180.0f);
 		constexpr static float const MIN_SOUND_DISTANCE = 0.33f;
-		constexpr static float const MAX_SOUND_DISTANCE = 1.0f;
-		// constexpr static float const HEAD_ALTITUDE = 1.2f; // Oleg@self: find a way to pass this as argument to program. Move to application maybe since that's where it's used mostly?
-		constexpr static float const HEAD_ALTITUDE = 0.0f; // Oleg@self: find a way to pass this as argument to program. Move to application maybe since that's where it's used mostly?
+		constexpr static float const MAX_SOUND_DISTANCE = 1.9f;
+		constexpr static float const HEAD_ALTITUDE = 1.2f; // Oleg@self: find a way to pass this as argument to program. Move to application maybe since that's where it's used mostly?
+		// constexpr static float const HEAD_ALTITUDE = 0.0f; // Oleg@self: find a way to pass this as argument to program. Move to application maybe since that's where it's used mostly?
 		constexpr static float const MIN_SOUND_ELEVATION = bs::ToRadians(70.0f); // Values chosen to land at ~(2,0,2) in cartesian relative to ground. 70.0f
 		constexpr static float const MAX_SOUND_ELEVATION = bs::ToRadians(123.0f); // Values chosen to land at ~(2,0,0) in cartesian relative to ground. 123.0f
 		constexpr static char const* const HRTF_PATH = "../resources/HRTF/3DTI_HRTF_IRC1008_128s_44100Hz.sofa";
@@ -80,7 +79,14 @@ namespace bsExp
 		constexpr static char const* const WAV_PATH_SPEECH = "../resources/AudioSamples/olegSpeech_44100Hz_32f.wav";
 		constexpr static char const* const WAV_PATH_BROWN_NOISE = "../resources/AudioSamples/brownNoise_44100Hz_32f_5sec.wav";
 		constexpr static char const* const WAV_PATH_SQUEAK = "../resources/AudioSamples/squeak_44100Hz_32f.wav";
-		constexpr static size_t const BUFFER_SIZE = 512; // Set this to 512 for release builds. Higher values are needed for debug build to avoid audio buffer underruns.
+		
+#ifdef _DEBUG
+		constexpr static size_t const BUFFER_SIZE = 2048;
+#else
+		constexpr static size_t const BUFFER_SIZE = 512;
+#endif // _DEBUG
+
+		
 		constexpr static size_t const SAMPLE_RATE = 44100;
 		constexpr static float const ROOM_SIZE_X = 7.0f; // Unused
 		constexpr static float const ROOM_SIZE_Y = 8.0f; // Unused

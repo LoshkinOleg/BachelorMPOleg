@@ -27,7 +27,7 @@ namespace bsExp
 		{
 		};
 
-		bs::CartesianCoord GenCartesian(const float headAltitude);
+		bs::CartesianCoord GenCartesian();
 		bs::SphericalCoord GenSpherical();
 		float GenAzimuth();
 		float GenElevation();

@@ -83,14 +83,14 @@ void bsExp::OpenVrManager::Update()
 						callback();
 					}
 				}
-				else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_SteamVR_Touchpad))
+				/*else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_SteamVR_Touchpad))
 				{
-					const auto& callbacks = callbacks_[left ? Input::LeftPad : Input::RightPad];
+					const auto& callbacks = callbacks_[left ? Input::LeftPadRight : Input::RightPadRight];
 					for (auto& callback : callbacks)
 					{
 						callback();
 					}
-				}
+				}*/
 				else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Grip))
 				{
 					const auto& callbacks = callbacks_[left ? Input::LeftGrip : Input::RightGrip];
@@ -107,9 +107,33 @@ void bsExp::OpenVrManager::Update()
 						callback();
 					}
 				}
-				else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_DPad_Right))
+				else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Axis2))
 				{
 					const auto& callbacks = callbacks_[left ? Input::LeftPadRight : Input::RightPadRight];
+					for (auto& callback : callbacks)
+					{
+						callback();
+					}
+				}
+				else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Axis3))
+				{
+					const auto& callbacks = callbacks_[left ? Input::LeftPadUp : Input::RightPadUp];
+					for (auto& callback : callbacks)
+					{
+						callback();
+					}
+				}
+				else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Axis4))
+				{
+					const auto& callbacks = callbacks_[left ? Input::LeftPadLeft : Input::RightPadLeft];
+					for (auto& callback : callbacks)
+					{
+						callback();
+					}
+				}
+				else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_DPad_Down))
+				{
+					const auto& callbacks = callbacks_[left ? Input::LeftPadDown : Input::RightPadDown];
 					for (auto& callback : callbacks)
 					{
 						callback();

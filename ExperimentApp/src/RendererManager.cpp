@@ -3,8 +3,8 @@
 #include <easy/profiler.h>
 
 bsExp::RendererManager::RendererManager():
-	threeDTI_renderer_(bs::ThreeDTI_AudioRenderer(HRTF_PATH, BRIR_PATH, BUFFER_SIZE, SAMPLE_RATE, HEAD_ALTITUDE, true)),
-	fmod_renderer_(bs::Fmod_AudioRenderer(HEAD_ALTITUDE, BUFFER_SIZE, SAMPLE_RATE,
+	threeDTI_renderer_(bs::ThreeDTI_AudioRenderer(HRTF_PATH, BRIR_PATH, BUFFER_SIZE, SAMPLE_RATE, true)),
+	fmod_renderer_(bs::Fmod_AudioRenderer(BUFFER_SIZE, SAMPLE_RATE,
 										  FMOD_DEFAULT_REVERB_PARAMS[0], FMOD_DEFAULT_REVERB_PARAMS[1], FMOD_DEFAULT_REVERB_PARAMS[2],
 										  FMOD_DEFAULT_REVERB_PARAMS[3], FMOD_DEFAULT_REVERB_PARAMS[4], FMOD_DEFAULT_REVERB_PARAMS[5],
 										  FMOD_DEFAULT_REVERB_PARAMS[6], FMOD_DEFAULT_REVERB_PARAMS[7], FMOD_DEFAULT_REVERB_PARAMS[8],
@@ -268,14 +268,14 @@ void bsExp::RendererManager::SetListenerTransform(const bs::Mat3x4& mat)
 
 void bsExp::RendererManager::UpdateRendererParams(const RendererParams p)
 {
-	threeDTI_renderer_.UpdateRendererParams(p.headAltitude, p.ILDEnabled);
-	fmod_renderer_.UpdateRendererParams(p.headAltitude);
+	threeDTI_renderer_.UpdateRendererParams(p.ILDEnabled);
+	fmod_renderer_.UpdateRendererParams();
 }
 
 bsExp::RendererManager::RendererParams bsExp::RendererManager::GetRendererParams() const
 {
 	RendererParams p; // Oleg@self: implement possibility of loaded sounds mismatch.
-	threeDTI_renderer_.GetRendererParams(p.headAltitude, p.ILDEnabled);
+	threeDTI_renderer_.GetRendererParams(p.ILDEnabled);
 	return p;
 }
 

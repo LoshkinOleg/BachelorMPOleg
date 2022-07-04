@@ -45,7 +45,7 @@ void bs::ThreeDTI_AudioRenderer::StopAllSounds()
 	}
 }
 
-bs::ThreeDTI_AudioRenderer::ThreeDTI_AudioRenderer(const char* hrtfPath, const char* brirPath, const size_t bufferSize, const size_t sampleRate, const float headAltitude, const bool ILDEnabled):
+bs::ThreeDTI_AudioRenderer::ThreeDTI_AudioRenderer(const char* hrtfPath, const char* brirPath, const size_t bufferSize, const size_t sampleRate, const bool ILDEnabled):
 	bufferSize(bufferSize), sampleRate(sampleRate)
 {
 	// Init 3dti core.
@@ -55,7 +55,7 @@ bs::ThreeDTI_AudioRenderer::ThreeDTI_AudioRenderer(const char* hrtfPath, const c
 	// Init 3dti listener.
 	listener_ = core_.CreateListener();
 	listener_->DisableCustomizedITD();
-	UpdateRendererParams(headAltitude, ILDEnabled);
+	UpdateRendererParams(ILDEnabled);
 	bool unused; // Oleg@self: investigate
 	if (!HRTF::CreateFromSofa(hrtfPath, listener_, unused)) assert(false, "Failed to load HRTF sofa file!");
 
@@ -68,19 +68,14 @@ bs::ThreeDTI_AudioRenderer::ThreeDTI_AudioRenderer(const char* hrtfPath, const c
 	currentlyProcessedSignal_.resize(2 * bufferSize, 0.0f);
 }
 
-void bs::ThreeDTI_AudioRenderer::GetRendererParams(float& outHeadAltitude, bool& outILDEnabled) const
+void bs::ThreeDTI_AudioRenderer::GetRendererParams(bool& outILDEnabled) const
 {
-	auto t = listener_->GetListenerTransform();
-	outHeadAltitude = t.GetPosition().z;
 	outILDEnabled = std::fabsf(listener_->GetILDAttenutaion()) < 0.001f ? false : true;
 }
 
-void bs::ThreeDTI_AudioRenderer::UpdateRendererParams(const float headAltitude, const bool ILDEnabled)
+void bs::ThreeDTI_AudioRenderer::UpdateRendererParams(const bool ILDEnabled)
 {
 	listener_->SetILDAttenutaion(ILDEnabled ? -6.0f : 0.0f); // Oleg@self: check if this is the right values.
-	auto t = listener_->GetListenerTransform();
-	t.SetPosition(Common::CVector3(0.0f, 0.0f, headAltitude));
-	listener_->SetListenerTransform(t);
 }
 
 void bs::ThreeDTI_AudioRenderer::ProcessAudio(std::vector<float>& interleavedStereoOut)

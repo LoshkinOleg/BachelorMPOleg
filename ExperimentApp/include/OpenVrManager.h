@@ -16,15 +16,20 @@ namespace bsExp
 		enum class Input: size_t
 		{
 			LeftTrigger = 0,
-			LeftPad = 1,
-			LeftGrip = 2,
-			RightTrigger = 3,
-			RightGrip = 4,
-			RightPad = 5,
-			LeftMenu = 6,
-			RightMenu = 7,
-			LeftPadRight = 8,
-			RightPadRight = 9
+			LeftGrip,
+			LeftMenu,
+			LeftPadRight,
+			LeftPadUp,
+			LeftPadLeft,
+			LeftPadDown,
+
+			RightTrigger,
+			RightGrip,
+			RightMenu,
+			RightPadRight,
+			RightPadUp,
+			RightPadLeft,
+			RightPadDown
 		};
 
 		BS_NON_COPYABLE(OpenVrManager);

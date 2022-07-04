@@ -24,10 +24,12 @@ namespace bsExp
 		void SetRandomSourcePos_();
 
 		void OnLeftTrigger_();
+
 		void OnRightTrigger_();
 		void OnRightGrip_();
-		void OnRightPad_();
 		void OnRightMenu_();
+		void OnRightPadRight_();
+		void OnRightPadLeft_();
 
 		RendererManager rendererManager_{};
 		SdlManager sdlManager_{};

@@ -18,10 +18,10 @@ namespace bs
 		BS_NON_MOVEABLE(ThreeDTI_AudioRenderer);
 
 		ThreeDTI_AudioRenderer() = delete;
-		ThreeDTI_AudioRenderer(const char* hrtfPath, const char* brirPath, const size_t bufferSize, const size_t sampleRate, const float headAltitude, const bool ILDEnabled);
+		ThreeDTI_AudioRenderer(const char* hrtfPath, const char* brirPath, const size_t bufferSize, const size_t sampleRate, const bool ILDEnabled);
 
-		void GetRendererParams(float& outHeadAltitude, bool& outILDEnabled) const;
-		void UpdateRendererParams(const float headAltitude, const bool ILDEnabled);
+		void GetRendererParams(bool& outILDEnabled) const;
+		void UpdateRendererParams(const bool ILDEnabled);
 
 		size_t CreateSoundMaker(const char* wavFileName, const bool loop, const bool spatialize,
 								const bool anechoicEnabled, const bool distanceBasedAttenuationAnechoic,
