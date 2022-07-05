@@ -6,14 +6,14 @@ import numpy as np
 import os.path
 
 # Global constants
-HEAD_ALTITUDE = 1.2
-FRONT_ARROW_LENGTH = 0.3
-CONDUCTOR_POS_LABEL = "Conductor controller"
-PARTICIPANT_POS_LABEL = "Participant controller"
-CONDUCTOR_COLOR = 'b'
-PARTICIPANT_COLOR = 'r'
-SOUND_MARKER = 'x'
-HEAD_POS_MARKER = 'o'
+HEAD_ALTITUDE = 1.2 # Participant's head elevation from ground (+z axis).
+FRONT_ARROW_LENGTH = 0.3 # Length of line used to indicate forward direction of participant's head.
+CONDUCTOR_POS_LABEL = "Conductor controller" # Substring to look for to identify conductor's controller position log entry.
+PARTICIPANT_POS_LABEL = "Participant controller" # Substring to look for to identify participant's controller position log entry.
+CONDUCTOR_COLOR = 'b' # blue
+PARTICIPANT_COLOR = 'r' # red
+SOUND_MARKER = 'x' # cross
+HEAD_POS_MARKER = 'o' # filled circle
 
 # Global variables
 cPos = [] # Positions the conductor has logged.
@@ -70,7 +70,6 @@ ax.set_zlim(0.0, 2.0)
 ax.set_xticks(np.arange(-2.0, 2.0, 0.5)) # Don't want the axis ticks to change depending on zoom level.
 ax.set_yticks(np.arange(-2.0, 2.0, 0.5))
 ax.set_zticks(np.arange(0.0, 2.0, 0.5))
-ax.legend(loc='upper left', bbox_to_anchor=(-0.4, 1.15)) # Add legend at the top left corner of the screen.
 ax.scatter(0.0, 0.0, HEAD_ALTITUDE, color=CONDUCTOR_COLOR, label='Head position', marker=HEAD_POS_MARKER) # mark head position
 ax.plot([0.0, FRONT_ARROW_LENGTH], [0.0, 0.0], [HEAD_ALTITUDE, HEAD_ALTITUDE], color=CONDUCTOR_COLOR) # mark head's forward direction in the +x direction
 
@@ -87,4 +86,5 @@ for i in range(len(cPos)):
     ax.plot([cp[0], pp[0]],     [cp[1], pp[1]],     [cp[2], pp[2]],     color=PARTICIPANT_COLOR, label=('errEuclidean' if i == 0 else None))
 
 # Display the resulting graph.
+ax.legend(loc='upper left', bbox_to_anchor=(-0.4, 1.15)) # Add legend at the top left corner of the screen.
 plt.show()
