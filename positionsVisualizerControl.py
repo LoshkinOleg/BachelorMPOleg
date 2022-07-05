@@ -4,6 +4,16 @@ import ast
 import matplotlib.pyplot as plt
 import numpy as np
 import os.path
+import math
+
+def CartesianToSpherical(x, y, z):
+    azimuth = math.atan(x/y)
+    elevation = math.atan(math.sqrt(x*x + y*y)/z)
+    radius = math.sqrt(x*x + y*y + z*z)
+    return azimuth, elevation, radius
+
+def CartesianMagnitude(x, y, z):
+    return math.sqrt(x*x + y*y + z*z)
 
 # Global constants
 HEAD_ALTITUDE = 1.2 # Participant's head elevation from ground (+z axis).
@@ -19,6 +29,10 @@ HEAD_POS_MARKER = 'o' # filled circle
 cPos = [] # Positions the conductor has logged.
 pPos = [] # Positions the participant has logged.
 lines = [] # String data from the log file.
+avgEuclidean = 0
+avgAzimuthal = 0
+avgSagittal = 0
+avgDepth = 0
 
 # Ensure there's a filepath passed to the script.
 if len(sys.argv) < 2:
@@ -84,7 +98,22 @@ for i in range(len(cPos)):
     
     # Link the two positions with a red line that represents the euclidean error. Add a label if this is the first iteration of the loop to indicate the meaning of the symbol.
     ax.plot([cp[0], pp[0]],     [cp[1], pp[1]],     [cp[2], pp[2]],     color=PARTICIPANT_COLOR, label=('errEuclidean' if i == 0 else None))
+    
+    # Add to error counters.
+    delta = [pp[0] - cp[0], pp[1] - cp[1], pp[2] - cp[2]]
+    a, e, r = CartesianToSpherical(delta[0], delta[1], delta[2])
+    avgEuclidean = avgEuclidean + abs(CartesianMagnitude(delta[0], delta[1], delta[2]))
+    avgAzimuthal = avgAzimuthal + abs(a)
+    avgSagittal = avgSagittal + abs(e)
+    avgDepth = avgDepth + abs(r)
+
+# Compute averages
+avgEuclidean = avgEuclidean / len(cPos)
+avgAzimuthal = avgAzimuthal / len(cPos)
+avgSagittal = avgSagittal / len(cPos)
+avgDepth = avgDepth / len(cPos)
 
 # Display the resulting graph.
 ax.legend(loc='upper left', bbox_to_anchor=(-0.4, 1.15)) # Add legend at the top left corner of the screen.
+plt.figtext(0.0, 0.01, "avg errEuclidean: %.2f, avg errAzimuthal: %.2f, avg errSagittal: %.2f, avg errDepth: %.2f" %(avgEuclidean,avgAzimuthal,avgSagittal,avgDepth))
 plt.show()

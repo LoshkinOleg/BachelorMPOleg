@@ -4,6 +4,7 @@ import ast
 import matplotlib.pyplot as plt
 import numpy as np
 import os.path
+import math
 
 # Global constants
 HEAD_ALTITUDE = 1.2 # Participant's head elevation from ground (+z axis).
@@ -83,6 +84,25 @@ def ReadPositions():
     
     return threeDTIPos, participantPosThreeDTI, fmodPos, participantPosFmod
 
+def CartesianToSpherical(x, y, z):
+    azimuth = math.atan(x/y)
+    elevation = math.atan(math.sqrt(x*x + y*y)/z)
+    radius = math.sqrt(x*x + y*y + z*z)
+    return azimuth, elevation, radius
+
+def CartesianMagnitude(x, y, z):
+    return math.sqrt(x*x + y*y + z*z)
+
+# Average error global vars
+avgEuclideanTdti = 0
+avgAzimuthalTdti = 0
+avgSagittalTdti = 0
+avgDepthTdti = 0
+avgEuclideanFmod = 0
+avgAzimuthalFmod = 0
+avgSagittalFmod = 0
+avgDepthFmod = 0
+
 # Ensure there's a filepath passed to the script.
 if len(sys.argv) < 2:
     print("Please pass the relative path to .log file as first argument to the command line.")
@@ -129,6 +149,20 @@ for i in range(len(tdtiPos)):
     
     # Link the two positions with a red line that represents the euclidean error. Add a label if this is the first iteration of the loop to indicate the meaning of the symbol.
     ax.plot([ap[0], pp[0]],     [ap[1], pp[1]],     [ap[2], pp[2]],     color=PARTICIPANT_TDTI_COLOR,   label=('errEuclidean 3dti' if i == 0 else None))
+    
+    # Add to error counters.
+    delta = [pp[0] - ap[0], pp[1] - ap[1], pp[2] - ap[2]]
+    a, e, r = CartesianToSpherical(delta[0], delta[1], delta[2])
+    avgEuclideanTdti = avgEuclideanTdti + abs(CartesianMagnitude(delta[0], delta[1], delta[2]))
+    avgAzimuthalTdti = avgAzimuthalTdti + abs(a)
+    avgSagittalTdti = avgSagittalTdti + abs(e)
+    avgDepthTdti = avgDepthTdti + abs(r)
+
+# Compute averages
+avgEuclideanTdti = avgEuclideanTdti / len(tdtiPos)
+avgAzimuthalTdti = avgAzimuthalTdti / len(tdtiPos)
+avgSagittalTdti = avgSagittalTdti / len(tdtiPos)
+avgDepthTdti = avgDepthTdti / len(tdtiPos)
 
 # Draw the 3d plot with all positions and their euclidean errors for fmod method.
 for i in range(len(fmodPos)):
@@ -141,7 +175,23 @@ for i in range(len(fmodPos)):
     
     # Link the two positions with a red line that represents the euclidean error. Add a label if this is the first iteration of the loop to indicate the meaning of the symbol.
     ax.plot([ap[0], pp[0]],     [ap[1], pp[1]],     [ap[2], pp[2]],     color=PARTICIPANT_FMOD_COLOR,   label=('errEuclidean fmod' if i == 0 else None))
+    
+    # Add to error counters.
+    delta = [pp[0] - ap[0], pp[1] - ap[1], pp[2] - ap[2]]
+    a, e, r = CartesianToSpherical(delta[0], delta[1], delta[2])
+    avgEuclideanFmod = avgEuclideanFmod + abs(CartesianMagnitude(delta[0], delta[1], delta[2]))
+    avgAzimuthalFmod = avgAzimuthalFmod + abs(a)
+    avgSagittalFmod = avgSagittalFmod + abs(e)
+    avgDepthFmod = avgDepthFmod + abs(r)
+
+# Compute averages
+avgEuclideanFmod = avgEuclideanFmod / len(fmodPos)
+avgAzimuthalFmod = avgAzimuthalFmod / len(fmodPos)
+avgSagittalFmod = avgSagittalFmod / len(fmodPos)
+avgDepthFmod = avgDepthFmod / len(fmodPos)
 
 # Display the resulting graph.
 ax.legend(loc='upper left', bbox_to_anchor=(-0.4, 1.15)) # Add legend at the top left corner of the screen.
+plt.figtext(0.0, 0.01, "3dti: avg errEuclidean: %.2f, avg errAzimuthal: %.2f, avg errSagittal: %.2f, avg errDepth: %.2f" %(avgEuclideanTdti,avgAzimuthalTdti,avgSagittalTdti,avgDepthTdti))
+plt.figtext(0.0, 0.05, "fmod: avg errEuclidean: %.2f, avg errAzimuthal: %.2f, avg errSagittal: %.2f, avg errDepth: %.2f" %(avgEuclideanFmod,avgAzimuthalFmod,avgSagittalFmod,avgDepthFmod))
 plt.show()
