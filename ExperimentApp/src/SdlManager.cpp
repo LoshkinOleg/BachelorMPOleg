@@ -31,7 +31,7 @@ void bsExp::SdlManager::RegisterCallback(Input input, std::function<void(void)> 
 	callbacks_[input].push_back(callback);
 }
 
-bool bsExp::SdlManager::Update(const bs::Mat3x4& sourceTransform, const bs::Mat3x4& listenerTransform, const float headAltitude)
+bool bsExp::SdlManager::Update(const bs::Mat3x4& sourceTransform, const bs::Mat3x4& listenerTransform, const bs::Mat3x4& participantControllerTransform, const float headAltitude, const bool soundPlaying)
 {
 	EASY_FUNCTION("SdlManager::Update");
 
@@ -67,25 +67,27 @@ bool bsExp::SdlManager::Update(const bs::Mat3x4& sourceTransform, const bs::Mat3
 		}
 	}
 
-	DrawSourceAndListener_(sourceTransform, listenerTransform, headAltitude);
+	DrawSourceAndListener_(sourceTransform, listenerTransform, participantControllerTransform, headAltitude, soundPlaying);
 
 	return false;
 }
 
-void bsExp::SdlManager::DrawSourceAndListener_(const bs::Mat3x4& sourceTransform, const bs::Mat3x4& listenerTransform, const float headAltitude)
+void bsExp::SdlManager::DrawSourceAndListener_(const bs::Mat3x4& sourceTransform, const bs::Mat3x4& listenerTransform, const bs::Mat3x4& participantControllerTransform, const float headAltitude, const bool soundPlaying)
 {
 	EASY_FUNCTION("SdlManager::DrawSourceAndListener_");
 
 	static bs::CartesianCoord lastSourcePos{};
 	static bs::CartesianCoord lastListenerPos{};
+	static bs::CartesianCoord lastControllerPos{};
 
 	const auto sourcePos = sourceTransform.GetPosition();
 	const auto listenerPos = listenerTransform.GetPosition();
+	const auto controllerPos = participantControllerTransform.GetPosition();
 
 	if (!sdlRenderer_) return;
 
-	if (sourcePos != lastListenerPos || listenerPos != lastListenerPos) // Avoid visual processing if there's no change.
-	{
+	// if (sourcePos != lastSourcePos || listenerPos != lastListenerPos || controllerPos != lastControllerPos) // Avoid visual processing if there's no change.
+	// {
 		EASY_BLOCK("Drawing on display.");
 
 		// Clear screen.
@@ -124,10 +126,30 @@ void bsExp::SdlManager::DrawSourceAndListener_(const bs::Mat3x4& sourceTransform
 		r = { (int)(-listenerPos.y * SCALE_FACTOR) + centerX - SQUARE_HALF_SIDE, (int)((-listenerPos.z) * SCALE_FACTOR) + centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
 		SDL_RenderDrawRect(sdlRenderer_, &r); // Back to front view
 
+		// Draw controller position in dark green.
+		centerX = DISPLAY_SIZE / 4;
+		centerY = centerX;
+		r = { (int)(-lastControllerPos.y * SCALE_FACTOR) + centerX - SQUARE_HALF_SIDE, (int)(-lastControllerPos.x * SCALE_FACTOR) + centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
+		SDL_SetRenderDrawColor(sdlRenderer_, 0, 128, 0, 255);
+		SDL_RenderDrawRect(sdlRenderer_, &r); // Top down view
+		centerX += DISPLAY_SIZE / 2;
+		r = { (int)(-lastControllerPos.y * SCALE_FACTOR) + centerX - SQUARE_HALF_SIDE, (int)((-lastControllerPos.z) * SCALE_FACTOR) + centerY - SQUARE_HALF_SIDE, SQUARE_SIDE, SQUARE_SIDE };
+		SDL_RenderDrawRect(sdlRenderer_, &r); // Back to front view
+
+		// Draw playing sound hint.
+		if (soundPlaying)
+		{
+			SDL_SetRenderDrawColor(sdlRenderer_, 255, 0, 0, 255);
+			centerY += DISPLAY_SIZE / 2;
+			r = {centerX - 50, centerY - 50, 100, 100};
+			SDL_RenderFillRect(sdlRenderer_, &r);
+		}
+
 		// Present.
 		SDL_RenderPresent(sdlRenderer_);
-	}
+	// }
 
 	lastSourcePos = sourcePos;
 	lastListenerPos = listenerPos;
+	lastControllerPos = controllerPos;
 }

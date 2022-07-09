@@ -1,0 +1,2 @@
+audio student
+has good knowledge of stereo vs hrtf

@@ -52,6 +52,7 @@ namespace bsExp
 		bool IsPaused(const char* soundName);
 		void StopSound(const char* soundName);
 		void StopAll();
+		bool AnyPlaying();
 
 		void MoveSound(const char* soundName, const bs::CartesianCoord coord);
 		void MoveAllSounds(const bs::CartesianCoord coord);
@@ -72,10 +73,10 @@ namespace bsExp
 		constexpr static float const MAX_SOUND_DISTANCE = 1.9f;
 		constexpr static float const HEAD_ALTITUDE = 1.2f; // Oleg@self: find a way to pass this as argument to program. Move to application maybe since that's where it's used mostly?
 		// constexpr static float const HEAD_ALTITUDE = 0.0f; // Oleg@self: find a way to pass this as argument to program. Move to application maybe since that's where it's used mostly?
-		constexpr static float const MIN_SOUND_ELEVATION = bs::ToRadians(70.0f); // Values chosen to land at ~(2,0,2) in cartesian relative to ground. 70.0f
+		constexpr static float const MIN_SOUND_ELEVATION = bs::ToRadians(50.0f); // Values chosen to land at ~(2,0,2) in cartesian relative to ground. 70.0f
 		constexpr static float const MAX_SOUND_ELEVATION = bs::ToRadians(123.0f); // Values chosen to land at ~(2,0,0) in cartesian relative to ground. 123.0f
 		constexpr static char const* const HRTF_PATH = "../resources/HRTF/3DTI_HRTF_IRC1008_128s_44100Hz.sofa";
-		constexpr static char const* const BRIR_PATH = "../resources/BRIR/3DTI_BRIR_large_44100Hz.sofa";
+		constexpr static char const* const BRIR_PATH = "../resources/BRIR/3DTI_BRIR_small_44100Hz.sofa";
 		constexpr static char const* const WAV_PATH_SPEECH = "../resources/AudioSamples/olegSpeech_44100Hz_32f.wav";
 		constexpr static char const* const WAV_PATH_BROWN_NOISE = "../resources/AudioSamples/brownNoise_44100Hz_32f_5sec.wav";
 		constexpr static char const* const WAV_PATH_SQUEAK = "../resources/AudioSamples/squeak_44100Hz_32f.wav";

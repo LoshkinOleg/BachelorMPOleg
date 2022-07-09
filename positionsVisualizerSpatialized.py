@@ -1,97 +1,10 @@
 # Imports
 import sys
-import ast
 import matplotlib.pyplot as plt
 import numpy as np
 import os.path
-import math
 
-# Global constants
-HEAD_ALTITUDE = 1.2 # Participant's head elevation from ground (+z axis).
-FRONT_ARROW_LENGTH = 0.3 # Length of line used to indicate forward direction of participant's head.
-APPLICATION_TDTI_COLOR = [0.0, 0.5, 0.0]
-APPLICATION_FMOD_COLOR = [0.0, 0.0, 1.0]
-PARTICIPANT_TDTI_COLOR = [0.6, 1.0, 0.1]
-PARTICIPANT_FMOD_COLOR = [0.6, 0.1, 1.0]
-HEAD_COLOR = 'b' # blue
-SOUND_MARKER = 'x' # cross
-HEAD_POS_MARKER = 'o' # filled circle
-APPLICATION_POS_LABEL = "New position of sound is:" # Substring to look for to identify the log entry indicating the position of the spatialized sound.
-PARTICIPANT_POS_LABEL = "Participant controller" # Substring to look for to identify participant's controller position log entry.
-METHOD_LABEL = "Selected" # Substring to look for to identify a log entry indicating the spatialization method used.
-THREEDTI_LABEL = '3dti'
-FMOD_LABEL = 'fmod'
-
-def LineContains(line, substring)->bool:
-    return (line.find(substring) != -1)
-
-def ExtractSpatMethod(string)->str:
-    start = string.find(METHOD_LABEL) + 9
-    if start < 9:
-        print("ExtractSpatMethod() has been passed a string that does not contain the spatialization method label!")
-        quit()
-    end = start + 4
-    returnVal = string[start : end]
-    if returnVal != THREEDTI_LABEL and returnVal != FMOD_LABEL:
-        print("ExtractSpatMethod() has retrieved an invalid spatialization method label: %s" %returnVal)
-        quit()
-    return returnVal
-
-def CartesianFromLine(string):
-    start = string.find('(')
-    end = string.find(')')
-    if start == -1 or end == -1:
-        print("CartesianFromLine() cannot parse string.")
-        quit()
-    return ast.literal_eval(string[start + 1:end]) # Interprets string as a tuple.
-
-def ReadPositions():
-    method = ''
-    threeDTIPos = []
-    fmodPos = []
-    participantPosThreeDTI = []
-    participantPosFmod = []
-    
-    for line in lines:
-        if LineContains(line, METHOD_LABEL):
-            if LineContains(line, THREEDTI_LABEL):
-                method = ExtractSpatMethod(line)
-            elif LineContains(line, FMOD_LABEL):
-                method = ExtractSpatMethod(line)
-            else:
-                print("Unknown spatialization method encountered!")
-                quit()
-        elif LineContains(line, APPLICATION_POS_LABEL):
-            if method == THREEDTI_LABEL:
-                threeDTIPos.append(CartesianFromLine(line))
-            elif method == FMOD_LABEL:
-                fmodPos.append(CartesianFromLine(line))
-            else:
-                print("ReadPositions() is trying to parse a spatialized sound position with an invalid spatialization method.")
-                quit()
-        elif LineContains(line, PARTICIPANT_POS_LABEL):
-            if method == THREEDTI_LABEL:
-                participantPosThreeDTI.append(CartesianFromLine(line))
-            elif method == FMOD_LABEL:
-                participantPosFmod.append(CartesianFromLine(line))
-            else:
-                print("ReadPositions() is trying to parse a participant position with an invalid spatialization method.")
-                quit()
-    
-    if len(threeDTIPos) != len(participantPosThreeDTI) or len(fmodPos) != len(participantPosFmod):
-        print("ReadPositions() exception: mismatch between number of logged participant positions and number of spatialized sounds.")
-        quit()
-    
-    return threeDTIPos, participantPosThreeDTI, fmodPos, participantPosFmod
-
-def CartesianToSpherical(x, y, z):
-    azimuth = math.atan(x/y)
-    elevation = math.atan(math.sqrt(x*x + y*y)/z)
-    radius = math.sqrt(x*x + y*y + z*z)
-    return azimuth, elevation, radius
-
-def CartesianMagnitude(x, y, z):
-    return math.sqrt(x*x + y*y + z*z)
+import ExpCommon
 
 # Average error global vars
 avgEuclideanTdti = 0
@@ -132,11 +45,11 @@ ax.set_zlim(0.0, 2.0)
 ax.set_xticks(np.arange(-2.0, 2.0, 0.5)) # Don't want the axis ticks to change depending on zoom level.
 ax.set_yticks(np.arange(-2.0, 2.0, 0.5))
 ax.set_zticks(np.arange(0.0, 2.0, 0.5))
-ax.scatter(0.0, 0.0, HEAD_ALTITUDE, color=HEAD_COLOR, label='Head position', marker=HEAD_POS_MARKER) # mark head position
-ax.plot([0.0, FRONT_ARROW_LENGTH], [0.0, 0.0], [HEAD_ALTITUDE, HEAD_ALTITUDE], color=HEAD_COLOR) # mark head's forward direction in the +x direction
+ax.scatter(0.0, 0.0, ExpCommon.HEAD_ALTITUDE, color=ExpCommon.HEAD_COLOR, label='Head position', marker=ExpCommon.HEAD_POS_MARKER) # mark head position
+ax.plot([0.0, ExpCommon.FRONT_ARROW_LENGTH], [0.0, 0.0], [ExpCommon.HEAD_ALTITUDE, ExpCommon.HEAD_ALTITUDE], color=ExpCommon.HEAD_COLOR) # mark head's forward direction in the +x direction
 
 # Parse log data.
-tdtiPos, pTdtiPos, fmodPos, pFmodPos = ReadPositions()
+tdtiPos, pTdtiPos, fmodPos, pFmodPos = ExpCommon.ReadPositions(lines)
 
 # Draw the 3d plot with all positions and their euclidean errors for 3dti method.
 for i in range(len(tdtiPos)):
@@ -144,25 +57,33 @@ for i in range(len(tdtiPos)):
     pp = pTdtiPos[i]
     
     # Mark actual and percieved sound positions. Add a label if this is the first iteration of the loop to indicate the meaning of the symbol.
-    ax.scatter(ap[0],ap[1],ap[2],   marker=SOUND_MARKER,                color=APPLICATION_TDTI_COLOR,   label=('Actual 3dti position' if i == 0 else None))
-    ax.scatter(pp[0],pp[1],pp[2],   marker=SOUND_MARKER,                color=PARTICIPANT_TDTI_COLOR,   label=('Percieved 3dti position' if i == 0 else None))
+    ax.scatter(ap[0],ap[1],ap[2],   marker=ExpCommon.SOUND_MARKER,                color=ExpCommon.APPLICATION_TDTI_COLOR,   label=('Actual 3dti position' if i == 0 else None))
+    ax.scatter(pp[0],pp[1],pp[2],   marker=ExpCommon.SOUND_MARKER,                color=ExpCommon.PARTICIPANT_TDTI_COLOR,   label=('Percieved 3dti position' if i == 0 else None))
     
     # Link the two positions with a red line that represents the euclidean error. Add a label if this is the first iteration of the loop to indicate the meaning of the symbol.
-    ax.plot([ap[0], pp[0]],     [ap[1], pp[1]],     [ap[2], pp[2]],     color=PARTICIPANT_TDTI_COLOR,   label=('errEuclidean 3dti' if i == 0 else None))
+    ax.plot([ap[0], pp[0]],     [ap[1], pp[1]],     [ap[2], pp[2]],     color=ExpCommon.PARTICIPANT_TDTI_COLOR,   label=('errEuclidean 3dti' if i == 0 else None))
     
     # Add to error counters.
-    delta = [pp[0] - ap[0], pp[1] - ap[1], pp[2] - ap[2]]
-    a, e, r = CartesianToSpherical(delta[0], delta[1], delta[2])
-    avgEuclideanTdti = avgEuclideanTdti + abs(CartesianMagnitude(delta[0], delta[1], delta[2]))
-    avgAzimuthalTdti = avgAzimuthalTdti + abs(a)
-    avgSagittalTdti = avgSagittalTdti + abs(e)
-    avgDepthTdti = avgDepthTdti + abs(r)
+    deltaCartesian = [pp[0] - ap[0], pp[1] - ap[1], pp[2] - ap[2]]
+    a0, e0, r0 = ExpCommon.CartesianToSpherical(ap[0], ap[1], ap[2])
+    a1, e1, r1 = ExpCommon.CartesianToSpherical(pp[0], pp[1], pp[2])
+    print("3DTI: ")
+    print("errEuclidean: %.2f" %abs(ExpCommon.CartesianMagnitude(deltaCartesian[0], deltaCartesian[1], deltaCartesian[2])))
+    avgEuclideanTdti = avgEuclideanTdti + abs(ExpCommon.CartesianMagnitude(deltaCartesian[0], deltaCartesian[1], deltaCartesian[2]))
+    print("errAzimuthal: %.2f" %abs(a1 - a0))
+    avgAzimuthalTdti = avgAzimuthalTdti + abs(a1 - a0)
+    print("errSagittal: %.2f" %abs(e1 - e0))
+    avgSagittalTdti = avgSagittalTdti + abs(e1 - e0)
+    print("errDepth: %.2f" %abs(r1 - r0))
+    avgDepthTdti = avgDepthTdti + abs(r1 - r0)
+    print("========")
 
 # Compute averages
 avgEuclideanTdti = avgEuclideanTdti / len(tdtiPos)
 avgAzimuthalTdti = avgAzimuthalTdti / len(tdtiPos)
 avgSagittalTdti = avgSagittalTdti / len(tdtiPos)
 avgDepthTdti = avgDepthTdti / len(tdtiPos)
+print("avg errEuclidean: %.2f, avg errAzimuthal: %.2f, avg errSagittal: %.2f, avg errDepth: %.2f" %(avgEuclideanTdti, avgAzimuthalTdti, avgSagittalTdti, avgDepthTdti))
 
 # Draw the 3d plot with all positions and their euclidean errors for fmod method.
 for i in range(len(fmodPos)):
@@ -170,25 +91,33 @@ for i in range(len(fmodPos)):
     pp = pFmodPos[i]
     
     # Mark actual and percieved sound positions. Add a label if this is the first iteration of the loop to indicate the meaning of the symbol.
-    ax.scatter(ap[0],ap[1],ap[2],   marker=SOUND_MARKER,                color=APPLICATION_FMOD_COLOR,   label=('Actual fmod position' if i == 0 else None))
-    ax.scatter(pp[0],pp[1],pp[2],   marker=SOUND_MARKER,                color=PARTICIPANT_FMOD_COLOR,   label=('Percieved fmod position' if i == 0 else None))
+    ax.scatter(ap[0],ap[1],ap[2],   marker=ExpCommon.SOUND_MARKER,                color=ExpCommon.APPLICATION_FMOD_COLOR,   label=('Actual fmod position' if i == 0 else None))
+    ax.scatter(pp[0],pp[1],pp[2],   marker=ExpCommon.SOUND_MARKER,                color=ExpCommon.PARTICIPANT_FMOD_COLOR,   label=('Percieved fmod position' if i == 0 else None))
     
     # Link the two positions with a red line that represents the euclidean error. Add a label if this is the first iteration of the loop to indicate the meaning of the symbol.
-    ax.plot([ap[0], pp[0]],     [ap[1], pp[1]],     [ap[2], pp[2]],     color=PARTICIPANT_FMOD_COLOR,   label=('errEuclidean fmod' if i == 0 else None))
+    ax.plot([ap[0], pp[0]],     [ap[1], pp[1]],     [ap[2], pp[2]],     color=ExpCommon.PARTICIPANT_FMOD_COLOR,   label=('errEuclidean fmod' if i == 0 else None))
     
     # Add to error counters.
-    delta = [pp[0] - ap[0], pp[1] - ap[1], pp[2] - ap[2]]
-    a, e, r = CartesianToSpherical(delta[0], delta[1], delta[2])
-    avgEuclideanFmod = avgEuclideanFmod + abs(CartesianMagnitude(delta[0], delta[1], delta[2]))
-    avgAzimuthalFmod = avgAzimuthalFmod + abs(a)
-    avgSagittalFmod = avgSagittalFmod + abs(e)
-    avgDepthFmod = avgDepthFmod + abs(r)
+    deltaCartesian = [pp[0] - ap[0], pp[1] - ap[1], pp[2] - ap[2]]
+    a0, e0, r0 = ExpCommon.CartesianToSpherical(ap[0], ap[1], ap[2])
+    a1, e1, r1 = ExpCommon.CartesianToSpherical(pp[0], pp[1], pp[2])
+    print("3DTI: ")
+    print("errEuclidean: %.2f" %abs(ExpCommon.CartesianMagnitude(deltaCartesian[0], deltaCartesian[1], deltaCartesian[2])))
+    avgEuclideanFmod = avgEuclideanFmod + abs(ExpCommon.CartesianMagnitude(deltaCartesian[0], deltaCartesian[1], deltaCartesian[2]))
+    print("errAzimuthal: %.2f" %abs(a1 - a0))
+    avgAzimuthalFmod = avgAzimuthalFmod + abs(a1 - a0)
+    print("errSagittal: %.2f" %abs(e1 - e0))
+    avgSagittalFmod = avgSagittalFmod + abs(e1 - e0)
+    print("errDepth: %.2f" %abs(r1 - r0))
+    avgDepthFmod = avgDepthFmod + abs(r1 - r0)
+    print("========")
 
 # Compute averages
 avgEuclideanFmod = avgEuclideanFmod / len(fmodPos)
 avgAzimuthalFmod = avgAzimuthalFmod / len(fmodPos)
 avgSagittalFmod = avgSagittalFmod / len(fmodPos)
 avgDepthFmod = avgDepthFmod / len(fmodPos)
+print("avg errEuclidean: %.2f, avg errAzimuthal: %.2f, avg errSagittal: %.2f, avg errDepth: %.2f" %(avgEuclideanFmod, avgAzimuthalFmod, avgSagittalFmod, avgDepthFmod))
 
 # Display the resulting graph.
 ax.legend(loc='upper left', bbox_to_anchor=(-0.4, 1.15)) # Add legend at the top left corner of the screen.

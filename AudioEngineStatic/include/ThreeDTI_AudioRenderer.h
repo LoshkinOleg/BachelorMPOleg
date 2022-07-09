@@ -30,6 +30,7 @@ namespace bs
 		ThreeDTI_SoundMaker& GetSound(const size_t soundId);
 
 		void StopAllSounds();
+		bool AnyPlaying();
 
 		void ProcessAudio(std::vector<float>& interleavedStereoOut);
 

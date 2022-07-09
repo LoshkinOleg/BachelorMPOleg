@@ -1,0 +1,5 @@
+3d artist
+has experience with vr
+has experienced difference between hrtf and stereo sound in games
+last one to get spatialization with reverb
+4 control measurements due to controller glitch: percieved position was below the floor

@@ -24,16 +24,16 @@ bs::Fmod_AudioRenderer::Fmod_AudioRenderer(const size_t bufferSize, const size_t
 	result = context_->init(32, FMOD_INIT_NORMAL, 0);    // Initialize FMOD.
 	assert(result == FMOD_OK, "Couldn't initialize Fmod system!");
 
-	result = context_->createReverb3D(&reverb_);
-	assert(result == FMOD_OK, "Couldn't create fmod reverb object!");
-	FMOD_REVERB_PROPERTIES p = {DecayTime, EarlyDelay, LateDelay, HFReference, HFDecayRatio, Diffusion, Density, LowShelfFrequency, LowShelfGain, HighCut, EarlyLateMix, WetLevel};
-	result = reverb_->setProperties(&p);
-	assert(result == FMOD_OK, "Couldn't set fmod reverb properties!");
+	// result = context_->createReverb3D(&reverb_);
+	// assert(result == FMOD_OK, "Couldn't create fmod reverb object!");
+	// FMOD_REVERB_PROPERTIES p = {DecayTime, EarlyDelay, LateDelay, HFReference, HFDecayRatio, Diffusion, Density, LowShelfFrequency, LowShelfGain, HighCut, EarlyLateMix, WetLevel};
+	// result = reverb_->setProperties(&p);
+	// assert(result == FMOD_OK, "Couldn't set fmod reverb properties!");
 	FMOD_VECTOR pos{0.0f, 0.0f, 0.0f};
 	result = context_->set3DListenerAttributes(0, &pos, 0, 0, 0);
 	assert(result == FMOD_OK, "Couldn't set listener position!");
-	result = reverb_->set3DAttributes(&pos, 0.0f, 10.0f); // Center reverb area on listener. Start attenuating at 0.0 meters away from listener and up to 10.0 meters.
-	assert(result == FMOD_OK, "Couldn't set reverb area position!");
+	// result = reverb_->set3DAttributes(&pos, 0.0f, 10.0f); // Center reverb area on listener. Start attenuating at 0.0 meters away from listener and up to 10.0 meters.
+	// assert(result == FMOD_OK, "Couldn't set reverb area position!");
 }
 bs::Fmod_AudioRenderer::~Fmod_AudioRenderer()
 {
@@ -42,9 +42,9 @@ bs::Fmod_AudioRenderer::~Fmod_AudioRenderer()
 		auto result = sound.first->release();
 		assert(result == FMOD_OK, "Failed to release fmod sound!");
 	}
-	auto result = reverb_->release();
-	assert(result == FMOD_OK, "Failed to release fmod reverb!");
-	result = context_->release();
+	// auto result = reverb_->release();
+	// assert(result == FMOD_OK, "Failed to release fmod reverb!");
+	auto result = context_->release();
 	assert(result == FMOD_OK, "Failed to release fmod context!");
 }
 
@@ -207,6 +207,24 @@ void bs::Fmod_AudioRenderer::MoveSound(const size_t soundId, const bs::Cartesian
 			assert(result == FMOD_OK, "Failed to set fmod sound position.");
 		}
 	}
+}
+
+bool bs::Fmod_AudioRenderer::AnyPlaying()
+{
+	for (auto& sound : sounds_)
+	{
+		if (sound.second)
+		{
+			bool isPlaying;
+			bool isPaused;
+			auto result = sound.second->isPlaying(&isPlaying);
+			assert(result == FMOD_OK && "Failed to retrieve is playing state from FMOD.");
+			result = sound.second->getPaused(&isPaused);
+			assert(result == FMOD_OK && "Failed to retrieve is playing state from FMOD.");
+			if (isPlaying && !isPaused) return true;
+		}
+	}
+	return false;
 }
 
 void bs::Fmod_AudioRenderer::MoveListener(const bs::Mat3x4& mat)

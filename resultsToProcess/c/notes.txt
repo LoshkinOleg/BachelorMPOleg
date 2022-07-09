@@ -1,0 +1,3 @@
+artist
+no prior experience with hrtfs
+surprisingly localized sounds better with fmod

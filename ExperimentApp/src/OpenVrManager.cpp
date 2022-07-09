@@ -48,33 +48,27 @@ void bsExp::OpenVrManager::Update()
 {
 #ifndef USE_DUMMY_INPUTS
 	vr::TrackedDevicePose_t pose;
+	vr::VRControllerState_t state;
 	context_->GetDeviceToAbsoluteTrackingPose(vr::ETrackingUniverseOrigin::TrackingUniverseStanding, 0.0f, &pose, 1);
 	headsetMat_ = pose.mDeviceToAbsoluteTracking;
+
+	auto result = context_->GetControllerStateWithPose(vr::ETrackingUniverseOrigin::TrackingUniverseStanding, leftControllerId_, &state, sizeof(vr::VRControllerState_t), &pose);
+	assert(result && "Failed to get controller state with pose!");
+	leftControllerMat_ = pose.mDeviceToAbsoluteTracking;
+	result = context_->GetControllerStateWithPose(vr::ETrackingUniverseOrigin::TrackingUniverseStanding, rightControllerId_, &state, sizeof(vr::VRControllerState_t), &pose);
+	rightControllerMat_ = pose.mDeviceToAbsoluteTracking;
 
 	while (context_->PollNextEvent(&event_, sizeof(vr::VREvent_t)))
 	{
 		if (event_.trackedDeviceIndex != leftControllerId_ && event_.trackedDeviceIndex != rightControllerId_) continue;
 
+		result = context_->GetControllerStateWithPose(vr::ETrackingUniverseOrigin::TrackingUniverseStanding, event_.trackedDeviceIndex, &state, sizeof(vr::VRControllerState_t), &pose);
 		const bool left = event_.trackedDeviceIndex == leftControllerId_ ? true : false;
 
 		switch (event_.eventType)
 		{
 			case vr::EVREventType::VREvent_ButtonPress:
 			{
-				vr::VRControllerState_t state;
-				vr::TrackedDevicePose_t pose;
-				auto result = context_->GetControllerStateWithPose(vr::ETrackingUniverseOrigin::TrackingUniverseStanding, event_.trackedDeviceIndex, &state, sizeof(vr::VRControllerState_t), &pose);
-				assert(result && "Failed to get controller state with pose!");
-
-				if (left)
-				{
-					leftControllerMat_ = pose.mDeviceToAbsoluteTracking;
-				}
-				else
-				{
-					rightControllerMat_ = pose.mDeviceToAbsoluteTracking;
-				}
-
 				if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_SteamVR_Trigger))
 				{
 					const auto& callbacks = callbacks_[left ? Input::LeftTrigger : Input::RightTrigger];
@@ -102,30 +96,6 @@ void bsExp::OpenVrManager::Update()
 				else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_ApplicationMenu))
 				{
 					const auto& callbacks = callbacks_[left ? Input::LeftMenu : Input::RightMenu];
-					for (auto& callback : callbacks)
-					{
-						callback();
-					}
-				}
-				else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Axis2))
-				{
-					const auto& callbacks = callbacks_[left ? Input::LeftPadRight : Input::RightPadRight];
-					for (auto& callback : callbacks)
-					{
-						callback();
-					}
-				}
-				else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Axis3))
-				{
-					const auto& callbacks = callbacks_[left ? Input::LeftPadUp : Input::RightPadUp];
-					for (auto& callback : callbacks)
-					{
-						callback();
-					}
-				}
-				else if (state.ulButtonPressed & vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Axis4))
-				{
-					const auto& callbacks = callbacks_[left ? Input::LeftPadLeft : Input::RightPadLeft];
 					for (auto& callback : callbacks)
 					{
 						callback();
@@ -167,7 +137,15 @@ bs::Mat3x4 bsExp::OpenVrManager::GetHeadsetMat() const
 
 bs::Mat3x4 bsExp::OpenVrManager::GetLeftControllerMat() const
 {
-	return ToStandardBasis_(leftControllerMat_);
+	// TODO: shit's bugged
+	const auto m = ToStandardBasis_(leftControllerMat_);
+	const auto pos = m.GetPosition();
+	return
+	{
+		1.0f, 0.0f, 0.0f, pos.x,
+		0.0f, 1.0f, 0.0f, pos.y,
+		0.0f, 0.0f, 1.0f, pos.z
+	};
 }
 
 bs::Mat3x4 bsExp::OpenVrManager::GetRightControllerMat() const

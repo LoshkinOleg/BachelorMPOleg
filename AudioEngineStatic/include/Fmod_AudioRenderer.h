@@ -35,6 +35,7 @@ namespace bs
 		void GetSoundParams(const size_t soundId);
 		void UpdateSoundParams(const size_t soundId);
 		void MoveSound(const size_t soundId, const bs::CartesianCoord coord);
+		bool AnyPlaying();
 
 		void MoveListener(const bs::Mat3x4& mat);
 
@@ -48,7 +49,7 @@ namespace bs
 
 	private:
 		FMOD::System* context_ = nullptr;
-		FMOD::Reverb3D* reverb_ = nullptr;
+		// FMOD::Reverb3D* reverb_ = nullptr;
 
 		std::vector<std::pair<FMOD::Sound*, FMOD::Channel*>> sounds_;
 	};

@@ -236,6 +236,11 @@ void bsExp::RendererManager::StopAll()
 	}
 }
 
+bool bsExp::RendererManager::AnyPlaying()
+{
+	return threeDTI_renderer_.AnyPlaying() || fmod_renderer_.AnyPlaying();
+}
+
 void bsExp::RendererManager::MoveSound(const char* soundName, const bs::CartesianCoord coord)
 {
 	if (threeDTI_soundIds_.find(soundName) != threeDTI_soundIds_.end())

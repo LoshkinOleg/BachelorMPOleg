@@ -4,26 +4,8 @@ import ast
 import matplotlib.pyplot as plt
 import numpy as np
 import os.path
-import math
 
-def CartesianToSpherical(x, y, z):
-    azimuth = math.atan(x/y)
-    elevation = math.atan(math.sqrt(x*x + y*y)/z)
-    radius = math.sqrt(x*x + y*y + z*z)
-    return azimuth, elevation, radius
-
-def CartesianMagnitude(x, y, z):
-    return math.sqrt(x*x + y*y + z*z)
-
-# Global constants
-HEAD_ALTITUDE = 1.2 # Participant's head elevation from ground (+z axis).
-FRONT_ARROW_LENGTH = 0.3 # Length of line used to indicate forward direction of participant's head.
-CONDUCTOR_POS_LABEL = "Conductor controller" # Substring to look for to identify conductor's controller position log entry.
-PARTICIPANT_POS_LABEL = "Participant controller" # Substring to look for to identify participant's controller position log entry.
-CONDUCTOR_COLOR = 'b' # blue
-PARTICIPANT_COLOR = 'r' # red
-SOUND_MARKER = 'x' # cross
-HEAD_POS_MARKER = 'o' # filled circle
+import ExpCommon
 
 # Global variables
 cPos = [] # Positions the conductor has logged.
@@ -53,14 +35,14 @@ else:
 
 # Traverse list of lines and extract conductor and participant positions.
 for line in lines:
-    matchIdx = line.find(CONDUCTOR_POS_LABEL)
+    matchIdx = line.find(ExpCommon.CONDUCTOR_POS_LABEL)
     if (matchIdx != -1):
         matchIdx = line.find("(") # Find start of position entry.
         posStr = line[matchIdx:len(line) - 1]
         pos = ast.literal_eval(posStr) # Interprets string as a tuple.
         cPos.append(pos)
     
-    matchIdx = line.find(PARTICIPANT_POS_LABEL)
+    matchIdx = line.find(ExpCommon.PARTICIPANT_POS_LABEL)
     if (matchIdx != -1):
         matchIdx = line.find("(") # Find start of position entry.
         posStr = line[matchIdx:len(line) - 1]
@@ -84,8 +66,8 @@ ax.set_zlim(0.0, 2.0)
 ax.set_xticks(np.arange(-2.0, 2.0, 0.5)) # Don't want the axis ticks to change depending on zoom level.
 ax.set_yticks(np.arange(-2.0, 2.0, 0.5))
 ax.set_zticks(np.arange(0.0, 2.0, 0.5))
-ax.scatter(0.0, 0.0, HEAD_ALTITUDE, color=CONDUCTOR_COLOR, label='Head position', marker=HEAD_POS_MARKER) # mark head position
-ax.plot([0.0, FRONT_ARROW_LENGTH], [0.0, 0.0], [HEAD_ALTITUDE, HEAD_ALTITUDE], color=CONDUCTOR_COLOR) # mark head's forward direction in the +x direction
+ax.scatter(0.0, 0.0, ExpCommon.HEAD_ALTITUDE, color=ExpCommon.CONDUCTOR_COLOR, label='Head position', marker=ExpCommon.HEAD_POS_MARKER) # mark head position
+ax.plot([0.0, ExpCommon.FRONT_ARROW_LENGTH], [0.0, 0.0], [ExpCommon.HEAD_ALTITUDE, ExpCommon.HEAD_ALTITUDE], color=ExpCommon.CONDUCTOR_COLOR) # mark head's forward direction in the +x direction
 
 # Draw the 3d plot with all positions and their euclidean errors.
 for i in range(len(cPos)):
@@ -93,25 +75,33 @@ for i in range(len(cPos)):
     pp = pPos[i]
     
     # Mark actual and percieved sound positions. Add a label if this is the first iteration of the loop to indicate the meaning of the symbol.
-    ax.scatter(cp[0],cp[1],cp[2],   marker=SOUND_MARKER,                color=CONDUCTOR_COLOR,   label=('Actual position' if i == 0 else None))
-    ax.scatter(pp[0],pp[1],pp[2],   marker=SOUND_MARKER,                color=PARTICIPANT_COLOR, label=('Percieved position' if i == 0 else None))
+    ax.scatter(cp[0],cp[1],cp[2],   marker=ExpCommon.SOUND_MARKER,                color=ExpCommon.CONDUCTOR_COLOR,   label=('Actual position' if i == 0 else None))
+    ax.scatter(pp[0],pp[1],pp[2],   marker=ExpCommon.SOUND_MARKER,                color=ExpCommon.PARTICIPANT_COLOR, label=('Percieved position' if i == 0 else None))
     
     # Link the two positions with a red line that represents the euclidean error. Add a label if this is the first iteration of the loop to indicate the meaning of the symbol.
-    ax.plot([cp[0], pp[0]],     [cp[1], pp[1]],     [cp[2], pp[2]],     color=PARTICIPANT_COLOR, label=('errEuclidean' if i == 0 else None))
+    ax.plot([cp[0], pp[0]],     [cp[1], pp[1]],     [cp[2], pp[2]],     color=ExpCommon.PARTICIPANT_COLOR, label=('errEuclidean' if i == 0 else None))
     
     # Add to error counters.
-    delta = [pp[0] - cp[0], pp[1] - cp[1], pp[2] - cp[2]]
-    a, e, r = CartesianToSpherical(delta[0], delta[1], delta[2])
-    avgEuclidean = avgEuclidean + abs(CartesianMagnitude(delta[0], delta[1], delta[2]))
-    avgAzimuthal = avgAzimuthal + abs(a)
-    avgSagittal = avgSagittal + abs(e)
-    avgDepth = avgDepth + abs(r)
+    
+    deltaCartesian = [pp[0] - cp[0], pp[1] - cp[1], pp[2] - cp[2]]
+    a0, e0, r0 = ExpCommon.CartesianToSpherical(cp[0], cp[1], cp[2])
+    a1, e1, r1 = ExpCommon.CartesianToSpherical(pp[0], pp[1], pp[2])
+    print("errEuclidean: %.2f" %abs(ExpCommon.CartesianMagnitude(deltaCartesian[0], deltaCartesian[1], deltaCartesian[2])))
+    avgEuclidean = avgEuclidean + abs(ExpCommon.CartesianMagnitude(deltaCartesian[0], deltaCartesian[1], deltaCartesian[2]))
+    print("errAzimuthal: %.2f" %abs(a1 - a0))
+    avgAzimuthal = avgAzimuthal + abs(a1 - a0)
+    print("errSagittal: %.2f" %abs(e1 - e0))
+    avgSagittal = avgSagittal + abs(e1 - e0)
+    print("errDepth: %.2f" %abs(r1 - r0))
+    avgDepth = avgDepth + abs(r1 - r0)
+    print("========")
 
 # Compute averages
 avgEuclidean = avgEuclidean / len(cPos)
 avgAzimuthal = avgAzimuthal / len(cPos)
 avgSagittal = avgSagittal / len(cPos)
 avgDepth = avgDepth / len(cPos)
+print("avg errEuclidean: %.2f, avg errAzimuthal: %.2f, avg errSagittal: %.2f, avg errDepth: %.2f" %(avgEuclidean, avgAzimuthal, avgSagittal, avgDepth))
 
 # Display the resulting graph.
 ax.legend(loc='upper left', bbox_to_anchor=(-0.4, 1.15)) # Add legend at the top left corner of the screen.

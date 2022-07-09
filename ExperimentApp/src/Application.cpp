@@ -54,7 +54,7 @@ int bsExp::Application::RunProgram()
 		rendererManager_.MoveAllSounds(sourceTransform_.GetPosition());
 
 		rendererManager_.SetListenerTransform(openVrManager_.GetHeadsetMat()); // Oleg@self: add head height offset here to allow the headset to remain static on the ground.
-		shutdown = sdlManager_.Update(sourceTransform_, openVrManager_.GetHeadsetMat(), RendererManager::HEAD_ALTITUDE);
+		shutdown = sdlManager_.Update(sourceTransform_, openVrManager_.GetHeadsetMat(), openVrManager_.GetLeftControllerMat(), RendererManager::HEAD_ALTITUDE, rendererManager_.AnyPlaying());
 	}
 
 	return 0;
