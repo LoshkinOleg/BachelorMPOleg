@@ -4,7 +4,7 @@ import pandas as pd
 import ast
 import ExpCommon
 
-CONFUSION_THRESHOLD = 0.15
+CONFUSION_THRESHOLD = 0.25
 
 def RadToDeg(x):
     returnVal = []
@@ -26,7 +26,7 @@ if len(sys.argv) != 3:
     quit()
 
 df = pd.read_csv(sys.argv[1])
-df = df.iloc[:, 0:4]
+df = df.iloc[:, 1:5]
 
 cartAp = []
 cartPp = []
@@ -37,8 +37,8 @@ errAzimuthal = []
 errSagittal = []
 errDepth = []
 frontBackConfusion = []
-upDownConfusion = []
 leftRightConfusion = []
+upDownConfusion = []
 
 for _, value in np.ndenumerate(df['Actual'].to_numpy()):
     cartAp.append(ast.literal_eval(value))
@@ -63,25 +63,25 @@ for i in range(len(cartAp)):
 
 for i in range(len(cartAp)):
     frontBack = False
-    upDown = False
     leftRight = False
+    upDown = False
     
     deltaX = abs(cartPp[i][0] - cartAp[i][0])
     deltaY = abs(cartPp[i][1] - cartAp[i][1])
     deltaZ = abs(cartPp[i][2] - cartAp[i][2])
     
-    if not SameSign(cartPp[i][0], cartAp[i][0]):
-        frontBack = deltaX < CONFUSION_THRESHOLD
-    if not SameSign(cartPp[i][1], cartAp[i][1]):
-        leftRight = deltaY < CONFUSION_THRESHOLD
-    if not SameSign(cartPp[i][2], cartAp[i][2]):
-        upDown = deltaZ < CONFUSION_THRESHOLD
+    if not (SameSign(cartPp[i][0], cartAp[i][0])):
+        frontBack = deltaY < CONFUSION_THRESHOLD and deltaZ < CONFUSION_THRESHOLD
+    if not (SameSign(cartPp[i][1], cartAp[i][1])):
+        leftRight = deltaX < CONFUSION_THRESHOLD and deltaZ < CONFUSION_THRESHOLD
+    if not (SameSign(cartPp[i][2] - ExpCommon.HEAD_ALTITUDE, cartAp[i][2] - ExpCommon.HEAD_ALTITUDE)):
+        upDown = deltaX < CONFUSION_THRESHOLD and deltaY < CONFUSION_THRESHOLD
     
     frontBackConfusion.append(frontBack)
-    upDownConfusion.append(upDown)
     leftRightConfusion.append(leftRight)
+    upDownConfusion.append(upDown)
 
 
-err = pd.DataFrame({"Euclidean error in meters" : errEuclidean, "Depth error in meters" : errDepth, "Azimuthal error in radians" : errAzimuthal, "Sagittal error in radians" : errSagittal, "Azimutal error in degrees: " : RadToDeg(errAzimuthal), "Sagittal error in degrees: " : RadToDeg(errSagittal), "Front-back confusion in boolean: " : frontBackConfusion, "Up-down confusion in boolean: " : upDownConfusion, "Left-right confusion in boolean: " : leftRightConfusion})
+err = pd.DataFrame({"Euclidean error in meters" : errEuclidean, "Depth error in meters" : errDepth, "Azimuthal error in radians" : errAzimuthal, "Sagittal error in radians" : errSagittal, "Azimutal error in degrees: " : RadToDeg(errAzimuthal), "Sagittal error in degrees: " : RadToDeg(errSagittal), "Front-back confusion: " : frontBackConfusion, "Left-right confusion: " : leftRightConfusion, "Up-down confusion: " : upDownConfusion})
 
 err.to_csv(sys.argv[2])

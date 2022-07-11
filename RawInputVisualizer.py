@@ -23,7 +23,7 @@ else:
         sampleIdx.append(int(sys.argv[i]))
 
 df = pd.read_csv(sys.argv[1])
-df = df.iloc[:, 0:4]
+df = df.iloc[:, 1:5]
 
 for i, value in np.ndenumerate(df['Actual'].to_numpy()):
     if plotAll or i[0] in sampleIdx:
