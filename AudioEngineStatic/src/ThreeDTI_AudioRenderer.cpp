@@ -99,17 +99,20 @@ void bs::ThreeDTI_AudioRenderer::ProcessAudio(std::vector<float>& interleavedSte
 		bs::SumSignals(interleavedStereoOut, currentlyProcessedSignal_);
 	}
 
+#ifdef BUILD_WITH_REVERB
 	// Process reverb_.
-	// EASY_BLOCK("Reverb");
-	// environment_->ProcessVirtualAmbisonicReverb(reverb_.left, reverb_.right);
-	// EASY_END_BLOCK;
+	EASY_BLOCK("Reverb");
+	environment_->ProcessVirtualAmbisonicReverb(reverb_.left, reverb_.right);
+	EASY_END_BLOCK;
 	auto result = GET_LAST_RESULT_STRUCT();
+
+	if (reverb_.left.size()) // 3dti sets size to 0 if there's no reverb_ to process.
+	{
+		bs::Interlace(interlacedReverb_, reverb_.left, reverb_.right);
+		bs::SumSignals(interleavedStereoOut, interlacedReverb_);
+	}
+#endif
 	
-	// if (reverb_.left.size()) // 3dti sets size to 0 if there's no reverb_ to process.
-	// {
-	// 	bs::Interlace(interlacedReverb_, reverb_.left, reverb_.right);
-	// 	bs::SumSignals(interleavedStereoOut, interlacedReverb_);
-	// }
 }
 
 void bs::ThreeDTI_AudioRenderer::MoveListener(const bs::Mat3x4& mat)

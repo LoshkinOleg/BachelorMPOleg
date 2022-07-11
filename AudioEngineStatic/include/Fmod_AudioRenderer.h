@@ -49,7 +49,9 @@ namespace bs
 
 	private:
 		FMOD::System* context_ = nullptr;
-		// FMOD::Reverb3D* reverb_ = nullptr;
+#ifdef BUILD_WITH_REVERB
+		FMOD::Reverb3D* reverb_ = nullptr;
+#endif // BUILD_WITH_REVERB
 
 		std::vector<std::pair<FMOD::Sound*, FMOD::Channel*>> sounds_;
 	};

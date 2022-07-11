@@ -27,9 +27,13 @@ void bsExp::Logger::LogDelimiter()
 
 void bsExp::Logger::LogControllerPosition(const char* deviceName, const bs::CartesianCoord coord)
 {
-	pLogger_->info("Position of {0} is: ({1:03.2f},{2:03.2f},{3:03.2f})", deviceName, coord.x, coord.y, coord.z);
+	static unsigned int participantControllerCounter = 0;
+	static unsigned int conductorControllerCounter = 0;
+	std::string s = std::to_string(strcmp(deviceName, "Conductor controller") == 0 ? conductorControllerCounter : participantControllerCounter);
 
-	std::string s = "Position of ";
+	pLogger_->info(s + " Position of {0} is: ({1:03.2f},{2:03.2f},{3:03.2f})", deviceName, coord.x, coord.y, coord.z);
+
+	s += " Position of ";
 	s += deviceName;
 	s += " is: (";
 	s += std::to_string(coord.x);
@@ -39,16 +43,30 @@ void bsExp::Logger::LogControllerPosition(const char* deviceName, const bs::Cart
 	s += std::to_string(coord.z);
 	s += ").\n";
 	std::cout << s;
+
+	if (strcmp(deviceName, "Conductor controller") == 0)
+	{
+		conductorControllerCounter++;
+	}
+	else
+	{
+		participantControllerCounter++;
+	}
 }
 
 void bsExp::Logger::LogRendererChange(const char* rendererName)
 {
-	pLogger_->info("Selected {} renderer.", rendererName);
+	static unsigned int rendererCounter = 0;
+	std::string s = std::to_string(rendererCounter);
 
-	std::string s = "Selected ";
+	pLogger_->info(s + " Selected {} renderer.", rendererName);
+
+	s += " Selected ";
 	s += rendererName;
 	s += " renderer.\n";
 	std::cout << s;
+
+	rendererCounter++;
 }
 
 void bsExp::Logger::LogNoiseToggle(const bool enabled)
@@ -62,9 +80,11 @@ void bsExp::Logger::LogNoiseToggle(const bool enabled)
 
 void bsExp::Logger::LogNewSoundPos(const bs::CartesianCoord coord)
 {
-	pLogger_->info("New position of sound is: ({0:03.2f},{1:03.2f},{2:03.2f})", coord.x, coord.y, coord.z);
+	static unsigned int posCounter = 0;
+	std::string s = std::to_string(posCounter);
+	pLogger_->info(s + " New position of sound is: ({0:03.2f},{1:03.2f},{2:03.2f})", coord.x, coord.y, coord.z);
 
-	std::string s = "New position of sound is: (";
+	s += " New position of sound is: (";
 	s += std::to_string(coord.x);
 	s += ",";
 	s += std::to_string(coord.y);
@@ -73,6 +93,7 @@ void bsExp::Logger::LogNewSoundPos(const bs::CartesianCoord coord)
 	s += ").\n";
 	std::cout << s;
 
+	posCounter++;
 }
 
 void bsExp::Logger::LogHeadSetPosAndRot(const bs::CartesianCoord pos, const bs::Euler euler)

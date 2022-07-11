@@ -24,16 +24,22 @@ bs::Fmod_AudioRenderer::Fmod_AudioRenderer(const size_t bufferSize, const size_t
 	result = context_->init(32, FMOD_INIT_NORMAL, 0);    // Initialize FMOD.
 	assert(result == FMOD_OK, "Couldn't initialize Fmod system!");
 
-	// result = context_->createReverb3D(&reverb_);
-	// assert(result == FMOD_OK, "Couldn't create fmod reverb object!");
-	// FMOD_REVERB_PROPERTIES p = {DecayTime, EarlyDelay, LateDelay, HFReference, HFDecayRatio, Diffusion, Density, LowShelfFrequency, LowShelfGain, HighCut, EarlyLateMix, WetLevel};
-	// result = reverb_->setProperties(&p);
-	// assert(result == FMOD_OK, "Couldn't set fmod reverb properties!");
+#ifdef BUILD_WITH_REVERB
+	result = context_->createReverb3D(&reverb_);
+	assert(result == FMOD_OK, "Couldn't create fmod reverb object!");
+	FMOD_REVERB_PROPERTIES p = { DecayTime, EarlyDelay, LateDelay, HFReference, HFDecayRatio, Diffusion, Density, LowShelfFrequency, LowShelfGain, HighCut, EarlyLateMix, WetLevel };
+	result = reverb_->setProperties(&p);
+	assert(result == FMOD_OK, "Couldn't set fmod reverb properties!");
+#endif // BUILD_WITH_REVERB
+
 	FMOD_VECTOR pos{0.0f, 0.0f, 0.0f};
 	result = context_->set3DListenerAttributes(0, &pos, 0, 0, 0);
 	assert(result == FMOD_OK, "Couldn't set listener position!");
-	// result = reverb_->set3DAttributes(&pos, 0.0f, 10.0f); // Center reverb area on listener. Start attenuating at 0.0 meters away from listener and up to 10.0 meters.
-	// assert(result == FMOD_OK, "Couldn't set reverb area position!");
+
+#ifdef BUILD_WITH_REVERB
+	result = reverb_->set3DAttributes(&pos, 0.0f, 10.0f); // Center reverb area on listener. Start attenuating at 0.0 meters away from listener and up to 10.0 meters.
+	assert(result == FMOD_OK, "Couldn't set reverb area position!");
+#endif // BUILD_WITH_REVERB
 }
 bs::Fmod_AudioRenderer::~Fmod_AudioRenderer()
 {
@@ -42,9 +48,12 @@ bs::Fmod_AudioRenderer::~Fmod_AudioRenderer()
 		auto result = sound.first->release();
 		assert(result == FMOD_OK, "Failed to release fmod sound!");
 	}
-	// auto result = reverb_->release();
-	// assert(result == FMOD_OK, "Failed to release fmod reverb!");
-	auto result = context_->release();
+	FMOD_RESULT result;
+#ifdef BUILD_WITH_REVERB
+	result = reverb_->release();
+	assert(result == FMOD_OK, "Failed to release fmod reverb!");
+#endif // BUILD_WITH_REVERB
+	result = context_->release();
 	assert(result == FMOD_OK, "Failed to release fmod context!");
 }
 

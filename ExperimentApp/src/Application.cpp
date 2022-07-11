@@ -105,12 +105,12 @@ void bsExp::Application::OnRightGrip_()
 	if (rendererManager_.IsPaused("noise"))
 	{
 		rendererManager_.PlaySound("noise");
-		logger_.LogNoiseToggle(true);
+		// logger_.LogNoiseToggle(true);
 	}
 	else
 	{
 		rendererManager_.PauseSound("noise");
-		logger_.LogNoiseToggle(false);
+		// logger_.LogNoiseToggle(false);
 	}
 }
 
