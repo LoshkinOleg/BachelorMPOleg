@@ -1,5 +1,6 @@
 import math
 import ast
+import os.path
 
 # Global constants
 HEAD_ALTITUDE = 1.2 # Participant's head elevation from ground (+z axis).
@@ -19,6 +20,14 @@ METHOD_LABEL = "Selected" # Substring to look for to identify a log entry indica
 THREEDTI_LABEL = '3dti'
 FMOD_LABEL = 'fmod'
 CONDUCTOR_POS_LABEL = "Conductor controller" # Substring to look for to identify conductor's controller position log entry.
+PI = 3.14159265359
+RAW_INPUT_COL_BEGIN = 0
+RAW_INPUT_COL_END = 5
+CONTROL_SCENARIO_NAME = "control"
+THREEDTI_NO_REVERB_SCENARIO_NAME = "3dti w/o reverb"
+FMOD_NO_REVERB_SCENARIO_NAME = "fmod w/o reverb"
+THREEDTI_WITH_REVERB_SCENARIO_NAME = "3dti w/ reverb"
+FMOD_WITH_REVERB_SCENARIO_NAME = "fmod w/ reverb"
 
 def LineContains(line, substring)->bool:
     return (line.find(substring) != -1)
@@ -94,3 +103,32 @@ def CartesianToSpherical(x, y, z):
 
 def CartesianMagnitude(x, y, z):
     return math.sqrt(x*x + y*y + z*z)
+
+def RadToDeg(x):
+    returnVal = []
+    for i in x:
+        returnVal.append(round(i * (180.0 / PI), 0))
+    return returnVal
+
+def SameSign(x, y)->bool:
+    if x == 0.0 or y == 0.0:
+        return True
+    if x > 0.0 and y < 0.0:
+        return False
+    if x < 0.0 and y > 0.0:
+        return False
+    return True
+
+def LimitToPlusMinusPi(x):
+    if x > PI:
+        return -2.0 * PI + x
+    else:
+        return x
+
+def FileExists(relativePath)->bool:
+    return os.path.isfile(relativePath)
+
+def Assert(condition, message):
+    if not condition:
+        print(message)
+        quit()
