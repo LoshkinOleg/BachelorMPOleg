@@ -70,7 +70,7 @@ bs::ThreeDTI_AudioRenderer::ThreeDTI_AudioRenderer(const char* hrtfPath, const c
 
 	// Init 3dti environment.
 	environment_ = core_.CreateEnvironment();
-	environment_->SetReverberationOrder(TReverberationOrder::BIDIMENSIONAL); // Oleg@self: investigate, I think this has to do with nr or ambisonic channels?
+	environment_->SetReverberationOrder(TReverberationOrder::THREEDIMENSIONAL);
 	if (!BRIR::CreateFromSofa(brirPath, environment_)) assert(false, "Failed to load BRIR sofa file!");
 
 	interlacedReverb_.resize(2 * bufferSize, 0.0f);
