@@ -356,4 +356,5 @@ MigrationBackup/
 .ionide/
 
 # Ignore stuff python leaves behind.
-__pycache__/
+*/__pycache__/
+*/.vs/
