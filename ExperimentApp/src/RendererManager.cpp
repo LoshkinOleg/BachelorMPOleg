@@ -14,26 +14,7 @@ bsExp::RendererManager::RendererManager():
 	auto err = Pa_Initialize();
 	assert(err == paNoError, "Portaudio failed to initialize!");
 
-#ifdef USE_DUMMY_INPUTS
 	const PaDeviceIndex selectedDevice = Pa_GetDefaultOutputDevice();
-#else
-	PaDeviceIndex selectedDevice = -1;
-
-	const auto deviceCount = Pa_GetDeviceCount();
-	for (PaDeviceIndex i = 0; i < deviceCount; i++)
-	{
-		auto* pDevice = Pa_GetDeviceInfo(i);
-		const char* name = pDevice->name;
-		constexpr const char* desired = "Speakers (VIVE Pro Mutimedia Audio)";
-		if (std::strcmp(name, desired) == 0)
-		{
-			selectedDevice = i;
-			break;
-		}
-		// std::cout << pDevice->name << std::endl;
-	}
-	assert(selectedDevice >= 0 && "Failed to retrieve desired output device by name!");
-#endif // USE_DUMMY_INPUTS
 
 	PaStreamParameters outputParams{
 		// selectedDevice,

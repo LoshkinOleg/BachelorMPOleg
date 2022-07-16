@@ -33,7 +33,9 @@ namespace bsExp
 
 		RendererManager rendererManager_{};
 		SdlManager sdlManager_{};
+#ifdef BUILD_WITH_OPENVR
 		OpenVrManager openVrManager_{};
+#endif
 		Logger logger_{};
 		RandomEngine rndEngine_;
 

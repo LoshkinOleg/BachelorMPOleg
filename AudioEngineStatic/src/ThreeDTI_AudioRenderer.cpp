@@ -66,12 +66,20 @@ bs::ThreeDTI_AudioRenderer::ThreeDTI_AudioRenderer(const char* hrtfPath, const c
 	listener_->DisableCustomizedITD();
 	UpdateRendererParams(ILDEnabled);
 	bool unused; // Oleg@self: investigate
-	if (!HRTF::CreateFromSofa(hrtfPath, listener_, unused)) assert(false, "Failed to load HRTF sofa file!");
+	if (!HRTF::CreateFromSofa(hrtfPath, listener_, unused))
+	{
+		const auto errStuct = ERRORHANDLER3DTI.GetFirstErrorStruct();
+		assert(false, "Failed to load HRTF sofa file!");
+	}
 
 	// Init 3dti environment.
 	environment_ = core_.CreateEnvironment();
-	environment_->SetReverberationOrder(TReverberationOrder::THREEDIMENSIONAL);
-	if (!BRIR::CreateFromSofa(brirPath, environment_)) assert(false, "Failed to load BRIR sofa file!");
+	environment_->SetReverberationOrder(TReverberationOrder::BIDIMENSIONAL);
+	if (!BRIR::CreateFromSofa(brirPath, environment_))
+	{
+		const auto errStuct = ERRORHANDLER3DTI.GetFirstErrorStruct();
+		assert(false && "Failed to load BRIR sofa file!");
+	}
 
 	interlacedReverb_.resize(2 * bufferSize, 0.0f);
 	currentlyProcessedSignal_.resize(2 * bufferSize, 0.0f);
