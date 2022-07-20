@@ -1,0 +1,13 @@
+SampleId,Euclidean Error in meters,Azimuthal Error in degrees,Sagittal Error in degrees,Depth Error in meters,,Mean Euclidean Error in meters,Mean Azimuthal Error in degrees,Mean Sagittal Error in degrees,Mean Depth Error in meters,Number of samples
+49,1.75,155,37,0.16,,1.216666667,76.83333333,31.58333333,0.3808333333,12
+51,1.59,66,27,0.68,,,,,,
+70,1.93,133,9,0.84,,,,,,
+72,0.33,23,11,0.15,,,,,,
+74,1.61,142,18,1.21,,,,,,
+76,1.38,115,36,0.24,,,,,,
+78,1.27,25,46,0.63,,,,,,
+142,0.61,55,26,0.02,,,,,,
+143,0.74,60,33,0.01,,,,,,
+146,0.77,99,31,0.06,,,,,,
+147,1.22,9,52,0.18,,,,,,
+149,1.4,40,53,0.39,,,,,,
